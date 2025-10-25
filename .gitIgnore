@@ -1,0 +1,20 @@
+.env
+__pycache__/
+_venv/
+.vscode/
+.git/
+*.pyc
+*.pyo
+*.log
+*.rar
+*.zip
+*.code-workspace
+<<<<<<< HEAD
+detected_frames/
+reports/
+data/videos/
+=======
+yolo_cam/media/
+>>>>>>> 293dbcf (Environment variables changes)
+data/detected_frames/
+yolo_cam/detected_frames/

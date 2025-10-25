@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guest Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+  <h2 class="text-center mb-3">Guest Management</h2>
+
+  <!-- Add Guest Section -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+      <span>Guest Registration (5s Video Capture)</span>
+      <button class="btn btn-light btn-sm" id="btnToggleForm">+ Add Guest</button>
+    </div>
+
+    <div class="card-body" id="guestFormSection" style="display: none;">
+      <form id="guestForm" novalidate>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-2">
+              <label class="form-label">Name <span class="text-danger">*</span></label>
+              <input type="text" id="name" name="name" class="form-control" required>
+              <div class="invalid-feedback">Please enter guest name.</div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Guest Type</label>
+              <select id="guest_type" name="guest_type" class="form-control">
+                <option value="2">Employee</option>
+                <option value="1">Resident</option>
+                <option value="0">Others</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Bed No <span class="text-danger">*</span></label>
+              <input type="text" id="bed_no" name="bed_no" class="form-control" required>
+              <div class="invalid-feedback">Please enter room number.</div>
+            </div>
+
+            <!-- Instruction -->
+            <div class="alert alert-warning py-2 px-3 mt-3" role="alert">
+              ⚠️ <strong>Note:</strong> Please make sure the <u>5-second video</u> is captured before clicking <b>Save Guest</b>.
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-2 w-100">💾 Save Guest</button>
+          </div>
+
+          <!-- Video Section -->
+          <div class="col-md-6 text-center">
+            <video id="videoPreview" width="100%" height="260" autoplay muted class="border rounded mb-2"></video><br>
+            <button type="button" id="btnRecord" class="btn btn-warning">🎥 Record 5s Video</button>
+            <p class="text-muted small mt-2" id="videoStatus">Video not captured yet.</p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Guest Table -->
+  <table class="table table-striped table-bordered">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Room</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="guestTable"></tbody>
+  </table>
+
+  <nav><ul class="pagination justify-content-center" id="pagination"></ul></nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+//const API_BASE = "http://127.0.0.1:8000";
+let currentPage = 1;
+let mediaRecorder, recordedChunks = [];
+
+// ------------------- Load Guests -------------------
+function loadGuests(page = 1) {
+  $.get(`/guests?page=${page}&limit=20`, function (data) {
+    let rows = "";
+    data.items.forEach(g => {
+      rows += `<tr>
+        <td>${g.guest_id}</td>
+        <td>${g.name}</td>
+        <td>${g.guest_type}</td>
+        <td>${g.bed_no || '-'}</td>
+        <td>${g.active ? '✅ Active' : '❌ Inactive'}</td>
+        <td><button class="btn btn-sm btn-outline-secondary" 
+        onclick="toggleGuestStatus('${g.guest_id}')">
+  Toggle
+</button><button class="btn btn-danger btn-sm" onclick="deleteGuest('${g.guest_id}')">Delete</button></td>
+      </tr>`;
+    });
+    $("#guestTable").html(rows);
+
+    // Pagination
+    let pagination = "";
+    for (let i = 1; i <= data.total_pages; i++) {
+      pagination += `<li class="page-item ${i === page ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="loadGuests(${i})">${i}</a>
+      </li>`;
+    }
+    $("#pagination").html(pagination);
+  });
+}
+
+
+
+
+// ------------------- Delete Guest -------------------
+function deleteGuest(id) {
+  if (confirm("Delete this guest?")) {
+    $.ajax({
+      url: `/guests/${id}`,
+      type: "DELETE",
+      success: function () {
+        loadGuests(currentPage);
+      }
+    });
+  }
+}
+
+// ------------------- Active/Inactive Guest -------------------
+function toggleGuestStatus(guest_id) {
+  $.ajax({
+    url: `/guests/${guest_id}/toggle`,
+    type: "PUT",
+    success: function (res) {
+      alert(`Guest is now ${res.active ? "Active" : "Inactive"}`);
+      loadGuests(); // refresh table if needed
+    },
+    error: function (xhr) {
+      alert(xhr.responseJSON.detail);
+    }
+  });
+}
+
+
+
+
+
+
+// ------------------- Toggle Form -------------------
+$("#btnToggleForm").click(() => $("#guestFormSection").toggle());
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 1280, height: 720 },
+      audio: false
+    });
+    const videoElement = document.getElementById('videoPreview');
+    videoElement.srcObject = stream;
+
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "video/webm;codecs=vp9",
+      videoBitsPerSecond: 5_000_000 // 5 Mbps for HD
+    });
+
+    mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+    mediaRecorder.onstop = () => uploadVideo();
+
+  } catch (err) {
+    alert("Camera access denied or unavailable.");
+    console.error(err);
+  }
+}
+
+
+$("#btnRecord").click(() => {
+  if (!mediaRecorder) return startCamera().then(() => $("#btnRecord").click());
+  recordedChunks = [];
+  mediaRecorder.start();
+  $("#btnRecord").text("Recording...").prop("disabled", true);
+  $("#videoStatus").text("Recording video...");
+  setTimeout(() => {
+    mediaRecorder.stop();
+    $("#btnRecord").text("🎥 Record 5s Video").prop("disabled", false);
+  }, 5000);
+});
+
+function uploadVideo() {
+  const blob = new Blob(recordedChunks, { type: "video/webm" });
+  const formData = new FormData();
+  const guestName = $("#name").val() || "Unknown";
+  formData.append("guest_name", guestName);
+  formData.append("file", blob, `${guestName.replace(/\s+/g, "_")}.webm`);
+
+  fetch(`/video/upload_video`, { method: "POST", body: formData })
+    .then(r => r.ok ? $("#videoStatus").text("✅ Video uploaded successfully!") : $("#videoStatus").text("❌ Video upload failed."))
+    .catch(() => $("#videoStatus").text("❌ Error uploading video."));
+}
+
+// ------------------- Form Submit -------------------
+$("#guestForm").submit(function (e) {
+  e.preventDefault();
+
+  // Only validate Name + Bed No
+  $("#name, #bed_no").removeClass("is-invalid");
+  const name = $("#name").val().trim();
+  const bed_no = $("#bed_no").val().trim();
+  if (!name) { $("#name").addClass("is-invalid"); return; }
+  if (!bed_no) { $("#bed_no").addClass("is-invalid"); return; }
+
+  const guest = {
+    name: name,
+    guest_type: $("#guest_type option:selected").text(),
+    bed_no: bed_no
+  };
+
+  $.ajax({
+    url: `/guests`,
+    type: "POST",
+    data: JSON.stringify(guest),
+    contentType: "application/json",
+    success: function (res) {
+      alert(res.message || "Guest saved successfully!");
+      loadGuests(currentPage);
+      $("#guestForm")[0].reset();
+      $("#guestFormSection").hide();
+      $("#videoStatus").text("Video not captured yet.");
+    },
+    error: function (xhr) {
+      alert(xhr.responseText || "Server error while saving guest.");
+    }
+  });
+});
+
+// ------------------- Initial Load -------------------
+loadGuests();
+startCamera();
+</script>
+</body>
+</html>

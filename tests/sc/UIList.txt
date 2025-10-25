@@ -1,0 +1,6 @@
+D:\Working\AI\WH Face Detection\backend\db\dbscript.py
+D:\Working\AI\WH Face Detection\frontend\static\Guests.html
+D:\Working\AI\WH Face Detection\backend\main.py
+D:\Working\AI\WH Face Detection\backend\api\guests.py
+D:\Working\AI\WH Face Detection\backend\services\guest_service.py
+D:\Working\AI\WH Face Detection\backend\services\face_worker.py

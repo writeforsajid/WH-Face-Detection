@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports & Analytics - WH Face Detection</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #222;
+}
+
+/* Header Styles */
+.header {
+  background: white;
+  border-radius: 15px;
+  padding: 15px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto 30px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.logo:hover {
+  transform: translateY(-2px);
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  background: #667eea;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn.secondary {
+  background: #f5f7fa;
+  color: #667eea;
+}
+
+.nav-btn.secondary:hover {
+  background: #e8ecf1;
+}
+
+/* Main Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Report Section */
+.report-section {
+  background: white;
+  border-radius: 15px;
+  padding: 35px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  margin-bottom: 30px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #667eea;
+}
+
+.section-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+}
+
+.section-header h2 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.section-header p {
+  color: #666;
+  font-size: 14px;
+  margin: 5px 0 0 0;
+}
+
+/* Cards Grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.report-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  padding: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+.report-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  border-color: #667eea;
+}
+
+.report-card:hover::before {
+  opacity: 1;
+}
+
+.report-card-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.report-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  position: relative;
+  z-index: 1;
+}
+
+.report-card p {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+/* Form Section */
+.form-section {
+  background: white;
+  border-radius: 15px;
+  padding: 35px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group label i {
+  color: #667eea;
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+input[type="date"], 
+input[type="email"], 
+textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 2px solid #e8ecf1;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #f8f9fb;
+}
+
+input[type="date"]:focus, 
+input[type="email"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Quick Date Buttons */
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.quick-btn {
+  padding: 14px 20px;
+  border: 2px solid #e8ecf1;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.quick-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.quick-btn i {
+  font-size: 14px;
+}
+
+/* Hint Text */
+.hint {
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint i {
+  color: #667eea;
+  font-size: 12px;
+}
+
+/* Alert Box */
+.alert {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #fff7df 0%, #fffaed 100%);
+  border: 2px solid #f7d774;
+  color: #6b5500;
+  padding: 15px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert i {
+  font-size: 20px;
+  color: #f7b731;
+}
+
+.alert.success {
+  background: linear-gradient(135deg, #d4f4dd 0%, #e8fced 100%);
+  border-color: #4caf50;
+  color: #1b5e20;
+}
+
+.alert.success i {
+  color: #4caf50;
+}
+
+.alert.error {
+  background: linear-gradient(135deg, #ffebee 0%, #fff5f7 100%);
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.alert.error i {
+  color: #f44336;
+}
+
+/* Send Button */
+.send-btn {
+  width: 100%;
+  margin-top: 25px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.send-btn:active {
+  transform: translateY(0);
+}
+
+.send-btn i {
+  font-size: 18px;
+}
+
+/* Loading State */
+.send-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.send-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Stats Cards */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card h3 {
+  font-size: 36px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.stat-card p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.stat-card.green {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card.orange {
+  background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+}
+
+.stat-card.blue {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+  }
+
+  .nav-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .date-row {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .report-section,
+  .form-section {
+    padding: 25px 20px;
+  }
+
+  .section-header h2 {
+    font-size: 22px;
+  }
+
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-section,
+.form-section {
+  animation: fadeIn 0.5s ease;
+}
+</style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo" onclick="window.location.href='admin_dashboard.html'">
+      <i class="fas fa-chart-line"></i>
+      <span>Reports & Analytics</span>
+    </div>
+    <div class="nav-buttons">
+      <a href="admin_dashboard.html" class="nav-btn secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </a>
+      <button class="nav-btn" onclick="handleLogout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Report Types Section -->
+    <div class="report-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <div>
+          <h2>Report Types</h2>
+          <p>Select a report type or customize your own date range below</p>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="report-card" onclick="selectReportType('daily')">
+          <div class="report-card-icon">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <h3>Daily Report</h3>
+          <p>View attendance and activity for a specific day</p>
+        </div>
+
+        <div class="report-card" onclick="selectReportType('weekly')">
+          <div class="report-card-icon">
+            <i class="fas fa-calendar-week"></i>
+          </div>
+          <h3>Weekly Report</h3>
+          <p>Summarize the past 7 days of attendance data</p>
+        </div>
+
+        <div class="report-card" onclick="selectReportType('monthly')">
+          <div class="report-card-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <h3>Monthly Report</h3>
+          <p>Comprehensive monthly attendance overview</p>
+        </div>
+
+        <div class="report-card" onclick="selectReportType('custom')">
+          <div class="report-card-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <h3>Custom Range</h3>
+          <p>Define your own date range for reporting</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate Report Section -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <div>
+          <h2>Generate Report</h2>
+          <p>Select date range and email recipients</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-calendar-alt"></i> Select Date Range</label>
+        <div class="date-row">
+          <input type="date" id="fromDate" placeholder="From Date">
+          <input type="date" id="toDate" placeholder="To Date">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-clock"></i> Quick Date Selection</label>
+        <div class="btn-grid">
+          <button class="quick-btn" id="btnToday">
+            <i class="fas fa-sun"></i> Today
+          </button>
+          <button class="quick-btn" id="btnYesterday">
+            <i class="fas fa-moon"></i> Yesterday
+          </button>
+          <button class="quick-btn" id="btnThisWeek">
+            <i class="fas fa-calendar-week"></i> This Week
+          </button>
+          <button class="quick-btn" id="btnThisMonth">
+            <i class="fas fa-calendar"></i> This Month
+          </button>
+          <button class="quick-btn" id="btnLastMonth">
+            <i class="fas fa-calendar-minus"></i> Last Month
+          </button>
+          <button class="quick-btn" id="btnTillDate">
+            <i class="fas fa-infinity"></i> Till Date
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email"><i class="fas fa-envelope"></i> Email Recipients</label>
+        <input type="email" id="email" placeholder="Enter email addresses">
+        <div class="hint">
+          <i class="fas fa-info-circle"></i>
+          Add multiple email addresses separated by commas (e.g., user1@example.com, user2@example.com)
+        </div>
+      </div>
+
+      <div class="alert" id="alertBox" style="display: none;">
+        <i class="fa-regular fa-envelope"></i> 
+        <span id="alertText">The report will be sent to the specified email addresses.</span>
+      </div>
+
+      <button class="send-btn" id="sendEmail">
+        <i class="fas fa-paper-plane"></i>
+        Generate & Send Report
+      </button>
+    </div>
+  </div>
+
+  <script>
+  $(document).ready(function() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    // Set default dates
+    $("#fromDate").val(today);
+    $("#toDate").val(today);
+
+    // Show alert on page load
+    setTimeout(() => {
+      $("#alertBox").fadeIn();
+    }, 500);
+
+    // --- Quick date buttons ---
+    $("#btnToday").click(() => {
+      $("#fromDate").val(today);
+      $("#toDate").val(today);
+      showAlert("Date range set to today", "success");
+    });
+
+    $("#btnYesterday").click(() => {
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      $("#fromDate").val(yesterdayStr);
+      $("#toDate").val(yesterdayStr);
+      showAlert("Date range set to yesterday", "success");
+    });
+
+    $("#btnThisWeek").click(() => {
+      const firstDayOfWeek = new Date(now);
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      firstDayOfWeek.setDate(diff);
+      const first = firstDayOfWeek.toISOString().split('T')[0];
+      $("#fromDate").val(first);
+      $("#toDate").val(today);
+      showAlert("Date range set to this week", "success");
+    });
+
+    $("#btnThisMonth").click(() => {
+      const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      $("#fromDate").val(first);
+      $("#toDate").val(today);
+      showAlert("Date range set to this month", "success");
+    });
+
+    $("#btnLastMonth").click(() => {
+      const first = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      const last = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      $("#fromDate").val(first);
+      $("#toDate").val(last);
+      showAlert("Date range set to last month", "success");
+    });
+
+    $("#btnTillDate").click(() => {
+      $("#fromDate").val("2024-01-01");
+      $("#toDate").val(today);
+      showAlert("Date range set from 2024 till today", "success");
+    });
+
+    // --- Send Email logic ---
+    $("#sendEmail").click(function() {
+      const $btn = $(this);
+      const fromDate = $("#fromDate").val();
+      const toDate = $("#toDate").val();
+      const email = $("#email").val().trim();
+
+      if (!fromDate || !toDate) {
+        showAlert("Please select a date range", "error");
+        return;
+      }
+      if (!email) {
+        showAlert("Please enter at least one email address", "error");
+        return;
+      }
+
+      const report = {
+        from_date: fromDate,
+        to_date: toDate,
+        emails: email.split(",").map(e => e.trim()).filter(e => e)
+      };
+
+      // Show loading state
+      $btn.addClass('loading');
+      $btn.html('<i class="fas fa-spinner"></i> Sending Report...');
+
+      $.ajax({
+        url: `/reports`,
+        type: "POST",
+        data: JSON.stringify(report),
+        contentType: "application/json",
+        success: function(res) {
+          showAlert(res.message || "Report sent successfully!", "success");
+          $("#email").val("");
+          
+          // Reset button
+          setTimeout(() => {
+            $btn.removeClass('loading');
+            $btn.html('<i class="fas fa-paper-plane"></i> Generate & Send Report');
+          }, 1000);
+        },
+        error: function(xhr) {
+          const errorMsg = xhr.responseJSON?.detail || xhr.responseText || "Server error while sending report.";
+          showAlert(errorMsg, "error");
+          
+          // Reset button
+          $btn.removeClass('loading');
+          $btn.html('<i class="fas fa-paper-plane"></i> Generate & Send Report');
+        }
+      });
+    });
+  });
+
+  // Select report type (pre-fill dates)
+  function selectReportType(type) {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    switch(type) {
+      case 'daily':
+        $("#fromDate").val(today);
+        $("#toDate").val(today);
+        showAlert("Daily report selected - dates set to today", "success");
+        break;
+      case 'weekly':
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        $("#fromDate").val(weekAgo.toISOString().split('T')[0]);
+        $("#toDate").val(today);
+        showAlert("Weekly report selected - last 7 days", "success");
+        break;
+      case 'monthly':
+        const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        $("#fromDate").val(first);
+        $("#toDate").val(today);
+        showAlert("Monthly report selected - current month", "success");
+        break;
+      case 'custom':
+        showAlert("Custom range selected - choose your dates below", "success");
+        break;
+    }
+    
+    // Smooth scroll to form
+    $('html, body').animate({
+      scrollTop: $(".form-section").offset().top - 20
+    }, 500);
+  }
+
+  // Show alert message
+  function showAlert(message, type = 'info') {
+    const $alert = $("#alertBox");
+    const $text = $("#alertText");
+    
+    $alert.removeClass('success error');
+    if (type === 'success') {
+      $alert.addClass('success');
+      $alert.find('i').attr('class', 'fas fa-check-circle');
+    } else if (type === 'error') {
+      $alert.addClass('error');
+      $alert.find('i').attr('class', 'fas fa-exclamation-circle');
+    } else {
+      $alert.find('i').attr('class', 'fa-regular fa-envelope');
+    }
+    
+    $text.text(message);
+    $alert.fadeIn();
+    
+    if (type !== 'info') {
+      setTimeout(() => {
+        $alert.fadeOut();
+      }, 4000);
+    }
+  }
+
+  // Handle logout
+  async function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+      const token = localStorage.getItem('wh_token');
+      const apiBase = localStorage.getItem('wh_api_base') || 'http://localhost:8000';
+      
+      try {
+        if (token) {
+          await fetch(`${apiBase}/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+      
+      localStorage.removeItem('wh_token');
+      localStorage.removeItem('wh_user');
+      window.location.href = 'login.html';
+    }
+  }
+
+  // Check authorization
+  function checkAuthorization() {
+    const token = localStorage.getItem('wh_token');
+    const userStr = localStorage.getItem('wh_user');
+    
+    if (!token || !userStr) {
+      alert('Please login to access this page');
+      window.location.href = 'login.html';
+      return false;
+    }
+    
+    try {
+      const user = JSON.parse(userStr);
+      const userRole = user.role?.toLowerCase();
+      
+      if (userRole !== 'owner' && userRole !== 'employee') {
+        alert('Access Denied: You do not have permission to view this page');
+        window.location.href = 'Bed_Guest_Relationship.html';
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking authorization:', error);
+      window.location.href = 'login.html';
+      return false;
+    }
+  }
+
+  // Check auth on page load
+  if (!checkAuthorization()) {
+    // Redirected in checkAuthorization()
+  }
+  </script>
+</body>
+</html>

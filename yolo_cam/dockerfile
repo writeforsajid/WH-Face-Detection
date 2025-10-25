@@ -1,0 +1,28 @@
+FROM python:3.10
+
+WORKDIR /app
+
+# Install OS dependencies for OpenCV, dlib, etc.
+RUN apt-get update && \
+    apt-get install -y \
+        build-essential \
+        cmake \
+        libboost-all-dev \
+        libgl1 \
+        libglib2.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy everything from yolo_com folder into the container
+COPY . .
+
+# Copy requirements first (for efficient Docker caching)
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Make sure Python can import local packages
+ENV PYTHONPATH=/app
+
+# Run the app
+CMD ["python", "-u", "Yolo_Runner.py"]

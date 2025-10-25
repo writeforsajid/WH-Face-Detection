@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guest Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-success text-white text-center">
+      <h4 class="mb-0">Guest Registration (5s Video Capture)</h4>
+    </div>
+
+    <div class="card-body">
+      <form id="guestForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Name <span class="text-danger">*</span></label>
+          <input type="text" id="name" name="name" class="form-control" required>
+          <div class="invalid-feedback">Please enter guest name.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Guest Type</label>
+          <select id="guest_type" name="guest_type" class="form-control">
+            <option value="2">Resident</option>
+            <option value="1">Employee</option>
+            <option value="0">Others</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Bed No <span class="text-danger">*</span></label>
+          <input list="bedList" id="bed_no" name="bed_no" class="form-control" required placeholder="Select or type bed no">
+          <datalist id="bedList"></datalist>
+          <div class="invalid-feedback">Please select bed number.</div>
+        </div>
+
+        <div class="alert alert-warning py-2 px-3" role="alert">
+          ⚠️ <strong>Note:</strong> Please capture the <u>5-second video</u> <b>after filling the form</b>.
+        </div>
+
+        <div class="mb-3 text-center">
+          <video id="videoPreview" width="100%" height="260" autoplay muted class="border rounded mb-2 bg-dark"></video><br>
+          <button type="button" id="btnRecord" class="btn btn-warning w-100">🎥 Record 5s Video</button>
+          <p class="text-muted small mt-2" id="videoStatus">Video not captured yet.</p>
+          <div class="d-grid mb-2">
+            <button type="button" id="btnSwitch" class="btn btn-secondary w-100">
+              🔁 Switch Camera
+            </button>
+          </div>
+          <button type="button" id="btnRetake" class="btn btn-outline-secondary w-100 mt-2 d-none">↩️ Retake Video</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-3">💾 Save Guest</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+
+// ------------------ Validate Form ------------------
+function validateForm() {
+  let valid = true;
+  $("#name, #bed_no").removeClass("is-invalid");
+  if (!$("#name").val().trim()) { $("#name").addClass("is-invalid"); valid = false; }
+  if (!$("#bed_no").val().trim()) { $("#bed_no").addClass("is-invalid"); valid = false; }
+
+  return valid;
+}
+
+let mediaRecorder, recordedChunks = [], cameraStream = null;
+let currentFacing = "environment"; // default back camera
+let guest_id = null;
+
+
+async function startCamera() {
+  try {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+    }
+
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9"
+      : "video/webm;codecs=vp8";
+
+    let constraints = {
+      video: {
+        facingMode: { ideal: currentFacing },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    };
+
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (err) {
+    console.warn("⚠️ Retrying with default camera...");
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    } catch (finalErr) {
+      alert("Unable to access any camera: " + finalErr.message);
+      console.error(finalErr);
+      return;
+    }
+  }
+
+  const videoElement = document.getElementById("videoPreview");
+  videoElement.srcObject = cameraStream;
+
+  const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+    ? "video/webm;codecs=vp9"
+    : "video/webm;codecs=vp8";
+
+  mediaRecorder = new MediaRecorder(cameraStream, {
+    mimeType,
+    videoBitsPerSecond: 8_000_000
+  });
+
+  recordedChunks = [];
+  mediaRecorder.ondataavailable = e => e.data && recordedChunks.push(e.data);
+  mediaRecorder.onstop = () => uploadVideo();
+
+  console.log(`🎥 Camera started (${currentFacing})`);
+}
+
+// ------------------ Switch Camera ------------------
+$("#btnSwitch").click(async () => {
+  currentFacing = currentFacing === "environment" ? "user" : "environment";
+  await startCamera(); // Restart camera with new facing mode
+  $("#videoStatus").text(`Switched to ${currentFacing} camera.`);
+});
+
+// ------------------ Record Button ------------------
+$("#btnRecord").click(() => {
+  if (!validateForm()) {
+    alert("Please fill in required fields before recording.");
+    return;
+  }
+
+  if (!mediaRecorder) return startCamera().then(() => $("#btnRecord").click());
+
+  recordedChunks = [];
+  mediaRecorder.start();
+  $("#btnRecord").text("Recording...").prop("disabled", true);
+  $("#videoStatus").text("Recording video...");
+
+  setTimeout(() => {
+    mediaRecorder.stop();
+    $("#btnRecord").text("🎥 Record 5s Video").prop("disabled", false);
+  }, 5000);
+});
+
+// ------------------ Upload + Preview ------------------
+function uploadVideo() {
+  const blob = new Blob(recordedChunks, { type: "video/webm" });
+  const formData = new FormData();
+  const guestName = $("#name").val() || "Unknown";
+  const guestType = $("#guest_type option:selected").text() ;
+  const roomNo = $("#bed_no").val() || "000";    
+  formData.append("guest_name", guestName);
+  formData.append("guest_type", guestType);
+  formData.append("bed_no", roomNo);
+  formData.append("file", blob, `${guestName.replace(/\s+/g, "_")}.webm`);
+
+  fetch(`/video/upload_video`, { method: "POST", body: formData })
+    .then(async r => {
+      if (!r.ok) throw new Error("Upload failed");
+      const res = await r.json();
+
+      // Expecting backend response like: { "video_id": "guid.webm" }
+      if (res.status) {
+        const videoElement = document.getElementById('videoPreview');
+
+        // Stop camera stream
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          cameraStream = null;
+        }
+
+        // Switch to preview mode
+        videoElement.srcObject = null;
+        videoElement.src = `./temp/preview.webm`;
+        videoElement.controls = true;
+        videoElement.autoplay = true;
+        videoElement.muted = false;
+        guest_id=res.guest_id;
+        $("#videoStatus").html("✅ Video uploaded! Showing preview below.");
+        $("#btnRetake").removeClass("d-none");
+      } else {
+        $("#videoStatus").text("✅ Uploaded but no preview returned.");
+      }
+    })
+    .catch(() => {
+      $("#videoStatus").text("❌ Error uploading video.");
+    });
+}
+
+
+
+let useFront = false;
+
+$("#btnSwitch").click(() => {
+  useFront = !useFront;
+  startCameraWithFacing(useFront ? "user" : "environment");
+});
+
+async function startCameraWithFacing(facing) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facing } },
+      audio: false
+    });
+    document.getElementById('videoPreview').srcObject = stream;
+  } catch (err) {
+    alert("Cannot switch camera: " + err.message);
+  }
+}
+
+
+// ------------------ Retake Video ------------------
+$("#btnRetake").click(() => {
+  $("#btnRetake").addClass("d-none");
+  $("#videoStatus").text("Ready to record new video.");
+  startCamera();
+});
+
+// ------------------ Submit Form ------------------
+$("#guestForm").submit(function (e) {
+  e.preventDefault();
+  if (!validateForm()) return;
+  if (!guest_id) { $("#btnRecord").addClass("is-invalid"); valid = false; }
+  const guest = {
+    name: $("#name").val().trim(),
+    guest_type: $("#guest_type option:selected").text(),
+    bed_no: $("#bed_no").val().trim()
+  };
+
+  $.ajax({
+    url: `/guests/${guest_id}/confirm`,
+    type: "POST",
+    data: JSON.stringify(guest),
+    contentType: "application/json",
+    success: function (res) {
+      alert(res.message || "Guest saved successfully!");
+      $("#guestForm")[0].reset();
+      $("#videoStatus").text("Video not captured yet.");
+      $("#videoPreview").attr("srcObject", null).attr("src", "");
+      $("#videoPreview")[0].controls = false;
+      $("#btnRetake").addClass("d-none");
+      startCamera();
+    },
+    error: function (xhr) {
+      alert(xhr.responseText || "Server error while saving guest.");
+    }
+  });
+});
+// ------------------ Load Bed Numbers (JSON API Simulation) ------------------
+async function loadBedNumbers() {
+  try {
+    // Temporary: simulate API response (replace this later with fetch('/api/beds'))
+    const response = [
+      "001/1/1", "001/1/2", "001/2/1", "001/2/2",
+      "002/1/1", "002/1/2", "002/2/1", "002/2/2",
+      "003/1/1", "003/1/2", "003/2/1", "003/2/2",
+      // ... add up to 83 or load dynamically from API
+    ];
+
+    const dataList = document.getElementById("bedList");
+    dataList.innerHTML = ""; // clear old options
+
+    response.forEach(bed => {
+      const opt = document.createElement("option");
+      opt.value = bed;
+      dataList.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error("Error loading bed numbers:", err);
+  }
+}
+
+// ------------------ Init ------------------
+loadBedNumbers();
+startCamera();
+</script>
+
+</body>
+</html>

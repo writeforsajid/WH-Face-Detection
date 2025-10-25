@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - White House</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #3b82f6;
+            --emerald-green: #10b981;
+            --warm-amber: #f59e0b;
+            --light-gray: #f3f4f6;
+            --dark-gray: #6b7280;
+            --white: #ffffff;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 0.5rem;
+            color: #1f2937;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(129,140,248,0.03)"/></svg>');
+            animation: rotate 60s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 480px;
+            padding: 1.5rem 2rem;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 8px 24px rgba(129, 140, 248, 0.3);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-section h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.65rem;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-section p {
+            color: var(--dark-gray);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-input.error {
+            border-color: #ef4444;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--dark-gray);
+            padding: 0.25rem;
+        }
+
+        .password-strength {
+            margin-top: 0.25rem;
+            font-size: 0.7rem;
+        }
+
+        .strength-bar {
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            margin-top: 0.3rem;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+            width: 0%;
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            border-radius: 10px;
+        }
+
+        .strength-text {
+            margin-top: 0.25rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: var(--dark-gray);
+            margin-top: 0.2rem;
+        }
+
+        .btn-signup {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 1rem;
+            box-shadow: 0 8px 20px rgba(129, 140, 248, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-signup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-signup:hover::before {
+            left: 100%;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(129, 140, 248, 0.4);
+        }
+
+        .btn-signup:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-signup:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--dark-gray);
+            font-size: 0.875rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+        }
+
+        .login-link {
+            text-align: center;
+            color: var(--dark-gray);
+            font-size: 0.95rem;
+        }
+
+        .login-link a {
+            color: var(--primary-blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-home a {
+            color: var(--dark-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-home a:hover {
+            color: var(--primary-blue);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border: 2px solid #ef4444;
+            color: #dc2626;
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: shake 0.5s;
+            font-weight: 600;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideDown 0.5s;
+            font-weight: 600;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .logo-section h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p>Join White House Student Management</p>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+
+        <form id="signup-form" onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label for="fullname" class="form-label">Full Name</label>
+                <input 
+                    type="text" 
+                    id="fullname" 
+                    class="form-input" 
+                    placeholder="John Doe"
+                    required
+                    minlength="3"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    class="form-input" 
+                    placeholder="your.email@example.com"
+                    required
+                >
+                <div class="form-hint">We'll never share your email with anyone else.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    class="form-input" 
+                    placeholder="+91 98765 43210"
+                    value="+91 "
+                    required
+                    pattern="\+91\s\d{5}\s\d{5}"
+                    maxlength="17"
+                    oninput="formatPhoneNumber(this)"
+                >
+                <div class="form-hint">Enter your 10-digit Indian mobile number.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="code" class="form-label">Security Code (Last 4 digits of phone)</label>
+                <input
+                    type="text"
+                    id="code"
+                    class="form-input"
+                    placeholder="Enter last 4 digits"
+                    required
+                    pattern="\\d{4}"
+                    maxlength="4"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                >
+                <div class="form-hint">Enter the last 4 digits of your phone number. This will be used as a simple verification code.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        placeholder="Create a strong password"
+                        required
+                        minlength="8"
+                        oninput="checkPasswordStrength()"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                        <i class="bi bi-eye" id="toggle-icon-password"></i>
+                    </button>
+                </div>
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div id="strength-fill" class="strength-fill"></div>
+                    </div>
+                    <div id="strength-text" class="strength-text"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm-password" class="form-label">Confirm Password</label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="confirm-password" 
+                        class="form-input" 
+                        placeholder="Re-enter your password"
+                        required
+                        minlength="8"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePassword('confirm-password')">
+                        <i class="bi bi-eye" id="toggle-icon-confirm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-signup">
+                <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>Already have an account?</span>
+        </div>
+
+        <div class="login-link">
+            <a href="login.html">Login here</a>
+        </div>
+
+        <div class="back-home">
+            <a href="index2.html">
+                <i class="bi bi-arrow-left me-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function formatPhoneNumber(input) {
+            let value = input.value.replace(/[^\d+]/g, '');
+            
+            // Ensure it starts with +91
+            if (!value.startsWith('+91')) {
+                value = '+91';
+            }
+            
+            // Remove +91 prefix for processing
+            let numbers = value.substring(3);
+            
+            // Limit to 10 digits
+            numbers = numbers.substring(0, 10);
+            
+            // Format as +91 XXXXX XXXXX
+            if (numbers.length > 5) {
+                value = `+91 ${numbers.substring(0, 5)} ${numbers.substring(5)}`;
+            } else if (numbers.length > 0) {
+                value = `+91 ${numbers}`;
+            } else {
+                value = '+91 ';
+            }
+            
+            input.value = value;
+        }
+
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const iconId = fieldId === 'password' ? 'toggle-icon-password' : 'toggle-icon-confirm';
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'bi bi-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'bi bi-eye';
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthFill = document.getElementById('strength-fill');
+            const strengthText = document.getElementById('strength-text');
+            
+            let strength = 0;
+            let text = '';
+            let color = '#ef4444';
+            
+            if (password.length === 0) {
+                strengthFill.style.width = '0%';
+                strengthText.textContent = '';
+                return;
+            }
+            
+            // Calculate strength
+            if (password.length >= 8) strength += 20;
+            if (password.length >= 12) strength += 10;
+            if (/[a-z]/.test(password)) strength += 20;
+            if (/[A-Z]/.test(password)) strength += 20;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 15;
+            
+            // Set color and text based on strength
+            if (strength < 40) {
+                text = 'Weak';
+                color = 'linear-gradient(90deg, #ef4444, #dc2626)';
+            } else if (strength < 70) {
+                text = 'Fair';
+                color = 'linear-gradient(90deg, #f59e0b, #d97706)';
+            } else if (strength < 90) {
+                text = 'Good';
+                color = 'linear-gradient(90deg, #818cf8, #a78bfa)';
+            } else {
+                text = 'Strong';
+                color = 'linear-gradient(90deg, #10b981, #059669)';
+            }
+            
+            strengthFill.style.width = strength + '%';
+            strengthFill.style.background = color;
+            strengthText.textContent = text;
+            strengthText.style.color = strength < 40 ? '#ef4444' : strength < 70 ? '#f59e0b' : strength < 90 ? '#818cf8' : '#10b981';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const code = document.getElementById('code').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            // Validation
+            if (!fullname || !email || !phone || !code || !password || !confirmPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (fullname.length < 3) {
+                showError('Full name must be at least 3 characters long');
+                return;
+            }
+
+            // Phone validation
+            const phoneRegex = /^\+91\s\d{5}\s\d{5}$/;
+            if (!phoneRegex.test(phone)) {
+                showError('Please enter a valid 10-digit Indian phone number');
+                return;
+            }
+
+            // Security code validation (must be 4 digits)
+            if (!/^\d{4}$/.test(code)) {
+                showError('Security code must be 4 digits');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                document.getElementById('confirm-password').classList.add('error');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            // Call FastAPI signup endpoint
+            try {
+                const res = await fetch('http://localhost:8000/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: fullname,
+                        email: email,
+                        password: password,
+                        phone_number: phone,
+                        code: code,
+                        role_name: 'residence'
+                    })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ detail: 'Signup failed' }));
+                    throw new Error(errorData.detail || 'Signup failed');
+                }
+
+                const data = await res.json();
+                console.log('Signup success:', data);
+                showSuccess('Account created successfully! Redirecting to login...');
+                
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } catch (err) {
+                showError(err.message);
+                console.error('Signup error:', err);
+            }
+        }
+
+        // Clear error on input
+        const inputs = document.querySelectorAll('.form-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('error');
+                document.getElementById('error-message').classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>

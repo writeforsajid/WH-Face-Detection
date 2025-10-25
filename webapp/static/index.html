@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — Choose Page</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(180deg,#f8fafc,#eef2f7);
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      width: 100%;
+      z-index: 1030;
+    }
+
+    .navbar-brand {
+      font-weight: 600;
+    }
+
+    /* Sidebar on mobile */
+    @media (max-width: 992px) {
+      #sidebarMenu {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: 250px;
+        height: 100%;
+        background: #fff;
+        box-shadow: 2px 0 12px rgba(0,0,0,.1);
+        transition: left 0.3s ease;
+        z-index: 1040;
+        padding-top: 4rem;
+      }
+      #sidebarMenu.show {
+        left: 0;
+      }
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,.3);
+        display: none;
+        z-index: 1035;
+      }
+      #overlay.show { display: block; }
+    }
+
+    /* Card container on desktop takes remaining width */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+      margin-top: 1rem;
+    }
+
+    .card-service {
+      max-width: 720px;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(40,40,80,0.06);
+      overflow: hidden;
+    }
+
+    .service-hero {
+      background: linear-gradient(90deg,#0d6efd66,#6610f299);
+      color: white;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .service-hero h1 { font-size: 1.25rem; margin: 0; font-weight: 600; }
+    .service-hero p { margin: 0; opacity: .95; font-size: .95rem; }
+
+    .btn-large {
+      padding: 1.15rem 1rem;
+      font-size: 1.02rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .btn-large .bi { font-size: 1.45rem; opacity: .95; }
+
+    @media (max-width: 576px) {
+      .btn-large { padding: .9rem .8rem; font-size: .98rem; }
+      .service-hero h1 { font-size: 1.05rem; }
+    }
+
+    .small-note { font-size: .88rem; color: #6c757d; }
+  </style>
+</head>
+<body>
+
+<!-- Overlay for mobile sidebar -->
+<div id="overlay"></div>
+
+<!-- Header / Navbar -->
+<header>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Dashboard</a>
+      
+      <!-- Hamburger button -->
+      <button class="navbar-toggler" type="button" id="sidebarToggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Desktop menu -->
+      <div class="collapse navbar-collapse justify-content-end d-none d-lg-flex">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="#">Reports</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Guests</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Register</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> User
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#">Profile</a></li>
+              <li><a class="dropdown-item" href="#">Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile sidebar menu -->
+  <div id="sidebarMenu">
+    <ul class="nav flex-column px-3">
+      <li class="nav-item"><a class="nav-link py-2" href="#">Reports</a></li>
+      <li class="nav-item"><a class="nav-link py-2" href="#">Guests</a></li>
+      <li class="nav-item"><a class="nav-link py-2" href="#">Register</a></li>
+      <li class="nav-item mt-3"><hr></li>
+      <li class="nav-item"><a class="nav-link py-2" href="#">Profile</a></li>
+      <li class="nav-item"><a class="nav-link py-2" href="#">Settings</a></li>
+      <li class="nav-item"><a class="nav-link py-2 text-danger" href="#">Logout</a></li>
+    </ul>
+  </div>
+</header>
+
+<!-- Main body -->
+<main>
+  <div>
+    <h1>Arish</h1>
+  </div>
+  <div class="card card-service ">
+    <div class="service-hero d-flex align-items-center justify-content-between">
+      <div>
+        <h1>Choose Module</h1>
+        <p class="small-note">Open Reports, Guests, or Register module — or clear cache below.</p>
+      </div>
+      <div class="text-end">
+        <span class="badge bg-white text-primary">v1.1</span>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <form id="quickForm" class="row g-3 align-items-center">
+        <div class="col-12">
+          <label for="userNote" class="form-label small-note">Optional note (will not be sent)</label>
+          <input id="userNote" class="form-control" placeholder="Type a short note (optional)" aria-label="Optional note">
+        </div>
+
+        <div class="col-12">
+          <div class="row g-3">
+            <!-- Buttons -->
+            <div class="col-12 col-md-6 d-grid">
+              <button type="button" id="btnReports" class="btn btn-outline-primary btn-large shadow-sm">
+                <i class="bi bi-graph-up-arrow"></i>
+                <div class="text-start">
+                  <div style="font-weight:600">Reports</div>
+                  <small class="small-note">View attendance & analytics</small>
+                </div>
+              </button>
+            </div>
+
+            <div class="col-12 col-md-6 d-grid">
+              <button type="button" id="btnGuests" class="btn btn-primary btn-large shadow-sm text-white">
+                <i class="bi bi-people-fill"></i>
+                <div class="text-start">
+                  <div style="font-weight:600">Guests</div>
+                  <small class="small-note">Add / manage guests</small>
+                </div>
+              </button>
+            </div>
+
+            <div class="col-12 col-md-6 d-grid">
+              <button type="button" id="btnRegister" class="btn btn-success btn-large shadow-sm text-white">
+                <i class="bi bi-person-plus-fill"></i>
+                <div class="text-start">
+                  <div style="font-weight:600">Register</div>
+                  <small class="small-note">Open registration page</small>
+                </div>
+              </button>
+            </div>
+
+            <div class="col-12 col-md-6 d-grid">
+              <button type="button" id="btnClearCache" class="btn btn-danger btn-large shadow-sm text-white">
+                <i class="bi bi-trash3-fill"></i>
+                <div class="text-start">
+                  <div style="font-weight:600">Clear Cache</div>
+                  <small class="small-note">Force reload all pages</small>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 text-end">
+          <small class="small-note">Tip: Hold <kbd>Ctrl</kbd> (or <kbd>Cmd</kbd> on macOS) while clicking to open in a new tab.</small>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  $(function(){
+    const reportsUrl = "Reports.html";
+    const guestsUrl  = "Guests.html";
+    const registerUrl = "Register.html";
+
+    function openTarget(url, event) {
+      const openInNewTab = event.ctrlKey || event.metaKey;
+      if (openInNewTab) window.open(url, "_blank", "noopener");
+      else window.location.href = url;
+    }
+
+    $("#btnReports").on("click", function(e){ openTarget(reportsUrl, e); });
+    $("#btnGuests").on("click", function(e){ openTarget(guestsUrl, e); });
+    $("#btnRegister").on("click", function(e){ openTarget(registerUrl, e); });
+
+    // Clear Cache
+    $("#btnClearCache").on("click", function(){
+      if (confirm("This will clear browser cache for this site and reload the page.")) {
+        caches.keys().then(function(names) { for (let name of names) caches.delete(name); });
+        localStorage.clear();
+        sessionStorage.clear();
+        location.reload(true);
+      }
+    });
+
+    // Keyboard accessibility
+    $("#btnReports, #btnGuests, #btnRegister, #btnClearCache").on("keydown", function(e){
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        $(this).trigger("click");
+      }
+    });
+
+    // Sidebar toggle for mobile
+    $("#sidebarToggle").on("click", function(){
+      $("#sidebarMenu").toggleClass("show");
+      $("#overlay").toggleClass("show");
+    });
+
+    $("#overlay").on("click", function(){
+      $(this).removeClass("show");
+      $("#sidebarMenu").removeClass("show");
+    });
+  });
+</script>
+</body>
+</html>

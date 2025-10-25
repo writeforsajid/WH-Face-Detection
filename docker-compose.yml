@@ -1,0 +1,102 @@
+services:
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile        # 👈 explicitly referencing
+    container_name: wh_webapp
+    env_file: ./data/.env.webapp
+    environment:
+      - API_IPADDRESS=http://webapp:8000
+      - SSL_CERT_PATH=/certs/webapp.crt
+      - SSL_KEY_PATH=/certs/webapp.key
+      - DB_PATH=/data/whitehouse.db
+      - VIDEOS_PATH=/data/Videos
+      - CERTS_PATH=/data/certs
+      - DETECTED_FRAMES_PATH=/data/detected_frames
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./webapp:/app
+      - ./data:/data           # ✅ shared persistent folder
+      - ./data/videos:/videos
+      - ./data/detected_frames:/detected_frames
+      - ./data/certs:/certs:ro   # ✅ mount certificates (read-only)
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+
+  yolo_cam1:
+    build:
+      context: ./yolo_cam
+      dockerfile: Dockerfile        # 👈 explicitly referencing
+    container_name: LIFT_CAM
+    env_file: ./data/.env.yolocam
+    network_mode: "host"
+    environment:
+      - OT=/data/detected_frames
+      - CAMERA_ID=LIFT
+      - SHOW_WINDOW=false
+      - RTSP_CREDENTIALS=gAAAAABo51b5zBBGgvEWbafRY6MGfVdDngsVtC-MiOkhoUBLgJqM5W5qRaBrTg7FjCRGddRZS4RuFVCwJBS3VcRwb_FFp7IV9Q==
+      - RTSP_IPADDRESS=192.168.1.4:554
+      - THERSHOLD_TOP_START_X=50
+      - THERSHOLD_TOP_START_Y=550
+      - THERSHOLD_TOP_END_X=1200
+      - THERSHOLD_BOTTOM_START_X=50
+      - THERSHOLD_BOTTOM_START_Y=1100
+      - THERSHOLD_BOTTOM_END_X=1200
+      - FRAME_TOP=5
+      - FRAME_BOTTOM=2560 #1900
+      - FRAME_LEFT=600 #1075
+      - FRAME_RIGHT=2560 #2400
+
+    volumes:
+      - ./yolo_cam:/app
+      - ./data:/data           # ✅ same shared DB folder
+      - ./data/detected_frames:/data/detected_frames # explicit, removes ambiguity
+    restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/data/WhiteHouse.db') else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  yolo_cam2:
+    build:
+      context: ./yolo_cam
+      dockerfile: Dockerfile        # 👈 explicitly referencing
+    container_name: EXIT_CAM
+    env_file: ./data/.env.yolocam
+    network_mode: "host"
+    environment:
+      - OT=/data/detected_frames    
+      - CAMERA_ID=EXIT
+      - SHOW_WINDOW=false
+      - RTSP_CREDENTIALS=gAAAAABo51b5zBBGgvEWbafRY6MGfVdDngsVtC-MiOkhoUBLgJqM5W5qRaBrTg7FjCRGddRZS4RuFVCwJBS3VcRwb_FFp7IV9Q==
+      - RTSP_IPADDRESS=192.168.1.5:554
+      - THERSHOLD_TOP_START_X=50
+      - THERSHOLD_TOP_START_Y=550
+      - THERSHOLD_TOP_END_X=1200
+      - THERSHOLD_BOTTOM_START_X=50
+      - THERSHOLD_BOTTOM_START_Y=1100
+      - THERSHOLD_BOTTOM_END_X=1200
+      - FRAME_TOP=5
+      - FRAME_BOTTOM=2560 #1900
+      - FRAME_LEFT=600 #1075
+      - FRAME_RIGHT=2560 #2400
+    volumes:
+      - ./yolo_cam:/app
+      - ./data:/data
+      - ./data/detected_frames:/data/detected_frames # explicit, removes ambiguity
+    restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/data/WhiteHouse.db') else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

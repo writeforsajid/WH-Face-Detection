@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White House - Student Management</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #3b82f6;
+            --emerald-green: #10b981;
+            --warm-amber: #f59e0b;
+            --light-gray: #f3f4f6;
+            --dark-gray: #6b7280;
+            --white: #ffffff;
+            --border-radius: 12px;
+            --header-h: 64px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 50%, #fef3c7 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #1f2937;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: var(--header-h);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark-gray);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary-blue);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-login {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+
+        .btn-login:hover {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, var(--primary-blue), var(--emerald-green));
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Hamburger (mobile) */
+        .hamburger {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-blue);
+            background: var(--white);
+            color: var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .hamburger:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .hamburger .bar {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: currentColor;
+            position: relative;
+        }
+
+        .hamburger .bar::before,
+        .hamburger .bar::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 22px;
+            height: 2px;
+            background: currentColor;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .hamburger .bar::before { top: -6px; }
+        .hamburger .bar::after { top: 6px; }
+
+        .hamburger[aria-expanded="true"] .bar {
+            background: transparent;
+        }
+        .hamburger[aria-expanded="true"] .bar::before {
+            transform: translateY(6px) rotate(45deg);
+        }
+        .hamburger[aria-expanded="true"] .bar::after {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--dark-gray);
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card.active {
+            border-left-color: var(--emerald-green);
+        }
+
+        .stat-card.inactive {
+            border-left-color: var(--warm-amber);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.95rem;
+            color: var(--dark-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-card.active .stat-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--emerald-green);
+        }
+
+        .stat-card.inactive .stat-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warm-amber);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-trend {
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trend-up {
+            color: var(--emerald-green);
+        }
+
+        .trend-down {
+            color: var(--warm-amber);
+        }
+
+        /* Address Section */
+        .address-section {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 3rem;
+        }
+
+        .address-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .address-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--emerald-green));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.75rem;
+        }
+
+        .address-header h2 {
+            font-size: 1.75rem;
+            color: #1f2937;
+        }
+
+        .address-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .address-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .address-label {
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .address-text {
+            font-size: 1.125rem;
+            color: #1f2937;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            align-self: flex-start;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .copy-btn.copied {
+            background-color: var(--emerald-green);
+        }
+
+        .address-map {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 0;
+            border: none;
+        }
+
+        .map-canvas {
+            width: 100%;
+            height: 280px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .map-placeholder {
+            text-align: center;
+        }
+
+        .map-placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .map-placeholder p {
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        /* Mobile dropdown menu */
+        .mobile-menu {
+            position: fixed;
+            top: var(--header-h);
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            z-index: 99;
+            max-height: calc(100vh - var(--header-h));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .mobile-menu.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .mobile-menu .menu-inner {
+            padding: 0.75rem 1rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .mobile-menu a {
+            text-decoration: none;
+            color: #374151;
+            padding: 0.875rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mobile-menu a:hover {
+            background: var(--light-gray);
+            color: var(--primary-blue);
+        }
+        .mobile-auth { display: flex; gap: 0.75rem; padding-top: 0.25rem; }
+
+        /* Backdrop */
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 98;
+        }
+        .backdrop.open { opacity: 1; pointer-events: auto; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container {
+                display: grid;
+                grid-template-columns: 44px 1fr auto;
+                align-items: center;
+                gap: 0.5rem;
+                padding: max(0.5rem, env(safe-area-inset-top)) 1rem 0.5rem 1rem;
+            }
+
+            .hamburger { display: flex; }
+
+            .logo { justify-self: end; }
+
+            .right-spacer { display: none; }
+
+            /* Hide desktop nav on small screens */
+            .desktop-nav { display: none !important; }
+
+            .hero h1 {
+                font-size: 1.875rem;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+
+            .address-content {
+                grid-template-columns: 1fr;
+            }
+
+            .address-section {
+                padding: 1.5rem;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card, .address-section {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* User Profile Dropdown */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--emerald-green));
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .user-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.75rem 1rem;
+            color: #1f2937;
+            text-decoration: none;
+            display: block;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .dropdown-item-custom:hover {
+            background: var(--light-gray);
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 0.25rem 0;
+        }
+
+        .dropdown-item-custom.logout {
+            color: #ef4444;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+                <span class="bar"></span>
+            </button>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="bi bi-building" style="font-size: 1.25rem;"></i>
+                </div>
+                <span>White House</span>
+                
+            </div>
+            <nav class="desktop-nav">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <div class="auth-buttons" id="auth-section">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </nav>
+            <div class="right-spacer" aria-hidden="true" style="display:none"></div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Main menu">
+        <div class="menu-inner">
+            <a href="#home" onclick="closeMobileMenu()">Home</a>
+            <a href="#about" onclick="closeMobileMenu()">About</a>
+            <a href="#contact" onclick="closeMobileMenu()">Contact</a>
+            <div class="mobile-auth" id="mobile-auth-section">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Welcome to White House</h1>
+            <p>Manage and track student attendance with ease</p>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stat-card active">
+                <div class="stat-header">
+                    <span class="stat-title">Active Students</span>
+                    <div class="stat-icon">✓</div>
+                </div>
+                <div class="stat-number">247</div>
+                <div class="stat-trend trend-up">↑ 12% from last month</div>
+            </div>
+
+            <div class="stat-card inactive">
+                <div class="stat-header">
+                    <span class="stat-title">Inactive Students</span>
+                    <div class="stat-icon">✕</div>
+                </div>
+                <div class="stat-number">53</div>
+                <div class="stat-trend trend-down">↓ 5% from last month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Total Students</span>
+                    <div class="stat-icon">👥</div>
+                </div>
+                <div class="stat-number">300</div>
+                <div class="stat-trend">Across all programs</div>
+            </div>
+
+            <div class="stat-card chart-card">
+                <div class="stat-header">
+                    <span class="stat-title">Student Distribution</span>
+                    <div class="stat-icon">📊</div>
+                </div>
+                <div style="position: relative; height: 200px; margin-top: 1rem;">
+                    <canvas id="studentChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Address Section -->
+        <section class="address-section">
+            <div class="address-header">
+                <div class="address-icon">📍</div>
+                <h2>Main Campus Address</h2>
+            </div>
+            <div class="address-content">
+                <div class="address-info">
+                    <div>
+                        <div class="address-label">Location</div>
+                        <div class="address-text" id="address-text">Building No. - B 23, Lane 7, Johri Farm, Noor Nagar Extension, Jamia Nagar-110025</div>
+                    </div>
+                    <button class="copy-btn" onclick="copyAddress()">
+                        <span>📋</span>
+                        <span id="copy-text">Copy Address</span>
+                    </button>
+                </div>
+                <div class="address-map">
+                    <div id="map" class="map-canvas" aria-label="Map"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        function getUserInfo() {
+            try {
+                const userJson = localStorage.getItem('wh_user');
+                return userJson ? JSON.parse(userJson) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name[0].toUpperCase();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('wh_token');
+            localStorage.removeItem('wh_user');
+            localStorage.removeItem('wh_api_base');
+            window.location.href = 'index2.html';
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('user-dropdown');
+            const profile = document.querySelector('.user-profile');
+            if (dropdown && profile && !profile.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        function renderAuthSection() {
+            const token = localStorage.getItem('wh_token');
+            const user = getUserInfo();
+            const authSection = document.getElementById('auth-section');
+            const mobileAuthSection = document.getElementById('mobile-auth-section');
+
+            if (token && user) {
+                // User is logged in - show profile
+                const initials = getInitials(user.name);
+                const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+                
+                const profileHTML = `
+                    <div class="user-profile" onclick="toggleUserDropdown()">
+                        <div class="user-avatar">${initials}</div>
+                        <div>
+                            <div class="user-name">${user.name || 'User'}</div>
+                            <div class="user-role">${role}</div>
+                        </div>
+                        <div class="dropdown-menu-custom" id="user-dropdown">
+                            <a href="Bed_Guest_Relationship.html" class="dropdown-item-custom">📊 Dashboard</a>
+                            <a href="Guests.html" class="dropdown-item-custom">👥 Guests</a>
+                            <div class="dropdown-divider-custom"></div>
+                            <div class="dropdown-item-custom logout" onclick="handleLogout(); event.stopPropagation();">🚪 Logout</div>
+                        </div>
+                    </div>
+                `;
+                
+                authSection.innerHTML = profileHTML;
+                mobileAuthSection.innerHTML = `
+                    <div style="padding: 0.5rem 0.75rem; background: linear-gradient(135deg, var(--primary-blue), var(--emerald-green)); border-radius: 8px; color: white; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 600;">${user.name || 'User'}</div>
+                        <div style="font-size: 0.85rem; opacity: 0.9;">${role}</div>
+                    </div>
+                    <a href="Bed_Guest_Relationship.html" style="display: block; padding: 0.75rem; color: #1f2937; text-decoration: none;" onclick="closeMobileMenu()">📊 Dashboard</a>
+                    <a href="Guests.html" style="display: block; padding: 0.75rem; color: #1f2937; text-decoration: none;" onclick="closeMobileMenu()">👥 Guests</a>
+                    <div style="height: 1px; background: #e5e7eb; margin: 0.5rem 0;"></div>
+                    <a href="#" style="display: block; padding: 0.75rem; color: #ef4444; text-decoration: none; font-weight: 600;" onclick="handleLogout(); return false;">🚪 Logout</a>
+                `;
+            } else {
+                // User is not logged in - show login/signup buttons
+                authSection.innerHTML = `
+                    <button class="btn btn-login" onclick="navigateToLoginOrBeds()">Login</button>
+                    <button class="btn btn-signup" onclick="window.location.href='signup.html'">Sign Up</button>
+                `;
+                mobileAuthSection.innerHTML = `
+                    <button class="btn btn-login" onclick="navigateToLoginOrBeds()">Login</button>
+                    <button class="btn btn-signup" onclick="window.location.href='signup.html'">Sign Up</button>
+                `;
+            }
+        }
+
+        // Render auth section on page load
+        renderAuthSection();
+
+        function navigateToLoginOrBeds() {
+            try {
+                const token = localStorage.getItem('wh_token');
+                const target = token ? 'Bed_Guest_Relationship.html' : 'login.html';
+                window.location.href = target;
+            } catch (_) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        const CAMPUS_ADDRESS = "Building No. - B 23, Lane 7, Johri Farm, Noor Nagar Extension, Jamia Nagar-110025";
+
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const backdrop = document.getElementById('backdrop');
+
+        function updateHeaderHeightVar() {
+            const headerEl = document.querySelector('header');
+            if (!headerEl) return;
+            const h = headerEl.getBoundingClientRect().height;
+            document.documentElement.style.setProperty('--header-h', h + 'px');
+        }
+        // initialize header height var
+        updateHeaderHeightVar();
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            hamburger && hamburger.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+            backdrop && backdrop.classList.add('open');
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            hamburger && hamburger.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+            backdrop && backdrop.classList.remove('open');
+        }
+
+        if (hamburger) {
+            hamburger.addEventListener('click', () => {
+                const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            updateHeaderHeightVar();
+            if (window.innerWidth > 768) {
+                closeMobileMenu();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.classList.contains('open')) return;
+            const clickedInsideMenu = mobileMenu.contains(e.target);
+            const clickedHamburger = hamburger && hamburger.contains(e.target);
+            if (!clickedInsideMenu && !clickedHamburger) {
+                closeMobileMenu();
+            }
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                closeMobileMenu();
+            }
+        });
+
+
+
+        function copyAddress() {
+            navigator.clipboard.writeText(CAMPUS_ADDRESS).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const text = document.getElementById('copy-text');
+                text.textContent = 'Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    text.textContent = 'Copy Address';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Initialize Leaflet map with exact coordinates
+        function initMap() {
+            try {
+                if (!window.L) return; // Leaflet not loaded
+                const mapEl = document.getElementById('map');
+                if (!mapEl) return;
+
+                // Exact coordinates for White House campus
+                const lat = 28.5544635936354;
+                const lon = 77.288124158961;
+
+                const map = L.map('map', { scrollWheelZoom: false }).setView([lat, lon], 17);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([lat, lon]).addTo(map).bindPopup(CAMPUS_ADDRESS).openPopup();
+
+                // Ensure proper rendering after layout changes
+                window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 150));
+            } catch (e) {
+                console.error('Map initialization failed:', e);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMap);
+        } else {
+            initMap();
+        }
+
+        // Keep the displayed address exactly in sync with the constant
+        const addressTextEl = document.getElementById('address-text');
+        if (addressTextEl) addressTextEl.textContent = CAMPUS_ADDRESS;
+
+    // Initialize Chart.js donut chart
+        function initChart() {
+            const ctx = document.getElementById('studentChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Active Students', 'Inactive Students'],
+                    datasets: [{
+                        data: [247, 53],
+                        backgroundColor: ['#10b981', '#f59e0b'],
+                        borderColor: ['#ffffff', '#ffffff'],
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#1f2937'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initChart);
+        } else {
+            initChart();
+        }
+    </script>
+</body>
+</html>

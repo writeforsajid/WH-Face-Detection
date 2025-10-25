@@ -1,0 +1,25 @@
+# Use official lightweight Python image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy only requirements first (for better layer caching)
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose FastAPI port
+EXPOSE 8000
+
+# Environment variables (optional defaults — can be overridden by docker-compose)
+ENV SSL_CERT_PATH=/certs/webapp.crt
+ENV SSL_KEY_PATH=/certs/webapp.key
+
+# Start FastAPI with SSL support
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --ssl-keyfile $SSL_KEY_PATH --ssl-certfile $SSL_CERT_PATH"]
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

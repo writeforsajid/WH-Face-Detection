@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Bed ↔ Guest Assignments</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		
+		body { 
+			background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
+			background-attachment: fixed;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+			min-height: 100vh;
+		}
+		
+		.page-title { 
+			font-weight: 700;
+			font-size: 1.75rem;
+			color: #1f2937;
+			text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+		}
+		
+		.badge-unassigned { 
+			background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+			color: white;
+			padding: 0.375rem 0.875rem;
+			border-radius: 20px;
+			font-size: 0.875rem;
+			font-weight: 600;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+		}
+		
+		.welcome-header {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+			color: white;
+			padding: 2rem 0;
+			margin-bottom: 2rem;
+			box-shadow: 0 8px 32px rgba(129, 140, 248, 0.25);
+			width: 100%;
+			margin-left: calc(-50vw + 50%);
+			margin-right: calc(-50vw + 50%);
+			backdrop-filter: blur(10px);
+			position: relative;
+			overflow: hidden;
+		}
+		
+		.welcome-header::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>');
+			animation: float 20s linear infinite;
+		}
+		
+		@keyframes float {
+			0% { transform: translateX(0); }
+			100% { transform: translateX(100px); }
+		}
+		.welcome-header-content {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 0 2rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			position: relative;
+			z-index: 1;
+		}
+		
+		.welcome-header h1 {
+			font-size: 2rem;
+			font-weight: 700;
+			margin: 0;
+			text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+			animation: slideInLeft 0.6s ease-out;
+		}
+		
+		@keyframes slideInLeft {
+			from {
+				opacity: 0;
+				transform: translateX(-30px);
+			}
+			to {
+				opacity: 1;
+				transform: translateX(0);
+			}
+		}
+		
+		.welcome-header .user-info {
+			font-size: 1rem;
+			opacity: 0.95;
+			margin-top: 0.5rem;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+		
+		.welcome-header .user-info::before {
+			content: '●';
+			color: #10b981;
+			font-size: 0.75rem;
+			animation: pulse 2s infinite;
+		}
+		
+		@keyframes pulse {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.5; }
+		}
+		
+		.logout-btn {
+			background: rgba(255, 255, 255, 0.25);
+			backdrop-filter: blur(10px);
+			border: 2px solid rgba(255, 255, 255, 0.3);
+			color: white;
+			padding: 0.625rem 1.5rem;
+			border-radius: 12px;
+			font-size: 0.95rem;
+			font-weight: 600;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			white-space: nowrap;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		}
+		
+		.logout-btn:hover {
+			background: rgba(255, 255, 255, 0.35);
+			border-color: rgba(255, 255, 255, 0.5);
+			color: white;
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+		}
+		
+		.back-btn {
+			background: rgba(255, 255, 255, 0.25);
+			backdrop-filter: blur(10px);
+			border: 2px solid rgba(255, 255, 255, 0.3);
+			color: white;
+			padding: 0.625rem 1.5rem;
+			border-radius: 12px;
+			font-size: 0.95rem;
+			font-weight: 600;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			white-space: nowrap;
+			margin-right: 0.75rem;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		}
+		
+		.back-btn:hover {
+			background: rgba(255, 255, 255, 0.35);
+			border-color: rgba(255, 255, 255, 0.5);
+			color: white;
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+		}
+		.container {
+			animation: fadeInUp 0.6s ease-out;
+		}
+		
+		@keyframes fadeInUp {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		
+		.card {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(20px);
+			border-radius: 20px;
+			border: 1px solid rgba(255, 255, 255, 0.3);
+			box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+			transition: all 0.3s ease;
+		}
+		
+		.card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 12px 48px rgba(31, 38, 135, 0.25);
+		}
+		
+		.btn-outline-secondary, .btn-outline-primary, .btn-sm {
+			border-radius: 10px;
+			font-weight: 600;
+			transition: all 0.3s ease;
+			border-width: 2px;
+		}
+		
+		.btn-outline-secondary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		}
+		
+		.btn-outline-primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+		}
+		
+		.table {
+			border-radius: 15px;
+			overflow: hidden;
+		}
+		
+		.table thead {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+		}
+		
+		.table thead th {
+			border: none;
+			padding: 1rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			font-size: 0.875rem;
+			letter-spacing: 0.5px;
+		}
+		
+		.table tbody tr {
+			transition: all 0.2s ease;
+			border-bottom: 1px solid rgba(0,0,0,0.05);
+		}
+		
+		.table tbody tr:hover {
+			background: rgba(129, 140, 248, 0.08);
+			transform: scale(1.01);
+		}
+		
+		.table tbody td {
+			padding: 1rem;
+			vertical-align: middle;
+		}
+		
+		@media (max-width: 768px) {
+			.welcome-header-content {
+				padding: 0 1rem;
+				flex-direction: column;
+				align-items: stretch;
+				gap: 0.75rem;
+			}
+			.welcome-header h1 {
+				font-size: 1.5rem;
+			}
+			.welcome-header .user-info {
+				font-size: 0.875rem;
+			}
+			.logout-btn, .back-btn {
+				padding: 0.5rem 1rem;
+				font-size: 0.875rem;
+			}
+
+			/* Group header buttons nicely on mobile */
+			.header-actions {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				width: 100%;
+			}
+			.header-actions .back-btn,
+			.header-actions .logout-btn {
+				flex: 1 1 48%;
+				min-width: 140px;
+			}
+
+			/* Top toolbar (Home / Guests) wraps cleanly */
+			.toolbar-actions {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+			}
+			.toolbar-actions .btn {
+				flex: 1 1 48%;
+				min-width: 120px;
+			}
+		}
+		
+		/* Modal Styles */
+		.modal-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.6);
+			backdrop-filter: blur(5px);
+			z-index: 9998;
+			animation: fadeIn 0.3s ease;
+		}
+		
+		.modal-overlay.active {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		
+		.modal-card {
+			background: white;
+			border-radius: 20px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+			max-width: 600px;
+			width: 90%;
+			max-height: 80vh;
+			overflow: hidden;
+			animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			position: relative;
+			z-index: 9999;
+		}
+		
+		@keyframes fadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+		
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(50px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		
+		.modal-header {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+			color: white;
+			padding: 1.5rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		
+		.modal-header h3 {
+			margin: 0;
+			font-size: 1.5rem;
+			font-weight: 700;
+		}
+		
+		.modal-close {
+			background: rgba(255, 255, 255, 0.2);
+			border: none;
+			color: white;
+			font-size: 1.5rem;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all 0.2s ease;
+		}
+		
+		.modal-close:hover {
+			background: rgba(255, 255, 255, 0.3);
+			transform: rotate(90deg);
+		}
+		
+		.modal-body {
+			padding: 1.5rem;
+			max-height: calc(80vh - 120px);
+			overflow-y: auto;
+		}
+		
+		.inactive-guest-item {
+			padding: 1rem;
+			border: 2px solid #e5e7eb;
+			border-radius: 12px;
+			margin-bottom: 1rem;
+			transition: all 0.3s ease;
+			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		
+		.inactive-guest-item:hover {
+			border-color: #818cf8;
+			background: rgba(129, 140, 248, 0.05);
+			transform: translateX(5px);
+		}
+		
+		.guest-info h5 {
+			margin: 0 0 0.5rem 0;
+			color: #1f2937;
+			font-weight: 600;
+		}
+		
+		.guest-info p {
+			margin: 0;
+			color: #6b7280;
+			font-size: 0.875rem;
+		}
+		
+		.assign-inactive-btn {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+			color: white;
+			border: none;
+			padding: 0.5rem 1.25rem;
+			border-radius: 8px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			white-space: nowrap;
+		}
+		
+		.assign-inactive-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+		}
+		
+		.no-inactive-guests {
+			text-align: center;
+			padding: 3rem 1rem;
+			color: #6b7280;
+		}
+		
+		.no-inactive-guests i {
+			font-size: 3rem;
+			margin-bottom: 1rem;
+			opacity: 0.5;
+		}
+
+		/* Snackbar (Undo) */
+		.snackbar {
+			position: fixed;
+			left: 50%;
+			bottom: 24px;
+			transform: translateX(-50%) translateY(20px);
+			background: rgba(31, 41, 55, 0.95);
+			color: #fff;
+			padding: 0.75rem 1rem;
+			border-radius: 12px;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+			display: none;
+			align-items: center;
+			gap: 1rem;
+			z-index: 10000;
+			animation: snackIn 0.2s ease forwards;
+		}
+		.snackbar.show { display: flex; }
+		.snackbar-message { font-weight: 500; }
+		.snackbar button {
+			background: transparent;
+			border: 0;
+			color: #60a5fa;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 0.25rem 0.5rem;
+			border-radius: 6px;
+		}
+		.snackbar button:hover { color: #93c5fd; text-decoration: underline; }
+		@keyframes snackIn { from { opacity:0; transform: translateX(-50%) translateY(20px);} to { opacity:1; transform: translateX(-50%) translateY(0);} }
+	</style>
+			<script>
+				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return 'http://localhost:8000';
+				})();
+
+		async function ensureLoggedInOrRedirect() {
+			const token = localStorage.getItem('wh_token');
+			if (!token) {
+				window.location.href = 'login.html';
+				return null;
+			}
+			return token;
+		}
+
+		function getUserInfo() {
+			try {
+				const userJson = localStorage.getItem('wh_user');
+				return userJson ? JSON.parse(userJson) : null;
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function displayWelcome() {
+			const user = getUserInfo();
+			const welcomeEl = document.getElementById('welcome-message');
+			const userInfoEl = document.getElementById('user-info');
+			
+			if (user && user.name) {
+				welcomeEl.textContent = `Welcome back, ${user.name}!`;
+				const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+				userInfoEl.textContent = `${role} • ${user.email || ''}`;
+			} else {
+				welcomeEl.textContent = 'Welcome to Bed Management';
+				userInfoEl.textContent = 'View and manage bed assignments';
+			}
+		}
+
+		function handleLogout() {
+			localStorage.removeItem('wh_token');
+			localStorage.removeItem('wh_user');
+			localStorage.removeItem('wh_api_base');
+			window.location.href = 'index2.html';
+		}
+
+		function handleBack() {
+			try {
+				// Prefer going back if we have a referrer/history
+				if (document.referrer && window.history.length > 1) {
+					window.history.back();
+					return;
+				}
+			} catch (e) { /* no-op */ }
+			// Fallback to home
+			window.location.href = 'index2.html';
+		}
+
+		function renderRows(items) {
+			const tbody = document.getElementById('rows');
+			if (!Array.isArray(items) || items.length === 0) {
+				tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No data</td></tr>`;
+				return;
+			}
+			const html = items.map((r) => {
+				let guest;
+				if (r.guest_name && r.guest_id) {
+					// Make guest name a clickable link to their details page
+					guest = `<a href="GuestDetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
+				} else if (r.guest_name) {
+					guest = r.guest_name;
+				} else {
+					guest = '<span class="badge badge-unassigned">Unassigned</span>';
+				}
+				const assignDate = r.assign_date || '-';
+				   return `
+					   <tr>
+						   <td>${r.bed_name || '-'}</td>
+						   <td>${r.bed_description || '-'}</td>
+						   <td>${guest}</td>
+						   <td>${assignDate}</td>
+						   <td>
+							   ${r.guest_id ? `<button class=\"btn btn-sm btn-success assign-btn\" data-bed-id=\"${r.bed_id}\" data-guest-id=\"${r.guest_id}\" data-guest-name=\"${(r.guest_name||'').replace(/\"/g,'\\\"')}\">Assigned</button>` : `<button class=\"btn btn-sm btn-secondary unassign-btn\" data-bed-id=\"${r.bed_id}\">Unassigned</button>`}
+						   </td>
+					   </tr>
+				   `;
+			}).join('');
+			tbody.innerHTML = html;
+		}
+
+		   async function loadData() {
+			   const token = await ensureLoggedInOrRedirect();
+			   if (!token) return; // redirected
+			   const statusEl = document.getElementById('status');
+			   statusEl.textContent = 'Loading...';
+			   try {
+				   const q = (document.getElementById('searchName')?.value || '').trim();
+				   const st = (document.getElementById('filterStatus')?.value || '').trim();
+				   const params = new URLSearchParams();
+				   if (q) params.set('search', q);
+				   if (st) params.set('status', st);
+				   const url = `${API_BASE_URL}/beds/guest-assignments${params.toString() ? ('?' + params.toString()) : ''}`;
+				   const res = await fetch(url, {
+					   headers: { 'Authorization': `Bearer ${token}` }
+				   });
+				   if (!res.ok) {
+					   if (res.status === 401) {
+						   // session invalid/expired: take user to login
+						   window.location.href = 'login.html';
+						   return;
+					   }
+					   const err = await res.json().catch(() => ({}));
+					   throw new Error(err.detail || `Request failed (${res.status})`);
+				   }
+				   const data = await res.json();
+				   renderRows(data);
+				   statusEl.textContent = '';
+				   // Attach event listeners to assign/unassign buttons
+				   setTimeout(() => {
+					   // Handle "Assigned" button clicks (unassign functionality)
+					   document.querySelectorAll('.assign-btn').forEach(btn => {
+						   btn.addEventListener('click', async function() {
+							   const guestId = this.getAttribute('data-guest-id');
+							   const guestName = this.getAttribute('data-guest-name') || 'Guest';
+							   if (!guestId) return;
+							   const row = this.closest('tr');
+							   const cells = row ? row.querySelectorAll('td') : null;
+							   this.disabled = true;
+							   this.textContent = 'Unassigning...';
+							   try {
+								   const token = localStorage.getItem('wh_token');
+								   // Call API to unassign guest
+								   const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
+									   method: 'POST',
+									   headers: {
+										   'Authorization': `Bearer ${token}`,
+										   'Content-Type': 'application/json'
+									   },
+									   body: JSON.stringify({ guest_id: guestId })
+								   });
+								   if (!res.ok) {
+									   const err = await res.json().catch(() => ({}));
+									   throw new Error(err.detail || `Unassign failed (${res.status})`);
+								   }
+								   // Optimistically update the row: Guest -> Unassigned, Date -> '-', Button -> Unassigned disabled
+								   if (cells && cells.length >= 5) {
+									   // cells: [0]=Bed, [1]=Desc, [2]=Guest, [3]=Date, [4]=Action
+									   cells[2].innerHTML = '<span class="badge badge-unassigned">Unassigned</span>';
+									   cells[3].textContent = '-';
+								   }
+								   this.classList.remove('btn-success');
+								   this.classList.add('btn-secondary');
+								   this.classList.remove('assign-btn');
+								   this.classList.add('unassign-btn');
+								   this.textContent = 'Unassigned';
+								   this.disabled = false;
+								   // Add click handler for the newly created unassign button
+								   const bedId = this.getAttribute('data-bed-id');
+								   this.onclick = () => showInactiveGuestsModal(bedId);
+								   // Show undo snackbar
+								   showUndoUnassign({ bedId, guestId, guestName });
+							   } catch (e) {
+								   alert(e.message || 'Failed to unassign');
+								   this.disabled = false;
+								   this.textContent = 'Assigned';
+							   }
+						   });
+					   });
+					   
+					   // Handle "Unassigned" button clicks (show inactive guests modal)
+					   document.querySelectorAll('.unassign-btn').forEach(btn => {
+						   btn.addEventListener('click', function() {
+							   const bedId = this.getAttribute('data-bed-id');
+							   showInactiveGuestsModal(bedId);
+						   });
+					   });
+				   }, 100);
+			   } catch (e) {
+				   console.error(e);
+				   statusEl.textContent = e.message || 'Failed to load';
+			   }
+		   }
+
+		document.addEventListener('DOMContentLoaded', () => {
+			displayWelcome();
+			loadData();
+			// If page refreshed, restore pending undo if still valid
+			restoreUndoFromStorage();
+			// wire filters
+			const statusSel = document.getElementById('filterStatus');
+			if (statusSel) statusSel.addEventListener('change', () => loadData());
+			const searchEl = document.getElementById('searchName');
+			if (searchEl) {
+				let _t = null;
+				searchEl.addEventListener('input', () => {
+					if (_t) clearTimeout(_t);
+					_t = setTimeout(() => loadData(), 300);
+				});
+			}
+		});
+		
+		// Snackbar helpers
+		let _snackTimer = null;
+		function ensureSnackbar() {
+			let el = document.getElementById('snackbar');
+			if (!el) {
+				el = document.createElement('div');
+				el.id = 'snackbar';
+				el.className = 'snackbar';
+				document.body.appendChild(el);
+			}
+			return el;
+		}
+
+		function showSnackbar(message, actionLabel, onAction, timeoutMs = 6000) {
+			const bar = ensureSnackbar();
+			bar.innerHTML = `<span class="snackbar-message">${message}</span>` +
+				(actionLabel ? ` <button type="button" id="snackbar-action">${actionLabel}</button>` : '');
+			bar.classList.add('show');
+			if (_snackTimer) { clearTimeout(_snackTimer); _snackTimer = null; }
+			if (actionLabel && typeof onAction === 'function') {
+				const btn = document.getElementById('snackbar-action');
+				if (btn) {
+					btn.onclick = async () => {
+						try { await onAction(); } finally { hideSnackbar(); }
+					};
+				}
+			}
+			_snackTimer = setTimeout(hideSnackbar, timeoutMs);
+		}
+
+		function hideSnackbar() {
+			const bar = ensureSnackbar();
+			bar.classList.remove('show');
+		}
+
+		function showUndoUnassign({ bedId, guestId, guestName }) {
+			// Persist pending undo so a page refresh doesn't lose it
+			const payload = { bedId, guestId, guestName, createdAt: Date.now(), timeoutMs: 8000 };
+			localStorage.setItem('wh_pending_undo_unassign', JSON.stringify(payload));
+			showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+				const token = localStorage.getItem('wh_token');
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ bed_id: bedId, guest_id: guestId })
+				});
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Undo failed (${res.status})`);
+				}
+				localStorage.removeItem('wh_pending_undo_unassign');
+				await loadData();
+			});
+		}
+
+		function restoreUndoFromStorage() {
+			try {
+				const raw = localStorage.getItem('wh_pending_undo_unassign');
+				if (!raw) return;
+				const data = JSON.parse(raw);
+				const { bedId, guestId, guestName, createdAt, timeoutMs = 8000 } = data || {};
+				if (!bedId || !guestId) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				const age = Date.now() - (createdAt || 0);
+				if (age > timeoutMs) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				// Show remaining time
+				const remaining = Math.max(2000, timeoutMs - age);
+				showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+					const token = localStorage.getItem('wh_token');
+					const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+						method: 'POST',
+						headers: {
+							'Authorization': `Bearer ${token}`,
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ bed_id: bedId, guest_id: guestId })
+					});
+					if (!res.ok) {
+						const err = await res.json().catch(() => ({}));
+						throw new Error(err.detail || `Undo failed (${res.status})`);
+					}
+					localStorage.removeItem('wh_pending_undo_unassign');
+					await loadData();
+				}, remaining);
+			} catch { /* ignore */ }
+		}
+
+		// Modal functions
+		async function showInactiveGuestsModal(bedId) {
+			const modal = document.getElementById('inactiveGuestsModal');
+			const modalBody = document.getElementById('inactiveGuestsBody');
+			
+			// Show loading state
+			modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading inactive guests...</p></div>';
+			modal.classList.add('active');
+			
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Fetch guests with inactive status - use max limit of 100
+				const res = await fetch(`${API_BASE_URL}/guests?page=1&limit=100&status=inactive`, {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!res.ok) {
+					if (res.status === 401) {
+						window.location.href = 'login.html';
+						return;
+					}
+					throw new Error(`Failed to fetch guests (${res.status})`);
+				}
+				
+				const data = await res.json();
+				const inactiveGuests = (data && Array.isArray(data.items)) ? data.items : [];
+				
+				if (inactiveGuests.length === 0) {
+					modalBody.innerHTML = `
+						<div class="no-inactive-guests">
+							<i class="bi bi-person-x"></i>
+							<h5>No Inactive Guests</h5>
+							<p>There are currently no guests with inactive status available for assignment.</p>
+						</div>
+					`;
+				} else {
+					const html = inactiveGuests.map(guest => `
+						<div class="inactive-guest-item" data-guest-id="${guest.guest_id}">
+							<div class="guest-info">
+								<h5>${guest.name}</h5>
+								<p>
+									<strong>ID:</strong> ${guest.guest_id} | 
+									<strong>Type:</strong> ${guest.guest_type || 'N/A'} | 
+									<strong>Status:</strong> <span style="color: #f59e0b; font-weight: 600;">Inactive</span>
+								</p>
+							</div>
+							<button class="assign-inactive-btn" onclick="assignGuestToBed('${bedId}', '${guest.guest_id}', '${guest.name.replace(/'/g, "\\'")}')">
+								Assign to Bed
+							</button>
+						</div>
+					`).join('');
+					modalBody.innerHTML = html;
+				}
+			} catch (e) {
+				console.error(e);
+				modalBody.innerHTML = `
+					<div class="no-inactive-guests">
+						<i class="bi bi-exclamation-triangle text-danger"></i>
+						<h5>Error Loading Guests</h5>
+						<p>${e.message || 'Failed to load inactive guests'}</p>
+					</div>
+				`;
+			}
+		}
+		
+		function closeModal() {
+			const modal = document.getElementById('inactiveGuestsModal');
+			modal.classList.remove('active');
+		}
+		
+		async function assignGuestToBed(bedId, guestId, guestName) {
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Call API to assign guest to bed
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						bed_id: bedId,
+						guest_id: guestId
+					})
+				});
+				
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Assignment failed (${res.status})`);
+				}
+				
+				// Close modal and reload data
+				closeModal();
+				alert(`Successfully assigned ${guestName} to bed!`);
+				await loadData();
+				
+			} catch (e) {
+				console.error(e);
+				alert(e.message || 'Failed to assign guest to bed');
+			}
+		}
+		
+		// Close modal when clicking outside
+		document.addEventListener('click', (e) => {
+			const modal = document.getElementById('inactiveGuestsModal');
+			if (e.target === modal) {
+				closeModal();
+			}
+		});
+	</script>
+  
+</head>
+<body>
+	<!-- Welcome Header (Full Width) -->
+	<div class="welcome-header">
+		<div class="welcome-header-content">
+			<div>
+				<h1 id="welcome-message">Welcome!</h1>
+				<div class="user-info" id="user-info">Loading...</div>
+			</div>
+			<div class="header-actions">
+				<button class="back-btn" onclick="handleBack()">
+					<i class="bi bi-arrow-left"></i> Back
+				</button>
+				<button class="logout-btn" onclick="handleLogout()">
+					<i class="bi bi-box-arrow-right"></i> Logout
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h2 class="page-title mb-0">Bed ↔ Guest Assignments</h2>
+			<div class="toolbar-actions">
+				<a class="btn btn-outline-secondary btn-sm" href="index2.html">Home</a>
+				<a class="btn btn-outline-primary btn-sm" href="Guests.html">Guests</a>
+			</div>
+		</div>
+
+		<div class="card shadow-sm">
+			<div class="card-body">
+				<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+					<div class="text-muted" id="status"></div>
+					<div class="d-flex align-items-center" style="gap: .5rem;">
+						<div class="input-group input-group-sm" style="width: 260px;">
+							<span class="input-group-text"><i class="bi bi-search"></i></span>
+							<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
+						</div>
+						<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
+							<option value="">All Statuses</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+							<option value="closed">Closed</option>
+						</select>
+						<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+					</div>
+				</div>
+				<div class="table-responsive">
+					<table class="table table-striped table-hover align-middle">
+						<thead class="table-dark">
+							<tr>
+								   <th>Bed Name</th>
+								   <th>Description</th>
+								   <!-- <th>Assignment ID</th> -->
+								   <th>Guest</th>
+								   <th>Assigned On</th>
+								   <th>Action</th>
+							</tr>
+						</thead>
+						<tbody id="rows"></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Inactive Guests Modal -->
+	<div class="modal-overlay" id="inactiveGuestsModal">
+		<div class="modal-card">
+			<div class="modal-header">
+				<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+				<button class="modal-close" onclick="closeModal()">×</button>
+			</div>
+			<div class="modal-body" id="inactiveGuestsBody">
+				<!-- Content will be dynamically loaded here -->
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
