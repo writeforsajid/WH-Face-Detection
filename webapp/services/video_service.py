@@ -20,7 +20,7 @@ os.makedirs(STATIC_TEMP_PATH, exist_ok=True)
 
 
 
-async def save_uploaded_video(file, guest_name=None, guest_type=None,bed_no=None):
+async def save_uploaded_video(file, guest_name=None, guest_type=None,comment=None,email=None,phone=None):
     """
     Save uploaded video in /data/videos and return metadata + thumbnails.
     """
@@ -37,7 +37,7 @@ async def save_uploaded_video(file, guest_name=None, guest_type=None,bed_no=None
         f.write(contents)
 
     file_size = os.path.getsize(filepath)
-    save_guest_data(guest_id,guest_name, guest_type,bed_no)
+    save_guest_data(guest_id,guest_name, guest_type,comment,email,phone)
     dst = os.path.join(STATIC_TEMP_PATH, "preview.webm")
     shutil.copy2(filepath, dst)
 
@@ -58,7 +58,7 @@ def generate_guid() -> str:
     """Generate a unique GUID string."""
     return str(uuid.uuid4())
 
-def save_guest_data(guest_id: str, name: str, guest_type: str, bed_no: str ) -> str:
+def save_guest_data(guest_id: str, name: str, guest_type: str, comment: str,email: str, phone: str ) -> str:
     """
     Save guest data into a unique JSON file.
     Returns the JSON file path.
@@ -72,8 +72,10 @@ def save_guest_data(guest_id: str, name: str, guest_type: str, bed_no: str ) -> 
     guest_data = {
         "guest_id": guest_id,
         "name": name,
-        "bed_no": bed_no,
+        "comment": comment,
         "guest_type": guest_type,
+        "email": email,
+        "phone": phone,
         "confirmed": False,
         "face_encodings": face_encodings
     }
