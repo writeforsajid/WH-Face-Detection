@@ -54,8 +54,8 @@ def init_db():
     # Beds master table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS beds (
-        bed_id      INTEGER PRIMARY KEY AUTOINCREMENT,
-        bed_name    TEXT NOT NULL UNIQUE,
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        bed_id    TEXT NOT NULL UNIQUE,
         description TEXT
     )
     """)
@@ -65,10 +65,10 @@ def init_db():
     CREATE TABLE IF NOT EXISTS guest_beds (
         assignment_id INTEGER PRIMARY KEY AUTOINCREMENT,
         guest_id      TEXT NOT NULL,
-        bed_name      TEXT NOT NULL,
+        bed_id      TEXT NOT NULL,
         assign_date   DATE DEFAULT (DATE('now')),
         FOREIGN KEY (guest_id) REFERENCES guests(guest_id) ON UPDATE CASCADE ON DELETE CASCADE,
-        FOREIGN KEY (bed_name) REFERENCES beds(bed_name) ON UPDATE CASCADE
+        FOREIGN KEY (bed_id) REFERENCES beds(bed_id) ON UPDATE CASCADE
     )
     """)
 
@@ -182,7 +182,7 @@ def init_db():
         beds_data = bed_patterns[:83]  # Take exactly 83 beds
         
         cur.executemany(
-            "INSERT INTO beds (bed_name, description) VALUES (?, ?)",
+            "INSERT INTO beds (bed_id, description) VALUES (?, ?)",
             beds_data
         )
 
@@ -196,23 +196,23 @@ def init_db():
         guest_ids = [r[0] for r in cur.fetchall()]
         
         # Get all bed names
-        cur.execute("SELECT bed_name FROM beds ORDER BY bed_name")
+        cur.execute("SELECT bed_id FROM beds ORDER BY bed_id")
         all_beds = [r[0] for r in cur.fetchall()]
         
         if len(guest_ids) > 0 and len(all_beds) > 0:
             assignments = []
             
             # Assign guests to beds (cycle through guests if more beds than guests)
-            for i, bed_name in enumerate(all_beds):
+            for i, bed_id in enumerate(all_beds):
                 guest_id = guest_ids[i % len(guest_ids)]  # Cycle through guests
                 # Vary the assign dates slightly
                 day = 1 + (i % 20)  # Days 1-20
                 assign_date = f"2025-10-{day:02d}"
-                assignments.append((guest_id, bed_name, assign_date))
+                assignments.append((guest_id, bed_id, assign_date))
             
             if assignments:
                 cur.executemany(
-                    "INSERT INTO guest_beds (guest_id, bed_name, assign_date) VALUES (?, ?, ?)",
+                    "INSERT INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
                     assignments
                 )
     

@@ -543,12 +543,12 @@
 				const assignDate = r.assign_date || '-';
 				   return `
 					   <tr>
-						   <td>${r.bed_name || '-'}</td>
+						   <td>${r.bed_id || '-'}</td>
 						   <td>${r.bed_description || '-'}</td>
 						   <td>${guest}</td>
 						   <td>${assignDate}</td>
 						   <td>
-							   ${r.guest_id ? `<button class=\"btn btn-sm btn-success assign-btn\" data-bed-id=\"${r.bed_id}\" data-guest-id=\"${r.guest_id}\" data-guest-name=\"${(r.guest_name||'').replace(/\"/g,'\\\"')}\">Assigned</button>` : `<button class=\"btn btn-sm btn-secondary unassign-btn\" data-bed-id=\"${r.bed_id}\">Unassigned</button>`}
+							   ${r.guest_id ? `<button class=\"btn btn-sm btn-success assign-btn\" data-bed-id=\"${r.id}\" data-guest-id=\"${r.guest_id}\" data-guest-name=\"${(r.guest_name||'').replace(/\"/g,'\\\"')}\">Assigned</button>` : `<button class=\"btn btn-sm btn-secondary unassign-btn\" data-bed-id=\"${r.id}\">Unassigned</button>`}
 						   </td>
 					   </tr>
 				   `;
@@ -714,7 +714,7 @@
 						'Authorization': `Bearer ${token}`,
 						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify({ bed_id: bedId, guest_id: guestId })
+					body: JSON.stringify({ id: bedId, guest_id: guestId })
 				});
 				if (!res.ok) {
 					const err = await res.json().catch(() => ({}));
@@ -744,7 +744,7 @@
 							'Authorization': `Bearer ${token}`,
 							'Content-Type': 'application/json'
 						},
-						body: JSON.stringify({ bed_id: bedId, guest_id: guestId })
+						body: JSON.stringify({ id: bedId, guest_id: guestId })
 					});
 					if (!res.ok) {
 						const err = await res.json().catch(() => ({}));
@@ -847,7 +847,7 @@
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
-						bed_id: bedId,
+						id: bedId,
 						guest_id: guestId
 					})
 				});
