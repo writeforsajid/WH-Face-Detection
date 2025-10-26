@@ -9,6 +9,7 @@ _venv/
 *.rar
 *.zip
 *.code-workspace
+*.db
 <<<<<<< HEAD
 detected_frames/
 reports/
