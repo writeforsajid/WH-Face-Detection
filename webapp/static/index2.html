@@ -184,7 +184,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 0.75rem 0.5rem 1rem 0.5rem;
         }
 
         /* Hero Section */
@@ -298,9 +298,9 @@
         .address-section {
             background-color: var(--white);
             border-radius: var(--border-radius);
-            padding: 3rem;
+            padding: 2.2rem 2.5rem 2.2rem 2.5rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            margin-bottom: 3rem;
+            margin-bottom: 2.5rem;
         }
 
         .address-header {
@@ -606,10 +606,10 @@
                 <span class="bar"></span>
             </button>
             <div class="logo">
-                <div class="logo-icon">
-                    <i class="bi bi-building" style="font-size: 1.25rem;"></i>
+                <div class="logo-icon" style="width:60px; height:60px; font-size:2.5rem;">
+                    <i class="bi bi-building" style="font-size:2.5rem;"></i>
                 </div>
-                <span>White House</span>
+                <span style="font-size:1.7rem; font-weight:800;">White House</span>
                 
             </div>
             <nav class="desktop-nav">
@@ -639,71 +639,31 @@
 
     <!-- Main Content -->
     <div class="container">
-        <!-- Hero Section -->
-        <section class="hero">
-            <h1>Welcome to White House</h1>
-            <p>Manage and track student attendance with ease</p>
+        <!-- Professional Welcome Section -->
+        <section class="hero" style="text-align:center; margin-bottom:2.5rem;">
+            <h1 style="font-size:3rem; font-weight:800; color:#2563eb; margin-bottom:0.15rem; letter-spacing:1px;">Welcome to White House</h1>
+            <p style="font-size:0.95rem; color:#374151; margin-bottom:0; font-weight:500;">Login with your account to get latest attendance updates.</p>
         </section>
 
-        <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="stat-card active">
-                <div class="stat-header">
-                    <span class="stat-title">Active Students</span>
-                    <div class="stat-icon">✓</div>
-                </div>
-                <div class="stat-number">247</div>
-                <div class="stat-trend trend-up">↑ 12% from last month</div>
-            </div>
-
-            <div class="stat-card inactive">
-                <div class="stat-header">
-                    <span class="stat-title">Inactive Students</span>
-                    <div class="stat-icon">✕</div>
-                </div>
-                <div class="stat-number">53</div>
-                <div class="stat-trend trend-down">↓ 5% from last month</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Total Students</span>
-                    <div class="stat-icon">👥</div>
-                </div>
-                <div class="stat-number">300</div>
-                <div class="stat-trend">Across all programs</div>
-            </div>
-
-            <div class="stat-card chart-card">
-                <div class="stat-header">
-                    <span class="stat-title">Student Distribution</span>
-                    <div class="stat-icon">📊</div>
-                </div>
-                <div style="position: relative; height: 200px; margin-top: 1rem;">
-                    <canvas id="studentChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Address Section -->
+        <!-- Address Section (kept as requested) -->
         <section class="address-section">
-            <div class="address-header">
-                <div class="address-icon">📍</div>
-                <h2>Main Campus Address</h2>
+            <div class="address-header" style="margin-bottom:0.7rem;">
+                <div class="address-icon"><i class="bi bi-geo-alt-fill" style="font-size:2.2rem;"></i></div>
+                <h2 style="font-size:1.7rem; font-weight:800; letter-spacing:0.5px;">Main Campus Address</h2>
             </div>
-            <div class="address-content">
-                <div class="address-info">
+            <div class="address-content" style="gap:0.7rem;">
+                <div class="address-info" style="min-width:320px;">
                     <div>
-                        <div class="address-label">Location</div>
-                        <div class="address-text" id="address-text">Building No. - B 23, Lane 7, Johri Farm, Noor Nagar Extension, Jamia Nagar-110025</div>
+                        <div class="address-label" style="font-size:1.05rem;">Location</div>
+                        <div class="address-text" id="address-text" style="font-size:1.45rem; font-weight:700; color:#1f2937;">Building No. - B 23, Lane 7, Johri Farm, Noor Nagar Extension, Jamia Nagar-110025</div>
                     </div>
-                    <button class="copy-btn" onclick="copyAddress()">
-                        <span>📋</span>
+                    <button class="copy-btn" onclick="copyAddress()" style="padding:0.55rem 1.3rem; font-size:1.1rem;">
+                        <i class="bi bi-clipboard" style="font-size:1.2rem;"></i>
                         <span id="copy-text">Copy Address</span>
                     </button>
                 </div>
                 <div class="address-map">
-                    <div id="map" class="map-canvas" aria-label="Map"></div>
+                    <div id="map" class="map-canvas" aria-label="Map" style="height:260px; min-width:260px;"></div>
                 </div>
             </div>
         </section>
