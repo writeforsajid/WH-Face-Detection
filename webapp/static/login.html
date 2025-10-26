@@ -455,13 +455,20 @@
 
                 // Role-based redirect
                 const userRole = data.guest?.role?.toLowerCase();
-                
+                const guestId = data.guest?.guest_id;
+                console.log('userRole:', userRole, 'guestId:', guestId);
+
                 // Check if user is owner or employee (admin roles)
                 if (userRole === 'owner' || userRole === 'employee') {
-                    // Redirect to Admin Dashboard
                     window.location.href = 'admin_dashboard.html';
+                } else if (userRole === 'resident' || userRole === 'residence') {
+                    if (guestId) {
+                        const url = `GuestDetails.html?id=${encodeURIComponent(guestId)}`;
+                        window.location.href = url;
+                    } else {
+                        window.location.href = 'Bed_Guest_Relationship.html';
+                    }
                 } else {
-                    // Regular users (residence) go to Bed ↔ Guest Relationship page
                     window.location.href = 'Bed_Guest_Relationship.html';
                 }
             } catch (err) {

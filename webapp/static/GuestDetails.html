@@ -800,14 +800,12 @@
 			}
 		}
 
-		function handleBack() {
-			try {
-				if (document.referrer && window.history.length > 1) {
-					window.history.back();
-					return;
-				}
-			} catch (e) { }
-			window.location.href = 'Bed_Guest_Relationship.html';
+		function handleLogout() {
+			// Optionally clear local/session storage if you want to fully log out
+			localStorage.removeItem('wh_token');
+			localStorage.removeItem('wh_user');
+			// Redirect to dashboard
+			window.location.href = 'index2.html';
 		}
 
 		// Create floating decorative elements
@@ -844,8 +842,8 @@
 				<div class="subtitle">Comprehensive details and attendance history</div>
 			</div>
 			<div>
-				<button class="btn-back" onclick="handleBack()">
-					<i class="bi bi-arrow-left"></i> Back to List
+				<button class="btn-back" onclick="handleLogout()">
+					<i class="bi bi-arrow-left"></i> Logout
 				</button>
 			</div>
 		</div>

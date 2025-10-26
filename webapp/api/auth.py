@@ -197,10 +197,10 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         role_mapping = {
             'Owner': 'owner',
             'Employee': 'employee',
-            'Resident': 'residence',
+            'Resident': 'resident',
             'Others': 'others'
         }
-        role = role_mapping.get(guest_type, 'residence')
+        role = role_mapping.get(guest_type, 'resident')
 
         conn.commit()
         return {
