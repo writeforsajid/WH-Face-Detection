@@ -108,7 +108,7 @@ def get_bunch_of_beds():
 
 
     # ✅ Correct SQL syntax
-    cur.execute("SELECT bed_name FROM beds ORDER BY bed_name")
+    cur.execute("SELECT bed_id FROM beds ORDER BY bed_id")
 
     # Fetch all rows as list of strings
     rows = [row[0] for row in cur.fetchall()]
@@ -224,7 +224,7 @@ def get_guest_with_attendance(guest_id: str):
     
     # Get guest details
     cur.execute("""
-        SELECT g.*, ga.bed_name, ga.assign_date
+        SELECT g.*, ga.bed_id, ga.assign_date
         FROM guests g
         LEFT JOIN guest_beds ga ON g.guest_id = ga.guest_id
         WHERE g.guest_id = ?

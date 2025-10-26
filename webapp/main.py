@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import routers
 from api import  reports,guests,upload_video
 from api import beds as beds_router
-from webapp.static import auth as auth_router
+from static import auth as auth_router
 from db import database
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment

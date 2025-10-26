@@ -107,18 +107,18 @@ def list_bed_guest_assignments(
         cur.execute(
             f"""
             SELECT
+                b.id AS id,
                 b.bed_id AS bed_id,
-                b.bed_name AS bed_name,
                 b.description AS bed_description,
                 gra.assignment_id AS assignment_id,
                 gra.guest_id AS guest_id,
                 g.name AS guest_name,
                 gra.assign_date AS assign_date
             FROM beds b
-            LEFT JOIN guest_beds gra ON gra.bed_name = b.bed_name
+            LEFT JOIN guest_beds gra ON gra.bed_id = b.bed_id
             LEFT JOIN guests g ON g.guest_id = gra.guest_id
             {{WHERE_SQL}}
-            ORDER BY b.bed_name ASC, gra.assign_date DESC, gra.assignment_id DESC
+            ORDER BY b.bed_id ASC, gra.assign_date DESC, gra.assignment_id DESC
             """.replace("{WHERE_SQL}", where_sql)
         , params)
         rows = [dict(r) for r in cur.fetchall()]
@@ -137,27 +137,27 @@ def assign_guest_to_bed(
 ):
     """
     Assign a guest to a bed by inserting into guest_beds table.
-    Expects: { "bed_id": str, "guest_id": str }
+    Expects: { "id": str, "guest_id": str }
     """
     token = _require_token(authorization)
     _validate_session(token)
 
-    bed_id = payload.get("bed_id")
+    id = payload.get("id")
     guest_id = payload.get("guest_id")
     
-    if not bed_id or not guest_id:
-        raise HTTPException(status_code=400, detail="bed_id and guest_id are required")
+    if not id or not guest_id:
+        raise HTTPException(status_code=400, detail="id and guest_id are required")
 
     conn = get_connection()
     cur = conn.cursor()
     try:
         # Check if bed exists
-        cur.execute("SELECT bed_name FROM beds WHERE bed_id = ?", (bed_id,))
+        cur.execute("SELECT bed_id FROM beds WHERE id = ?", (id,))
         bed_row = cur.fetchone()
         if not bed_row:
             raise HTTPException(status_code=404, detail="Bed not found")
         
-        bed_name = bed_row[0]
+        bed_id = bed_row[0]
         
         # Check if guest exists
         cur.execute("SELECT guest_id, name FROM guests WHERE guest_id = ?", (guest_id,))
@@ -166,7 +166,7 @@ def assign_guest_to_bed(
             raise HTTPException(status_code=404, detail="Guest not found")
         
         # Check if guest is already assigned to any bed
-        cur.execute("SELECT bed_name FROM guest_beds WHERE guest_id = ?", (guest_id,))
+        cur.execute("SELECT bed_id FROM guest_beds WHERE guest_id = ?", (guest_id,))
         existing_assignment = cur.fetchone()
         if existing_assignment:
             raise HTTPException(
@@ -175,19 +175,19 @@ def assign_guest_to_bed(
             )
         
         # Check if bed already has a guest assigned
-        cur.execute("SELECT guest_id FROM guest_beds WHERE bed_name = ?", (bed_name,))
+        cur.execute("SELECT guest_id FROM guest_beds WHERE bed_id = ?", (bed_id,))
         existing_guest = cur.fetchone()
         if existing_guest:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Bed {bed_name} is already occupied by guest {existing_guest[0]}"
+                detail=f"Bed {bed_id} is already occupied by guest {existing_guest[0]}"
             )
         
         # Insert assignment into guest_beds
         assign_date = datetime.now().strftime("%Y-%m-%d")
         cur.execute(
-            "INSERT INTO guest_beds (guest_id, bed_name, assign_date) VALUES (?, ?, ?)",
-            (guest_id, bed_name, assign_date)
+            "INSERT INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
+            (guest_id, bed_id, assign_date)
         )
         
         # Update guest status to 'active' since they're being assigned to a bed
@@ -199,10 +199,10 @@ def assign_guest_to_bed(
         conn.commit()
         return {
             "status": "success", 
-            "message": f"Guest {guest_id} assigned to bed {bed_name}",
+            "message": f"Guest {guest_id} assigned to bed {bed_id}",
             "assignment": {
                 "guest_id": guest_id,
-                "bed_name": bed_name,
+                "bed_id": bed_id,
                 "assign_date": assign_date
             }
         }

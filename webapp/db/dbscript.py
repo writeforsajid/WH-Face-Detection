@@ -61,8 +61,8 @@ CREATE TABLE IF NOT EXISTS devices (
 # 3️⃣ Devices Table
 cursor.execute("""
 CREATE TABLE beds (
-    bed_id      INTEGER       PRIMARY KEY AUTOINCREMENT,
-    bed_name    VARCHAR (10)  NOT NULL,
+    id      INTEGER       PRIMARY KEY AUTOINCREMENT,
+    bed_id    VARCHAR (10)  NOT NULL,
     description VARCHAR (150) 
 )
 """)
@@ -90,7 +90,7 @@ cursor.execute("""
 CREATE TABLE guest_beds (
     assignment_id INTEGER      PRIMARY KEY AUTOINCREMENT,
     guest_id      VARCHAR (20) NOT NULL,
-    bed_name       VARCHAR (10) NOT NULL,
+    bed_id       VARCHAR (10) NOT NULL,
     assign_date   DATE         NOT NULL
                                DEFAULT (DATE('now') ),
     FOREIGN KEY (
@@ -269,7 +269,7 @@ beds = [
 
 
 cursor.executemany(
-    "INSERT OR IGNORE INTO beds (bed_name, description) VALUES (?, ?)",
+    "INSERT OR IGNORE INTO beds (bed_id, description) VALUES (?, ?)",
     beds
 )
 
@@ -331,7 +331,7 @@ guest_beds = [
     ("20250105000001", "201/1/1", "2025-10-12")
 ]
 cursor.executemany(
-    "INSERT OR IGNORE INTO guest_beds (guest_id, bed_name, assign_date) VALUES (?, ?, ?)",
+    "INSERT OR IGNORE INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
     guest_beds
 )
 

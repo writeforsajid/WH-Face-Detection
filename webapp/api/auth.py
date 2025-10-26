@@ -23,7 +23,7 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-    code: str = Field(..., min_length=4, max_length=4, description="Last 4 digits of phone number")
+    
 
 
 def _now_utc() -> datetime:
@@ -139,7 +139,9 @@ def signup(payload: SignupRequest, request: Request):
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = Header(None)):
+    
     conn = get_connection()
+
     cur = conn.cursor()
     try:
         # Verify credentials from guests table and check auth flags
@@ -180,29 +182,7 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         if stored_password != payload.password:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        # Phone-based security code verification (last 4 digits)
-        # Try to read from phone_number or legacy phone column
-        phone_value = _get_guest_phone(cur, guest_id)
-        if phone_value:
-            phone_clean = (
-                str(phone_value)
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("+", "")
-                .replace("(", "")
-                .replace(")", "")
-            )
-            last4 = phone_clean[-4:] if len(phone_clean) >= 4 else ""
-
-            # Validate code format and match
-            if not (payload.code and payload.code.isdigit() and len(payload.code) == 4):
-                raise HTTPException(status_code=401, detail="Security code must be 4 digits")
-            if last4 != payload.code:
-                raise HTTPException(status_code=401, detail="Invalid security code")
-        else:
-            # If no phone column/value, explicitly inform (helps diagnose DB schema issues)
-            raise HTTPException(status_code=400, detail="Phone number not configured for this account")
-
+        
         # Create session
         token = uuid.uuid4().hex
         now = _now_utc()
