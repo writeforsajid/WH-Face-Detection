@@ -8,9 +8,13 @@
     rel="stylesheet" 
     href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    body { background: #f8f9fa; }
+    .form-label span { color: #dc3545; }
+  </style>
 </head>
-<body class="bg-light">
 
+<body class="bg-light">
 <div class="container mt-4 mb-5">
   <div class="card shadow-sm">
     <div class="card-header bg-success text-white text-center">
@@ -19,40 +23,64 @@
 
     <div class="card-body">
       <form id="guestForm" novalidate>
-        <div class="mb-3">
-          <label class="form-label">Name <span class="text-danger">*</span></label>
-          <input type="text" id="name" name="name" class="form-control" required>
-          <div class="invalid-feedback">Please enter guest name.</div>
+
+        <!-- Row 1: Name -->
+        <div class="row mb-3">
+          <div class="col-12">
+            <label class="form-label">Name <span>*</span></label>
+            <input type="text" id="name" name="name" class="form-control" required>
+            <div class="invalid-feedback">Please enter guest name.</div>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Guest Type</label>
-          <select id="guest_type" name="guest_type" class="form-control">
-            <option value="2">Resident</option>
-            <option value="1">Employee</option>
-            <option value="0">Others</option>
-          </select>
+        <!-- Row 2: Guest type & Bed no -->
+        <div class="row mb-3">
+          <div class="col-md-6 col-12">
+            <label class="form-label">Guest Type</label>
+            <select id="guest_type" name="guest_type" class="form-control">
+              <option value="2">Resident</option>
+              <option value="1">Employee</option>
+              <option value="0">Others</option>
+            </select>
+          </div>
+
+          <div class="col-md-6 col-12">
+            <label class="form-label">Bed No <span>*</span></label>
+            <input type="text" id="comment" name="comment" class="form-control" >
+            <!--<div class="invalid-feedback">Please select a bed number.</div> -->
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Bed No <span class="text-danger">*</span></label>
-          <select id="bed_no" name="bed_no" class="form-control" required></select>
-          <div class="invalid-feedback">Please select a bed number.</div>
+        <!-- Row 3: Email & Phone -->
+        <div class="row mb-3">
+          <div class="col-md-6 col-12">
+            <label class="form-label">Email <span>*</span></label>
+            <input type="email" id="email" name="email" class="form-control" required>
+            <div class="invalid-feedback">Please enter a valid email address.</div>
+          </div>
+          <div class="col-md-6 col-12">
+            <label class="form-label">Phone Number <span>*</span></label>
+            <input type="tel" id="phone" name="phone" class="form-control" required pattern="^[6-9]\\d{9}$">
+            <div class="invalid-feedback">Enter a valid 10-digit phone number.</div>
+          </div>
         </div>
 
         <div class="alert alert-warning py-2 px-3" role="alert">
           ⚠️ <strong>Note:</strong> Please capture the <u>5-second video</u> <b>after filling the form</b>.
         </div>
 
-        <div class="mb-3 text-center">
-          <video id="videoPreview" width="100%" height="260" autoplay muted class="border rounded mb-2 bg-dark"></video><br>
-          <button type="button" id="btnRecord" class="btn btn-warning w-100">🎥 Record 5s Video</button>
-          <p class="text-muted small mt-2" id="videoStatus">Video not captured yet.</p>
-          <div class="d-grid mb-2">
-            <button type="button" id="btnSwitch" class="btn btn-secondary w-100">
-              🔁 Switch Camera
-            </button>
+        <!-- Video Section -->
+        <div class="text-center mb-3">
+          <video id="videoPreview" width="100%" height="260" autoplay muted class="border rounded mb-2 bg-dark"></video>
+          <div class="row g-2">
+            <div class="col-md-6 col-12 d-grid">
+              <button type="button" id="btnRecord" class="btn btn-warning">🎥 Record 5s Video</button>
+            </div>
+            <div class="col-md-6 col-12 d-grid">
+              <button type="button" id="btnSwitch" class="btn btn-secondary">🔁 Switch Camera</button>
+            </div>
           </div>
+          <p class="text-muted small mt-2" id="videoStatus">Video not captured yet.</p>
           <button type="button" id="btnRetake" class="btn btn-outline-secondary w-100 mt-2 d-none">↩️ Retake Video</button>
         </div>
 
@@ -65,23 +93,42 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 
 <script>
+let mediaRecorder, recordedChunks = [], cameraStream = null;
+let currentFacing = "environment";
+let guest_id = null;
+
+// ------------------ Validate Form ------------------
+
 // ------------------ Validate Form ------------------
 function validateForm() {
   let valid = true;
-  $("#name").removeClass("is-invalid");
-  $("#bed_no").removeClass("is-invalid");
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phonePattern = /^[6-9]\d{9}$/; // Indian mobile format example
 
-  if (!$("#name").val().trim()) { $("#name").addClass("is-invalid"); valid = false; }
-  if (!$("#bed_no").val()) { $("#bed_no").addClass("is-invalid"); valid = false; }
+  $("#name, #email, #phone, #comment").removeClass("is-invalid");
+
+  if (!$("#name").val().trim()) {
+    $("#name").addClass("is-invalid"); valid = false;
+  }
+  console.log(valid);
+  if (!$("#email").val().trim() || !emailPattern.test($("#email").val().trim())) {
+    $("#email").addClass("is-invalid"); valid = false;
+  }
+  console.log(valid);
+  if (!$("#phone").val().trim() || !phonePattern.test($("#phone").val().trim())) {
+    $("#phone").addClass("is-invalid"); valid = false;
+  }
+  console.log(valid);
+  if (!$("#comment").val().trim()) {
+    $("#comment").addClass("is-invalid"); valid = false;
+  }
+
+  console.log(valid);
 
   return valid;
 }
 
-let mediaRecorder, recordedChunks = [], cameraStream = null;
-let currentFacing = "environment"; // default back camera
-let guest_id = null;
-
-
+// ------------------ Start Camera ------------------
 // ------------------ Start Camera ------------------
 async function startCamera() {
   try {
@@ -131,7 +178,6 @@ async function startCamera() {
   console.log(`🎥 Camera started (${currentFacing})`);
 }
 
-
 // ------------------ Switch Camera ------------------
 $("#btnSwitch").click(async () => {
   currentFacing = currentFacing === "environment" ? "user" : "environment";
@@ -139,27 +185,19 @@ $("#btnSwitch").click(async () => {
   $("#videoStatus").text(`Switched to ${currentFacing} camera.`);
 });
 
-
 // ------------------ Record Button ------------------
 $("#btnRecord").click(() => {
-  if (!validateForm()) {
-    alert("Please fill in required fields before recording.");
-    return;
-  }
-
+  if (!validateForm()) { alert("Please fill in all required fields correctly."); return; }
   if (!mediaRecorder) return startCamera().then(() => $("#btnRecord").click());
-
   recordedChunks = [];
   mediaRecorder.start();
   $("#btnRecord").text("Recording...").prop("disabled", true);
   $("#videoStatus").text("Recording video...");
-
   setTimeout(() => {
     mediaRecorder.stop();
     $("#btnRecord").text("🎥 Record 5s Video").prop("disabled", false);
   }, 5000);
 });
-
 
 // ------------------ Upload + Preview ------------------
 function uploadVideo() {
@@ -167,21 +205,26 @@ function uploadVideo() {
   const formData = new FormData();
   const guestName = $("#name").val() || "Unknown";
   const guestType = $("#guest_type option:selected").text();
-  const roomNo = $("#bed_no").val() || "000";
+  const comment = $("#comment").val() || "000";
+  const email = $("#email").val();
+  const phone = $("#phone").val();
+  
   formData.append("guest_name", guestName);
   formData.append("guest_type", guestType);
-  formData.append("bed_no", roomNo);
+  formData.append("comment", comment);
+  formData.append("email",email);
+  formData.append("phone", phone);
   formData.append("file", blob, `${guestName.replace(/\s+/g, "_")}.webm`);
-
+  console.log(guestName);console.log(guestType);
+  console.log(comment);console.log(email);
+  console.log(phone);
   fetch(`/video/upload_video`, { method: "POST", body: formData })
     .then(async r => {
       if (!r.ok) throw new Error("Upload failed");
       const res = await r.json();
-
       if (res.status) {
         const videoElement = document.getElementById('videoPreview');
         if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; }
-
         videoElement.srcObject = null;
         videoElement.src = `./temp/preview.webm`;
         videoElement.controls = true;
@@ -197,14 +240,12 @@ function uploadVideo() {
     .catch(() => $("#videoStatus").text("❌ Error uploading video."));
 }
 
-
 // ------------------ Retake Video ------------------
 $("#btnRetake").click(() => {
   $("#btnRetake").addClass("d-none");
   $("#videoStatus").text("Ready to record new video.");
   startCamera();
 });
-
 
 // ------------------ Submit Form ------------------
 $("#guestForm").submit(function (e) {
@@ -215,7 +256,8 @@ $("#guestForm").submit(function (e) {
   const guest = {
     name: $("#name").val().trim(),
     guest_type: $("#guest_type option:selected").text(),
-    bed_no: $("#bed_no").val().trim()
+    email: $("#email").val().trim(),
+    phone: $("#phone").val().trim()
   };
 
   $.ajax({
@@ -239,63 +281,11 @@ $("#guestForm").submit(function (e) {
 });
 
 
-async function loadBedNumbers() {
-  try {
-    let beds = await new Promise((resolve, reject) => {
-      $.ajax({
-        url: `/guests/bed_numbers`,
-        type: "GET",
-        dataType: "json",  // ✅ ensure JSON parsing
-        success: function (res) {
-          resolve(res);
-        },
-        error: function (xhr) {
-          reject(xhr.responseJSON?.detail || "Error fetching bed numbers");
-        }
-      });
-    });
-
-    if (typeof beds === "string") {
-      beds = JSON.parse(beds);
-    }    
-    const $bedSelect = $("#bed_no");
-    $bedSelect.empty();
-    $bedSelect.append(`<option value="">-- Select Bed No --</option>`);
-    beds.forEach(b => $bedSelect.append(`<option value="${b}">${b}</option>`));
-
-    makeBedNoSearchable();
-  } catch (err) {
-    console.error("Error loading bed numbers:", err);
-    alert(err);
-  }
-}
-
-
-
-// ------------------ Searchable Bed No Dropdown ------------------
-function makeBedNoSearchable() {
-  const $select = $("#bed_no");
-  const $searchBox = $('<input type="text" class="form-control mb-1" placeholder="Type to search...">');
-
-  $select.before($searchBox);
-
-  $searchBox.on("keyup", function () {
-    const term = $(this).val().toLowerCase();
-    $select.find("option").each(function () {
-      const text = $(this).text().toLowerCase();
-      $(this).toggle(text.includes(term) || $(this).val() === "");
-    });
-  });
-}
-
-
 // ------------------ Init ------------------
 $(document).ready(function () {
-  loadBedNumbers();
+
   startCamera();
 });
 </script>
-
-
 </body>
 </html>

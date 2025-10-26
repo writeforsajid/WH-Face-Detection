@@ -44,11 +44,11 @@ def generate_guest_id():
 # -----------------------
 # 3️⃣ Insert guest into guests table
 # -----------------------
-def insert_guest(cursor, guest_id, name, guest_type, bed_no):
+def insert_guest(cursor, guest_id, name, guest_type, comment,email,phone_number):
     cursor.execute("""
-        INSERT INTO guests (guest_id, name, guest_type, bed_no, status)
-        VALUES (?, ?, ?, ?, ?)
-    """, (guest_id, name, guest_type, bed_no, 'inactive'))
+        INSERT INTO guests (guest_id, name, guest_type, comment, email,phone_number, status)
+        VALUES (?, ?, ?, ?, ?,?,?)
+    """, (guest_id, name, guest_type, comment,email,phone_number, 'inactive'))
 
 # -----------------------
 # 4️⃣ Insert face encodings
@@ -128,7 +128,9 @@ def process_json_file(cursor, json_file_path):
             guest_id,
             data.get("name") or "Unknown",
             data.get("guest_type") or "Unknown",
-            data.get("bed_no") or "N/A"
+            data.get("comment") or "N/A",
+            data.get("email") or "N/A",
+            data.get("phone") or "N/A"
         )
 
         insert_face_encodings(cursor, guest_id, valid_encodings)
