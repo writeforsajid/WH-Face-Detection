@@ -35,7 +35,7 @@ def load_known_faces():
 
     try:
         cur = DB.cursor()
-        cur.execute("SELECT gf.guest_id, gf.encoding FROM guest_faces AS gf JOIN guests AS g ON gf.guest_id = g.guest_id WHERE g.status = 'active'")
+        cur.execute("SELECT gf.guest_id, gf.encoding FROM guest_faces AS gf JOIN guests AS g ON gf.guest_id = g.guest_id WHERE (g.status = 'active' or g.status = 'leave')")
         rows = cur.fetchall()
     except Exception:
         rows = []
