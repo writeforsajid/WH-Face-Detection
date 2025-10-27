@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS guests (
     password    TEXT,
     phone_number TEXT,
     comments      VARCHAR(10),
-    status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed'))
+    status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed','leave'))
 )
 """)
 
@@ -466,8 +466,8 @@ cursor.executemany(
 devices = [
     ("RFID01", "RFID", "Main Gate"),
     ("CAM01", "Camera", "Dining Hall"),
-    ("OUT", "Camera", "Out"),
-    ("IN", "Camera", "In")        
+    ("EXIT_CAM", "Camera", "Out"),
+    ("LIFT_CAM", "Camera", "In")        
 ]
 cursor.executemany("INSERT OR IGNORE INTO devices VALUES (?,?,?)", devices)
 

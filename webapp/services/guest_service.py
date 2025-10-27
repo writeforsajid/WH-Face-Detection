@@ -45,11 +45,17 @@ def create_guest(guest: dict):
         return {"error": "Guest already exists with this ID."}
     
     cur.execute("""
-        INSERT INTO guests (guest_id, name, guest_type, bed_no, email, password, phone_number, status)
+        INSERT INTO guests (guest_id, name, comment, email, password, phone_number, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (guest_id, guest["name"], guest.get("guest_type"), guest["bed_no"],
+    """, (guest_id, guest["name"],  guest["comment"],
           guest.get("email"), guest.get("password"), guest.get("phone_number"), 'active'))
  
+    id = 1 if guest.get("guest_type").lower() == "residence" else 2 if guest.get("guest_type").lower() == "employee" else 3
+    cur.execute("""
+        INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
+        VALUES (?,?, ?)
+    """, (guest_id, id, datetime.now().strftime("%Y-%m-%d")))
+    
     conn.commit()
     conn.close()
  

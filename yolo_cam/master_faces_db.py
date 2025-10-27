@@ -46,9 +46,18 @@ def generate_guest_id():
 # -----------------------
 def insert_guest(cursor, guest_id, name, guest_type, comment,email,phone_number):
     cursor.execute("""
-        INSERT INTO guests (guest_id, name, guest_type, comment, email,phone_number, status)
+        INSERT INTO guests (guest_id, name,  comment, email,phone_number, status)
         VALUES (?, ?, ?, ?, ?,?,?)
-    """, (guest_id, name, guest_type, comment,email,phone_number, 'inactive'))
+    """, (guest_id, name,  comment,email,phone_number, 'inactive'))
+    
+    
+    id = 1 if guest_type.lower() == "residence" else 2 if guest_type.lower() == "employee" else 3
+    cursor.execute("""
+        INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
+        VALUES (?,?, ?)
+    """, (guest_id, id, datetime.now().strftime("%Y-%m-%d")))
+    
+
 
 # -----------------------
 # 4️⃣ Insert face encodings

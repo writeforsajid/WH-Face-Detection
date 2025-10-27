@@ -122,7 +122,6 @@ def generate_attendance_report(from_date: str, to_date: str):
             g.name,
             g.bed_no,
             g.guest_id,
-            g.guest_type,
             a.method,
             a.device_id,
             a.timestamp
@@ -137,7 +136,7 @@ def generate_attendance_report(from_date: str, to_date: str):
     # Write to CSV
     with open(filepath, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["S.No", "Name", "Bed No", "Guest ID", "Guest Type", "Method", "Device ID", "Timestamp"])
+        writer.writerow(["S.No", "Name", "Bed No", "Guest ID", "Method", "Device ID", "Timestamp"])
         for i, row in enumerate(rows, start=1):
             writer.writerow([i] + list(row))
 
