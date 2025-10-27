@@ -44,11 +44,11 @@ def generate_guest_id():
 # -----------------------
 # 3️⃣ Insert guest into guests table
 # -----------------------
-def insert_guest(cursor, guest_id, name, guest_type, comment,email,phone_number):
+def insert_guest(cursor, guest_id, name, guest_type, comments,email,phone_number):
     cursor.execute("""
-        INSERT INTO guests (guest_id, name,  comment, email,phone_number, status)
-        VALUES (?, ?, ?, ?, ?,?,?)
-    """, (guest_id, name,  comment,email,phone_number, 'inactive'))
+        INSERT INTO guests (guest_id, name,  comments, email,phone_number, status)
+        VALUES (?, ?, ?, ?, ?,?)
+    """, (guest_id, name,  comments,email,phone_number, 'inactive'))
     
     
     id = 1 if guest_type.lower() == "residence" else 2 if guest_type.lower() == "employee" else 3
