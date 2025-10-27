@@ -5,14 +5,14 @@ from utilities.environment_variables import load_environment
 import json
 from typing import List, Dict
 from fastapi import HTTPException
-from passlib.context import CryptContext
+#from passlib.context import CryptContext
 #import ffmpeg
 
 #VIDEOS_PATH = "./data/videos"
 load_environment("./../data/.env.webapp")
 VIDEOS_PATH=os.getenv("VIDEOS_PATH","./../data/Videos")
 STATIC_TEMP_PATH=os.getenv("STATIC_TEMP_PATH","./static/temp")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 #VIDEOS_PATH = "./data/videos"
 
 
@@ -280,14 +280,14 @@ async def change_password(guest_id,old_password, secret_key, new_password):
 
     # Check condition: either match old password OR secret key
     if old_password:
-        if not pwd_context.verify(old_password, db_hashed_pw):
-            raise HTTPException(status_code=401, detail="Old password incorrect")
-    elif secret_key:
+ #       if not pwd_context.verify(old_password, db_hashed_pw):
+ #           raise HTTPException(status_code=401, detail="Old password incorrect")
+ #   elif secret_key:
         if secret_key.upper() != db_secret_key.upper():
             raise HTTPException(status_code=401, detail="Secret key incorrect")
         # Hash and update password
-    new_hashed = pwd_context.hash(new_password)
-    cursor.execute("UPDATE guest SET password=? WHERE id=?", (new_hashed, db_id))
+#    new_hashed = pwd_context.hash(new_password)
+#    cursor.execute("UPDATE guest SET password=? WHERE id=?", (new_hashed, db_id))
     conn.commit()
     conn.close()
 
