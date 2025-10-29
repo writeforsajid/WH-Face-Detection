@@ -18,7 +18,8 @@
 <script src="./js/main.js"></script>
 <script>
     $(document).ready(function(){
-        const username = sessionStorage.getItem("username");
+        
+        const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
         if (!username) window.location.href = "login.html";
         $("#username").text(username);
     });

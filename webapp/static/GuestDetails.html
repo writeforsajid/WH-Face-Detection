@@ -580,7 +580,7 @@
 
 	<script>
 		// API Base URL
-		debugger;
+
 		const API_BASE_URL = (function(){
 			const saved = localStorage.getItem('wh_api_base');
 			if (saved) return saved;
@@ -831,7 +831,7 @@
 	</script>
 </head>
 <body>
-	<div id="header-container"></div>
+
 
 
 	<!-- Loading Overlay -->
@@ -840,8 +840,9 @@
 			<div class="loader-spinner"></div>
 			<div class="loader-text">Loading guest details...</div>
 		</div>
-	</div>
 
+	</div>
+	<div id="header-container"></div>
 	<!-- Welcome Header -->
 	<div class="welcome-header">
 		<div class="welcome-header-content">
@@ -866,7 +867,7 @@
 		$(document).ready(function(){
 	
 			//const username = sessionStorage.getItem("username");
-			const userName = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
 			if (!username) window.location.href = "login.html";
 			$("#username").text(username);
 		});

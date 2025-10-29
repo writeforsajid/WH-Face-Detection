@@ -139,7 +139,6 @@ def signup(payload: SignupRequest, request: Request):
 def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = Header(None)):
     
     conn = get_connection()
-
     cur = conn.cursor()
     try:
         # Verify credentials from guests table and check auth flags

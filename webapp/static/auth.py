@@ -186,6 +186,7 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
     conn = get_connection()
     cur = conn.cursor()
     try:
+        
         # Verify credentials from guests table and check auth flags
         cur.execute(
             """
@@ -244,13 +245,12 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         
         # Map guest_type to lowercase role for frontend
         role_mapping = {
-            'Owner': 'owner',
-            'Employee': 'employee',
+            'owner': 'owner',
+            'employee': 'employee',
             'Resident': 'resident',
             'Others': 'others'
         }
         role = role_mapping.get(guest_type, 'resident')
-
         conn.commit()
         return {
             "access_token": token,

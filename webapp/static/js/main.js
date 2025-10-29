@@ -1,8 +1,7 @@
 $(document).ready(function () {
     // Load header dynamically
 
-    $("#header-container").load("../header.html", function() {
-        debugger;
+    $("#header-container").load("header.html", function() {
         applyRoleMenu();
     });
 });
@@ -10,8 +9,8 @@ $(document).ready(function () {
 function applyRoleMenu() {
     //const role = sessionStorage.getItem("role") || "guest";
     const role = JSON.parse(localStorage.getItem('wh_user') || '{}').role || '';
-    debugger;
     // Hide all role-specific elements first
+    
     $(".role-owner, .role-employee, .role-resident").hide();
 
     if (role === "owner") $(".role-owner").show();

@@ -419,7 +419,6 @@
                 showError('Please fill in all fields');
                 return;
             }
-
             // Call FastAPI login endpoint
             try {
                 const res = await fetch('http://localhost:8000/auth/login', {
@@ -457,10 +456,9 @@
                 const userRole = data.guest?.role?.toLowerCase();
                 const guestId = data.guest?.guest_id;
                 console.log('userRole:', userRole, 'guestId:', guestId);
-
                 // Check if user is owner or employee (admin roles)
                 if (userRole === 'owner' || userRole === 'employee') {
-                    window.location.href = 'admin_dashboard.html';
+                    window.location.href = 'dashboard.html';
                 } else if (userRole === 'resident') {
                     if (guestId) {
                         const url = `GuestDetails.html?id=${encodeURIComponent(guestId)}`;
