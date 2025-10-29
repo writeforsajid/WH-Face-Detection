@@ -50,7 +50,7 @@ def create_guest(guest: dict):
     """, (guest_id, guest["name"],  guest["comment"],
           guest.get("email"), guest.get("password"), guest.get("phone_number"), 'active'))
  
-    id = 1 if guest.get("guest_type").lower() == "residence" else 2 if guest.get("guest_type").lower() == "employee" else 3
+    id = 1 if guest.get("guest_type").lower() == "resident" else 2 if guest.get("guest_type").lower() == "employee" else 3
     cur.execute("""
         INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
         VALUES (?,?, ?)

@@ -50,6 +50,7 @@ app.add_middleware(
 # Include routers
 
 app.include_router(guests.router, prefix="/guests", tags=["Guests"])
+app.include_router(guests.router, prefix="/login", tags=["login"])
 app.include_router(upload_video.router, prefix="/video", tags=["Video Upload"])
 app_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(app_dir, "static")
@@ -62,6 +63,7 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 app.include_router(reports.router, tags=["Reports"])
+app.include_router(reports.router, prefix="/reports",tags=["Reports"])
 app.include_router(auth_router.router)
 app.include_router(beds_router.router, prefix="/beds", tags=["Beds"])
 

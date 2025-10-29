@@ -17,7 +17,7 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     phone_number: Optional[str] = Field(None, description="Phone number of the guest")
-    role_name: Optional[str] = Field("residence", description="owner | residence | employee")
+    role_name: Optional[str] = Field("resident", description="owner | resident | employee")
 
 
 class LoginRequest(BaseModel):
@@ -83,7 +83,6 @@ def signup(payload: SignupRequest, request: Request):
             role_mapping = {
                 'owner': 'Owner',
                 'employee': 'Employee',
-                'residence': 'Resident',
                 'resident': 'Resident',
                 'others': 'Others'
             }
@@ -102,7 +101,6 @@ def signup(payload: SignupRequest, request: Request):
             role_mapping = {
                 'owner': 'Owner',
                 'employee': 'Employee',
-                'residence': 'Resident',
                 'resident': 'Resident',
                 'others': 'Others'
             }
@@ -245,10 +243,10 @@ def me(authorization: Optional[str] = Header(None)):
         role_mapping = {
             'Owner': 'owner',
             'Employee': 'employee',
-            'Resident': 'residence',
+            'Resident': 'resident',
             'Others': 'others'
         }
-        role = role_mapping.get(guest_type, 'residence')
+        role = role_mapping.get(guest_type, 'resident')
         
         return {
             "guest_id": row[0],

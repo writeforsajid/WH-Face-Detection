@@ -1,7 +1,8 @@
 import os
 import smtplib
 from email.message import EmailMessage
-from datetime import datetime
+from datetime import datetime, timedelta
+
 from typing import List
 from models.reports_model import ReportRequest, ReportResponse
 import threading
@@ -9,7 +10,6 @@ import csv
 import sqlite3,os
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment
-
 
 
 
@@ -144,3 +144,77 @@ def generate_attendance_report(from_date: str, to_date: str):
 
     print(f"✅ Report generated successfully: {filepath}")
     return filepath
+
+
+
+
+
+
+def guest_presence_report(till_date: str):
+    """
+    Generate guest presence/missing report between (till_date - 48 hrs) and till_date.
+    Example: /reports/guest_presence?till_date=2025-10-02
+    """
+
+    # Parse and calculate date range
+    till_dt = datetime.strptime(till_date, "%Y-%m-%d")
+    start_dt = till_dt - timedelta(hours=48)
+    start_str = start_dt.strftime("%Y-%m-%d 00:00:00")
+    end_str = till_dt.strftime("%Y-%m-%d 23:59:59")
+
+    query = f"""
+    WITH latest_activity AS (
+        SELECT 
+            a1.guest_id,
+            a1.device_id AS latest_device,
+            a1.timestamp AS latest_time
+        FROM attendance a1
+        INNER JOIN (
+            SELECT 
+                guest_id,
+                MAX(timestamp) AS latest_time
+            FROM attendance
+            WHERE timestamp BETWEEN '{start_str}' AND '{end_str}'
+            GROUP BY guest_id
+        ) a2 
+        ON a1.guest_id = a2.guest_id AND a1.timestamp = a2.latest_time
+    )
+    SELECT 
+        g.guest_id,
+        g.name,
+        b.bed_id,
+        CASE 
+            WHEN la.latest_device = 'LIFT_CAM' THEN 'present'
+            WHEN la.latest_device = 'EXIT_CAM' THEN 'not present'
+            ELSE 'unknown'
+        END AS current_status,
+        la.latest_time AS latest_entry_time,
+        ROUND(
+            (JULIANDAY('{end_str}') - JULIANDAY(la.latest_time)) * 24,
+            2
+        ) AS missing_hrs
+    FROM guests AS g
+    LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
+    LEFT JOIN beds AS b ON gb.bed_id = b.bed_id
+    LEFT JOIN latest_activity AS la ON g.guest_id = la.guest_id
+    ORDER BY current_status, missing_hrs DESC;
+    """
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+
+    # Convert to list of dicts
+    report = [dict(zip(columns, row)) for row in rows]
+
+    conn.close()
+
+    return {
+        "status": "success",
+        "till_date": till_date,
+        "from_date": start_dt.strftime("%Y-%m-%d"),
+        "count": len(report),
+        "data": report
+    }

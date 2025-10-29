@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<div class="page-content">
+    <h2>Welcome, <span id="username"></span></h2>
+    <p>This is your dashboard.</p>
+</div>
+
+<script src="./js/main.js"></script>
+<script>
+    $(document).ready(function(){
+        const username = sessionStorage.getItem("username");
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+    });
+</script>
+
+</body>
+</html>

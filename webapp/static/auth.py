@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Header, Request
+from fastapi import APIRouter, HTTPException, Depends, Header, Request,Form
 from pydantic import BaseModel, EmailStr, Field
 import re
 from typing import Optional
@@ -7,7 +7,7 @@ from utilities.passwords import hash_password, verify_password
 from datetime import datetime, timedelta, timezone
 import sqlite3
 import uuid
-
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -19,7 +19,7 @@ class SignupRequest(BaseModel):
     password: str = Field(..., min_length=6)
     phone_number: Optional[str] = Field(None, description="Phone number of the guest")
     code: Optional[str] = Field(None, min_length=4, max_length=4, description="Last 4 digits of phone number for verification")
-    role_name: Optional[str] = Field("residence", description="owner | residence | employee")
+    role_name: Optional[str] = Field("resident", description="owner | resident | employee")
 
 
 class LoginRequest(BaseModel):
@@ -120,7 +120,6 @@ def signup(payload: SignupRequest, request: Request):
             role_mapping = {
                 'owner': 'Owner',
                 'employee': 'Employee',
-                'residence': 'Resident',
                 'resident': 'Resident',
                 'others': 'Others'
             }
@@ -139,7 +138,6 @@ def signup(payload: SignupRequest, request: Request):
             role_mapping = {
                 'owner': 'Owner',
                 'employee': 'Employee',
-                'residence': 'Resident',
                 'resident': 'Resident',
                 'others': 'Others'
             }
@@ -173,6 +171,15 @@ def signup(payload: SignupRequest, request: Request):
     finally:
         conn.close()
 
+#@router.post("/login")
+#async def login(username: str = Form(...), password: str = Form(...)):
+#    if username == "owner":
+#        role = "owner"
+#    elif username == "emp":
+#        role = "employee"
+#    else:
+#        role = "resident"
+#    return JSONResponse({"username": username, "role": role, "token": "abc123"})
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = Header(None)):
@@ -187,11 +194,16 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
                 g.name,
                 g.email,
                 g.password,
-                g.guest_type,
+                r.role_name AS guest_type,
                 g.status,
                 COALESCE(ga.is_active, 1) AS auth_active
-            FROM guests g
-            LEFT JOIN guest_auth ga ON ga.email = g.email
+            FROM guests AS g
+            LEFT JOIN guest_auth AS ga 
+                ON ga.guest_id = g.guest_id
+            LEFT JOIN guest_roles AS gr 
+                ON g.guest_id = gr.guest_id
+            LEFT JOIN roles AS r 
+                ON gr.role_id = r.role_id
             WHERE g.email = ?
             """,
             (str(payload.email),),
@@ -201,6 +213,7 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         if not row:
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
+
         guest_id = row[0]
         name = row[1]
         email = row[2]
@@ -233,10 +246,10 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         role_mapping = {
             'Owner': 'owner',
             'Employee': 'employee',
-            'Resident': 'residence',
+            'Resident': 'resident',
             'Others': 'others'
         }
-        role = role_mapping.get(guest_type, 'residence')
+        role = role_mapping.get(guest_type, 'resident')
 
         conn.commit()
         return {
@@ -281,10 +294,10 @@ def me(authorization: Optional[str] = Header(None)):
         role_mapping = {
             'Owner': 'owner',
             'Employee': 'employee',
-            'Resident': 'residence',
+            'Resident': 'resident',
             'Others': 'others'
         }
-        role = role_mapping.get(guest_type, 'residence')
+        role = role_mapping.get(guest_type, 'resident')
         
         return {
             "guest_id": row[0],

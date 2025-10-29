@@ -6,8 +6,12 @@ from pathlib import Path
 import random
 from datetime import datetime, timedelta
 
+from environment_variables import load_environment
 # Connect (creates file WhiteHouse.db if not exists)
 DB_PATH = "./data/WhiteHouse_Fresh.db"
+
+load_environment("./../../data/.env.webapp")
+from crypto_manager import crypto
 if os.path.exists(DB_PATH):
     os.remove(DB_PATH)
 
@@ -20,7 +24,7 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS guests (
     guest_id    VARCHAR(20) PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
-    email       TEXT,
+    email       TEXT UNIQUE,
     password    TEXT,
     phone_number TEXT,
     comments      VARCHAR(10),
@@ -96,7 +100,6 @@ CREATE TABLE guest_beds (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS guest_auth (
     guest_id    VARCHAR(20) PRIMARY KEY,
-    email       TEXT UNIQUE,
     password_hash TEXT NOT NULL,
     is_active   BOOLEAN DEFAULT 1,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -132,7 +135,7 @@ CREATE TABLE IF NOT EXISTS guest_password_resets (
 """)
 
 # Indices
-cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_auth_email ON guest_auth(email)")
+cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_email ON guests(email)")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_sessions_guest ON guest_sessions(guest_id)")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_pwresets_guest ON guest_password_resets(guest_id)")
 
@@ -151,11 +154,11 @@ CREATE TABLE IF NOT EXISTS roles (
 
 
 
-# Seed default roles (priority: owner=1, residence=2, employee=3)
+# Seed default roles (priority: owner=1, resident=2, employee=3)
 cursor.executemany(
     "INSERT OR IGNORE INTO roles (role_name, priority) VALUES (?, ?)",
     [
-        ("residence", 1),
+        ("resident", 1),
         ("employee", 2),
         ("owner", 3),
     ]
@@ -264,85 +267,85 @@ cursor.executemany(
 
 # 5️⃣ Insert Dummy Guests
 guests = [
-("20250100000001","Rakshita","mock+8319940394@crib.in","8319940394"),
-("20250100000002","Ramsha","9336980752@crib.in","9336980752"),
-("20250100000003","Aqsa Amroha.","mock+9760775533@crib.in","9760775533"),
-("20250100000004","Sana Ansari Bareilly.","9997255787@crib.in","9997255787"),
-("20250100000005","Rukhsana","mock+9654088295@crib.in","9654088295"),
-("20250100000006","Taezeen Hamid.","taezeen786+7006671809@gmail.com","7006671809"),
-("20250100000007","Razbi Ara Kanpur","9792364990@crib.in","9792364990"),
-("20250100000008","Sumaiya Khan Aligarh.","8171514921@crib.in","8171514921"),
-("20250100000010","Sania Kausar","saniakausar032+9818867032@gmail.com","9818867032"),
-("20250100000011","Aiysha Xi","mock+9906579310@crib.in","9906579310"),
-("20250100000012","Darakhshan Zahid","darakhsahanji+9149569285@gmail.com","9149569285"),
-("20250100000013","Alina Mustak Ix","mock+7889334398@crib.in","7889334398"),
-("20250100000014","Kanza","7060666770@crib.in","7060666770"),
-("20250100000015","Litpujam Gladia Lady.","7085600638@crib.in","7085600638"),
-("20250100000016","Unzila Shams Uttrakhand","mock+7983660305@crib.in","7983660305"),
-("20250100000017","Anam Mirza.","7302166766@crib.in","7302166766"),
-("20250100000018","Kulsum Deoband","mock+9557009090@crib.in","9557009090"),
-("20250100000019","Fariya Ali.","mock+7289831016@crib.in","7289831016"),
-("20250100000020","Saujanya Sarkar","8777349575@crib.in","8777349575"),
-("20250100000021","Roshni Bihar","8539084388@crib.in","8539084388"),
-("20250100000022","Sara Khan Muradabad.","7906715399@crib.in","7906715399"),
-("20250100000023","Sadiya.","8400285185@crib.in","8400285185"),
-("20250100000024","Alruba Khan.","alrubakhan911gt3+7354338899@gmail.com","7354338899"),
-("20250100000025","Sidra.","sidrasiddiqui952+7078481666@gmail.com","7078481666"),
-("20250100000026","Fatima Durrani.","mock+6306103474@crib.in","6306103474"),
-("20250100000027","Joya Yamuna Nagar.","mock+8295500787@crib.in","8295500787"),
-("20250100000028","Eram Khan.","bhueramkhan+8418040470@gmail.com","8418040470"),
-("20250100000029","Simrah Javed","simrahjaved611+8791891711@gmail.com","8791891711"),
-("20250100000030","Shafiya Jammu.","mock+9103284409@crib.in","9103284409"),
-("20250100000031","Bushra Jaipur.","9319058372@crib.in","9319058372"),
-("20250100000032","Amisha Jha Vaishali","7856884933@crib.in","7856884933"),
-("20250100000033","Saniya Siddiqui.","alinasiddiqui2007+7015665532@gmail.com","7015665532"),
-("20250100000034","Tanuja Negi","8449694272@crib.in","8449694272"),
-("20250100000035","Aysha Syed","9650068375@crib.in","9650068375"),
-("20250100000036","Ambhi Singh.","ambhisingh111+7699559422@gmail.com","7699559422"),
-("20250100000037","Shaista.","shaistaaju927+7352161466@gmail.com","7352161466"),
-("20250100000038","Areeba Agra.","mock+8650690789@crib.in","8650690789"),
-("20250100000039","Taqdeer Hussain.","taqdeer.504gc+7762990568@gmail.com","7762990568"),
-("20250100000040","Aalia Harayana.","8814844786@crib.in","8814844786"),
-("20250100000041","Iqra Fatehpur Tabassum.","mock+9667938102@crib.in","9667938102"),
-("20250100000042","Zoha Shahzad","shahzadzoha60@gmail.com","#VALUE!"),
-("20250100000043","Adeeba Shahzad","8077819424@crib.in","8077819424"),
-("20250100000044","Umaima Fatima.","umaimaf676+7393022866@gmail.com","7393022866"),
-("20250100000045","Sara Fatima.","mock+9170712038@crib.in","9170712038"),
-("20250100000046","Saniya Haque.","mock+9128746730@crib.in","9128746730"),
-("20250100000047","Sherish Naaz Muradabad.","9149257376@crib.in","9149257376"),
-("20250100000048","Urooj Fatima","9719473122@crib.in","9719473122"),
-("20250100000049","Saleena Waseem.","9760834337@crib.in","9760834337"),
-("20250100000050","Sadaf Jamal.","gausiyasadaf2001+9335532134@gmail.com","9335532134"),
-("20250100000051","Sunera","9818451599@crib.in","9818451599"),
-("20250100000052","Faiza Srinagar.","6006414151@crib.in","6006414151"),
-("20250100000053","Neha Khan","nk8474329+6388094396@gmail.com","6388094396"),
-("20250100000055","Areeba Khan.","areebakhan62389+8006588406@gmail.com","8006588406"),
-("20250100000056","Faizia Xi Shahjahanpur","mock+9451643726@crib.in","9451643726"),
-("20250100000057","Sumra Sambul","mock+9631547599@crib.in","9631547599"),
-("20250100000058","Shafia Bihar.","mock+9229214261@crib.in","9229214261"),
-("20250100000060","Muskan Anjum.","mock+9142402767@crib.in","9142402767"),
-("20250100000061","Ghausia.","ghausiaparween032+6290941265@gmail.com","6290941265"),
-("20250100000062","Iqra Naaz Bijnor","mock+8979542119@crib.in","8979542119"),
-("20250100000063","Iqra Khan Farukhabad.","iqrakhan8385+8009776840@gmail.com","8009776840"),
-("20250100000064","Iqra Jaipur","8118859709@crib.in","8118859709"),
-("20250100000066","Mrym.","mrymonshop+9897691116@gmail.com","9897691116"),
-("20250100000067","Nida Farooqui.","nidafarooqui2626+9634941399@gmail.com","9634941399"),
-("20250100000068","Aafnan Ashraf Patna.","mock+6201902265@crib.in","6201902265"),
-("20250100000069","Nasra Afrien","roselucky1107+9369051398@gmail.com","9369051398"),
-("20250100000070","Umam Samreen Hashmi.","mock+6306355591@crib.in","6306355591"),
-("20250100000071","Surabhi Katariya","mock+8826513840@crib.in","8826513840"),
-("20250100000072","Afsana Kosser","afsanakosser01+8492807440@gmail.com","8492807440"),
-("20250100000073","Farheen Hak Jharkhand.","mock+7050563194@crib.in","7050563194"),
-("20250100000074","Mufleha Khatoon,","muflehakhatoon95+8789706612@gmail.com","8789706612"),
-("20250100000075","Alzia Lucknow","mock+6307894578@crib.in","6307894578"),
-("20250100000076","Najiba Perween","najibaperween9+9934219896@gmail.com","9934219896"),
-("20250100000077","Muskan Khatoon Coochbehar","mock+9064234514@crib.in","9064234514"),
-("20250100000078","Aiman.","mock+7985348230@crib.in","7985348230"),
-("20250100000079","Gazala Motihari.","mock+7870701853@crib.in","7870701853"),
-("20250100000080","Isma Nanital","8899292240@crib.in","8899292240"),
-("20250100000081","Aiman Naz Bihar","mock+8210731821@crib.in","8210731821"),
-("20250100000082","Zohara Xith","mock+7858857798@crib.in","7858857798"),
-("20250100000083","Wajiha Fatima.","wajihafatima2003+8102618006@gmail.com","8102618006")
+("20250105000001","Rakshita","writeforsajid@gmail.com","8319940394"),
+("20250105000002","Ramsha","arish@gmail.com","9336980752"),
+("20250105000003","Aqsa Amroha.","mock+9760775533@crib.in","9760775533"),
+("20250105000004","Sana Ansari Bareilly.","9997255787@crib.in","9997255787"),
+("20250105000005","Rukhsana","mock+9654088295@crib.in","9654088295"),
+("20250105000006","Taezeen Hamid.","taezeen786+7006671809@gmail.com","7006671809"),
+("20250105000007","Razbi Ara Kanpur","9792364990@crib.in","9792364990"),
+("20250105000008","Sumaiya Khan Aligarh.","8171514921@crib.in","8171514921"),
+("20250105000010","Sania Kausar","saniakausar032+9818867032@gmail.com","9818867032"),
+("20250105000011","Aiysha Xi","mock+9906579310@crib.in","9906579310"),
+("20250105000012","Darakhshan Zahid","darakhsahanji+9149569285@gmail.com","9149569285"),
+("20250105000013","Alina Mustak Ix","mock+7889334398@crib.in","7889334398"),
+("20250105000014","Kanza","7060666770@crib.in","7060666770"),
+("20250105000015","Litpujam Gladia Lady.","7085600638@crib.in","7085600638"),
+("20250105000016","Unzila Shams Uttrakhand","mock+7983660305@crib.in","7983660305"),
+("20250105000017","Anam Mirza.","7302166766@crib.in","7302166766"),
+("20250105000018","Kulsum Deoband","mock+9557009090@crib.in","9557009090"),
+("20250105000019","Fariya Ali.","mock+7289831016@crib.in","7289831016"),
+("20250105000020","Saujanya Sarkar","8777349575@crib.in","8777349575"),
+("20250105000021","Roshni Bihar","8539084388@crib.in","8539084388"),
+("20250105000022","Sara Khan Muradabad.","7906715399@crib.in","7906715399"),
+("20250105000023","Sadiya.","8400285185@crib.in","8400285185"),
+("20250105000024","Alruba Khan.","alrubakhan911gt3+7354338899@gmail.com","7354338899"),
+("20250105000025","Sidra.","sidrasiddiqui952+7078481666@gmail.com","7078481666"),
+("20250105000026","Fatima Durrani.","mock+6306103474@crib.in","6306103474"),
+("20250105000027","Joya Yamuna Nagar.","mock+8295500787@crib.in","8295500787"),
+("20250105000028","Eram Khan.","bhueramkhan+8418040470@gmail.com","8418040470"),
+("20250105000029","Simrah Javed","simrahjaved611+8791891711@gmail.com","8791891711"),
+("20250105000030","Shafiya Jammu.","mock+9103284409@crib.in","9103284409"),
+("20250105000031","Bushra Jaipur.","9319058372@crib.in","9319058372"),
+("20250105000032","Amisha Jha Vaishali","7856884933@crib.in","7856884933"),
+("20250105000033","Saniya Siddiqui.","alinasiddiqui2007+7015665532@gmail.com","7015665532"),
+("20250105000034","Tanuja Negi","8449694272@crib.in","8449694272"),
+("20250105000035","Aysha Syed","9650068375@crib.in","9650068375"),
+("20250105000036","Ambhi Singh.","ambhisingh111+7699559422@gmail.com","7699559422"),
+("20250105000037","Shaista.","shaistaaju927+7352161466@gmail.com","7352161466"),
+("20250105000038","Areeba Agra.","mock+8650690789@crib.in","8650690789"),
+("20250105000039","Taqdeer Hussain.","taqdeer.504gc+7762990568@gmail.com","7762990568"),
+("20250105000040","Aalia Harayana.","8814844786@crib.in","8814844786"),
+("20250105000041","Iqra Fatehpur Tabassum.","mock+9667938102@crib.in","9667938102"),
+("20250105000042","Zoha Shahzad","shahzadzoha60@gmail.com","#VALUE!"),
+("20250105000043","Adeeba Shahzad","8077819424@crib.in","8077819424"),
+("20250105000044","Umaima Fatima.","umaimaf676+7393022866@gmail.com","7393022866"),
+("20250105000045","Sara Fatima.","mock+9170712038@crib.in","9170712038"),
+("20250105000046","Saniya Haque.","mock+9128746730@crib.in","9128746730"),
+("20250105000047","Sherish Naaz Muradabad.","9149257376@crib.in","9149257376"),
+("20250105000048","Urooj Fatima","9719473122@crib.in","9719473122"),
+("20250105000049","Saleena Waseem.","9760834337@crib.in","9760834337"),
+("20250105000050","Sadaf Jamal.","gausiyasadaf2001+9335532134@gmail.com","9335532134"),
+("20250105000051","Sunera","9818451599@crib.in","9818451599"),
+("20250105000052","Faiza Srinagar.","6006414151@crib.in","6006414151"),
+("20250105000053","Neha Khan","nk8474329+6388094396@gmail.com","6388094396"),
+("20250105000055","Areeba Khan.","areebakhan62389+8006588406@gmail.com","8006588406"),
+("20250105000056","Faizia Xi Shahjahanpur","mock+9451643726@crib.in","9451643726"),
+("20250105000057","Sumra Sambul","mock+9631547599@crib.in","9631547599"),
+("20250105000058","Shafia Bihar.","mock+9229214261@crib.in","9229214261"),
+("20250105000060","Muskan Anjum.","mock+9142402767@crib.in","9142402767"),
+("20250105000061","Ghausia.","ghausiaparween032+6290941265@gmail.com","6290941265"),
+("20250105000062","Iqra Naaz Bijnor","mock+8979542119@crib.in","8979542119"),
+("20250105000063","Iqra Khan Farukhabad.","iqrakhan8385+8009776840@gmail.com","8009776840"),
+("20250105000064","Iqra Jaipur","8118859709@crib.in","8118859709"),
+("20250105000066","Mrym.","mrymonshop+9897691116@gmail.com","9897691116"),
+("20250105000067","Nida Farooqui.","nidafarooqui2626+9634941399@gmail.com","9634941399"),
+("20250105000068","Aafnan Ashraf Patna.","mock+6201902265@crib.in","6201902265"),
+("20250105000069","Nasra Afrien","roselucky1107+9369051398@gmail.com","9369051398"),
+("20250105000070","Umam Samreen Hashmi.","mock+6306355591@crib.in","6306355591"),
+("20250105000071","Surabhi Katariya","mock+8826513840@crib.in","8826513840"),
+("20250105000072","Afsana Kosser","afsanakosser01+8492807440@gmail.com","8492807440"),
+("20250105000073","Farheen Hak Jharkhand.","mock+7050563194@crib.in","7050563194"),
+("20250105000074","Mufleha Khatoon,","muflehakhatoon95+8789706612@gmail.com","8789706612"),
+("20250105000075","Alzia Lucknow","mock+6307894578@crib.in","6307894578"),
+("20250105000076","Najiba Perween","najibaperween9+9934219896@gmail.com","9934219896"),
+("20250105000077","Muskan Khatoon Coochbehar","mock+9064234514@crib.in","9064234514"),
+("20250105000078","Aiman.","mock+7985348230@crib.in","7985348230"),
+("20250105000079","Gazala Motihari.","mock+7870701853@crib.in","7870701853"),
+("20250105000080","Isma Nanital","8899292240@crib.in","8899292240"),
+("20250105000081","Aiman Naz Bihar","mock+8210731821@crib.in","8210731821"),
+("20250105000082","Zohara Xith","mock+7858857798@crib.in","7858857798"),
+("20250105000083","Wajiha Fatima.","wajihafatima2003+8102618006@gmail.com","8102618006")
 ]
 # Insert sample data
 cursor.executemany(
@@ -351,6 +354,24 @@ cursor.executemany(
     guests
 )
 #cursor.executemany("INSERT OR IGNORE INTO guests VALUES (?,?,?,'Pass@123',?,'','Resident',1)", guests)
+
+
+
+# Fetch all guest IDs
+cursor.execute("SELECT guest_id FROM guests")
+guests = cursor.fetchall()
+# Insert or update each guest entry
+for (guest_id,) in guests:
+    password_hash = crypto.encrypt("Pass@123")  # You can replace with your logic
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+    INSERT OR REPLACE INTO guest_auth (guest_id, password_hash, is_active, created_at, updated_at)
+    VALUES (?, ?, 1, ?, ?)
+    """, (guest_id, password_hash, now, now))
+
+
+
 
 
 
@@ -786,7 +807,7 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
 
     for _ in range(total_records):
         # Random guest_id in given range
-        guest_id = f"202501{random.randint(1,83):08d}"
+        guest_id = f"20250105{random.randint(1,83):06d}"
 
         # Random day within range
         random_day = start_dt + timedelta(days=random.randint(0, delta_days))

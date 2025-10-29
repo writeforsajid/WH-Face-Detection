@@ -435,7 +435,7 @@
                     const errorData = await res.json().catch(() => ({ detail: 'Login failed' }));
                     throw new Error(errorData.detail || 'Invalid credentials');
                 }
-
+                // 
                 const data = await res.json();
                 console.log('Login success:', data);
                 
@@ -452,7 +452,7 @@
                         role: data.guest.role
                     }));
                 }
-
+                
                 // Role-based redirect
                 const userRole = data.guest?.role?.toLowerCase();
                 const guestId = data.guest?.guest_id;
@@ -461,7 +461,7 @@
                 // Check if user is owner or employee (admin roles)
                 if (userRole === 'owner' || userRole === 'employee') {
                     window.location.href = 'admin_dashboard.html';
-                } else if (userRole === 'resident' || userRole === 'residence') {
+                } else if (userRole === 'resident') {
                     if (guestId) {
                         const url = `GuestDetails.html?id=${encodeURIComponent(guestId)}`;
                         window.location.href = url;

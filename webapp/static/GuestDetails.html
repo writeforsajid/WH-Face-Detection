@@ -6,6 +6,8 @@
 	<title>Guest Profile - Elegant Details</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/style.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<style>
 		* {
 			margin: 0;
@@ -574,8 +576,11 @@
 			}
 		}
 	</style>
+	<script src="./js/main.js"></script>
+
 	<script>
 		// API Base URL
+		debugger;
 		const API_BASE_URL = (function(){
 			const saved = localStorage.getItem('wh_api_base');
 			if (saved) return saved;
@@ -826,6 +831,9 @@
 	</script>
 </head>
 <body>
+	<div id="header-container"></div>
+
+
 	<!-- Loading Overlay -->
 	<div id="loading-overlay">
 		<div class="loader">
@@ -854,7 +862,15 @@
 		<div id="profile-section"></div>
 		<div id="attendance-section"></div>
 	</div>
-
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const userName = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
