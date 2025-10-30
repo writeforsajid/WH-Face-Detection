@@ -5,7 +5,9 @@
   <title>Guest Management</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="./js/main.js"></script>
   <style>
     * {
       margin: 0;
@@ -229,19 +231,12 @@
 </head>
 <body class="bg-light">
 
-<!-- Page Header (Full Width) -->
+<div id="menu-container"></div>
+  <!-- Page Header (Full Width) -->
 <div class="page-header">
   <div class="page-header-content">
     <div>
       <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
-    </div>
-    <div class="d-flex" style="gap: .5rem;">
-      <a href="#" class="back-btn" onclick="handleBack(); return false;">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
-      <a href="Bed_Guest_Relationship.html" class="back-btn">
-        <i class="bi bi-house"></i> Beds
-      </a>
     </div>
   </div>
 </div>
@@ -271,16 +266,16 @@
 let currentPage = 1;
 const API_BASE_URL = 'http://localhost:8000';
 
-function handleBack() {
-  try {
-    if (document.referrer && window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-  } catch (e) { /* ignore */ }
-  // Fallback to Beds page if no history
-  window.location.href = 'Bed_Guest_Relationship.html';
-}
+// function handleBack() {
+//   try {
+//     if (document.referrer && window.history.length > 1) {
+//       window.history.back();
+//       return;
+//     }
+//   } catch (e) { /* ignore */ }
+//   // Fallback to Beds page if no history
+//   window.location.href = 'Bed_Guest_Relationship.html';
+// }
 
 function loadGuests(page = 1) {
   $.ajax({
@@ -362,5 +357,16 @@ function toggleGuestStatus(guest_id) {
 // ------------------- Initial Load -------------------
 loadGuests();
 </script>
+
+<script>
+  $(document).ready(function(){
+    
+    const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+    if (!username) window.location.href = "login.html";
+    $("#username").text(username);
+  });
+</script>
+
+
 </body>
 </html>

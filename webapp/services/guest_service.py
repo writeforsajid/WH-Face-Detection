@@ -67,40 +67,71 @@ def create_guest(guest: dict):
 
 def get_guests(page=1, limit=20, search: str | None = None, status: str | None = None):
     """
-    Return paginated guests with optional filters:
+    Return paginated guests joined with role and bed info.
+    Columns: guest_id, name, guest_type, bed_id, status
+    Supports optional filters:
       - search: case-insensitive substring match on name
       - status: one of ('active','inactive','closed')
     """
+    
     offset = (page - 1) * limit
     conn = get_connection()
+    # conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
+    # Build WHERE filters dynamically
     where_clauses = []
-    params: list = []
-
+    params = []
+    
     if status:
-        # Normalize and guard allowed values
         st = str(status).lower().strip()
         if st in ("active", "inactive", "closed"):
-            where_clauses.append("LOWER(status) = ?")
+            where_clauses.append("LOWER(g.status) = ?")
             params.append(st)
+
     if search:
-        where_clauses.append("LOWER(name) LIKE ?")
-        params.append(f"%{str(search).lower().strip()}%")
+        where_clauses.append("LOWER(g.name) LIKE ?")
+        params.append(f"%{search.lower().strip()}%")
 
-    where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+    where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
 
-    # total count with same filters
-    cur.execute(f"SELECT COUNT(*) as cnt FROM guests{where_sql}", params)
+    # --- ⚡ Optimized query ---
+    # Use LEFT JOIN to include guests even if role/bed missing
+    # Use COALESCE for readable defaults
+    base_query = f"""
+        FROM guests AS g
+        LEFT JOIN guest_roles AS gr ON g.guest_id = gr.guest_id
+        LEFT JOIN roles AS r ON gr.role_id = r.role_id
+        LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
+        LEFT JOIN beds AS b ON gb.bed_id = b.bed_id
+        {where_sql}
+    """
+
+    # --- total count for pagination ---
+    cur.execute(f"SELECT COUNT(DISTINCT g.guest_id) AS cnt {base_query}", params)
     total = cur.fetchone()["cnt"]
     total_pages = (total + limit - 1) // limit if limit else 1
 
+    # --- main data query ---
     cur.execute(
-        f"SELECT * FROM guests{where_sql} ORDER BY name ASC LIMIT ? OFFSET ?",
+        f"""
+        SELECT 
+            g.guest_id,
+            g.name,
+            COALESCE(r.role_name, '-') AS guest_type,
+            COALESCE(b.bed_id, '-') AS bed_no,
+            g.status
+        {base_query}
+        GROUP BY g.guest_id
+        ORDER BY g.name ASC
+        LIMIT ? OFFSET ?
+        """,
         [*params, limit, offset],
     )
+
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
+
     return {
         "page": page,
         "limit": limit,
@@ -108,7 +139,6 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         "total_pages": total_pages,
         "items": rows,
     }
-
 
 def get_bunch_of_beds():
     conn = get_connection()
@@ -221,6 +251,47 @@ def confirm_guest(guest_id: str):
     except Exception as e:
         print(f"⚠️ Error updating guest {guest_id}: {e}")
         return False
+
+
+def get_guest_history(guest_id: str):
+    """
+    Fetch guest details along with their attendance records and bed assignment.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Get guest details
+    cur.execute("""
+        SELECT g.*, ga.bed_id, ga.assign_date
+        FROM guests g
+        LEFT JOIN guest_beds ga ON g.guest_id = ga.guest_id
+        WHERE g.guest_id = ?
+    """, (guest_id,))
+    
+    guest = cur.fetchone()
+    
+    if not guest:
+        conn.close()
+        return {"error": "Guest not found"}
+    
+    guest_data = dict(guest)
+    
+    # Get attendance records
+    cur.execute("""
+        SELECT * FROM guest_metadata
+        WHERE guest_id = ?
+        ORDER BY timestamp DESC
+    """, (guest_id,))
+    
+    history_records = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    return {
+        "guest": guest_data,
+        "history": history_records
+    }
+
+
 
 
 def get_guest_with_attendance(guest_id: str):

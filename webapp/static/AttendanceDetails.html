@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<style>
 		* {
@@ -785,14 +786,14 @@
 					const err = await res.json().catch(() => ({}));
 					throw new Error(err.detail || `Request failed (${res.status})`);
 				}
-
+				debugger;
 				const data = await res.json();
 				
 				// Hide loading overlay
 				document.getElementById('loading-overlay').style.display = 'none';
 				
 				// Update header
-				document.getElementById('guest-name-header').textContent = data.guest.name || 'Guest Details';
+				//document.getElementById('guest-name-header').textContent = data.guest.name || 'Guest Details';
 				
 				// Render profile and attendance
 				renderGuestProfile(data.guest);
@@ -805,13 +806,13 @@
 			}
 		}
 
-		function handleLogout() {
-			// Optionally clear local/session storage if you want to fully log out
-			localStorage.removeItem('wh_token');
-			localStorage.removeItem('wh_user');
-			// Redirect to dashboard
-			window.location.href = 'index2.html';
-		}
+		// function handleLogout() {
+		// 	// Optionally clear local/session storage if you want to fully log out
+		// 	localStorage.removeItem('wh_token');
+		// 	localStorage.removeItem('wh_user');
+		// 	// Redirect to dashboard
+		// 	window.location.href = 'index2.html';
+		// }
 
 		// Create floating decorative elements
 		function createFloatingElements() {
@@ -844,13 +845,7 @@
 	</div>
 	<div id="menu-container"></div>
 	<!-- Shared header will be loaded here -->
-	<div id="site-header"></div>
-	<script>
-		fetch('Header.html')
-			.then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
-			.then(html => { document.getElementById('site-header').innerHTML = html; })
-			.catch(err => console.error('Header load error:', err));
-	</script>
+
 
 	<!-- Main Content -->
 	<div class="container">

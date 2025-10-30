@@ -411,7 +411,7 @@
 
         async function handleLogin(event) {
             event.preventDefault();
-            
+            debugger
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             // Basic validation
@@ -437,7 +437,7 @@
                 // 
                 const data = await res.json();
                 console.log('Login success:', data);
-                
+                debugger;
                 // Store API base (so other pages know where to call the API from)
                 localStorage.setItem('wh_api_base', 'http://localhost:8000');
 
@@ -461,7 +461,7 @@
                     window.location.href = 'dashboard.html';
                 } else if (userRole === 'resident') {
                     if (guestId) {
-                        const url = `GuestDetails.html?id=${encodeURIComponent(guestId)}`;
+                        const url = `Dashboard.html`;
                         window.location.href = url;
                     } else {
                         window.location.href = 'Bed_Guest_Relationship.html';

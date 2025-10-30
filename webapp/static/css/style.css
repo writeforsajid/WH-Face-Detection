@@ -189,3 +189,16 @@ body {
 .sr-only{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
 
 /* End of header styles */
+
+
+.user-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.user-dropdown .dropdown-content {
+  right: 0;
+  left: auto;
+  text-align: left;
+}
+

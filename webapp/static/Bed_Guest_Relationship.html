@@ -6,7 +6,10 @@
 	<title>Bed ↔ Guest Assignments</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/style.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<!-- header styles moved to Header.html -->
+	
 	<style>
 		* {
 			margin: 0;
@@ -492,26 +495,26 @@
 		}
 
 		function displayWelcome() {
-			const user = getUserInfo();
-			const welcomeEl = document.getElementById('welcome-message');
-			const userInfoEl = document.getElementById('user-info');
+			// const user = getUserInfo();
+			// const welcomeEl = document.getElementById('welcome-message');
+			// const userInfoEl = document.getElementById('user-info');
 			
-			if (user && user.name) {
-				welcomeEl.textContent = `Welcome back, ${user.name}!`;
-				const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
-				userInfoEl.textContent = `${role} • ${user.email || ''}`;
-			} else {
-				welcomeEl.textContent = 'Welcome to Bed Management';
-				userInfoEl.textContent = 'View and manage bed assignments';
-			}
+			// if (user && user.name) {
+			// 	welcomeEl.textContent = `Welcome back, ${user.name}!`;
+			// 	const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+			// 	userInfoEl.textContent = `${role} • ${user.email || ''}`;
+			// } else {
+			// 	welcomeEl.textContent = 'Welcome to Bed Management';
+			// 	userInfoEl.textContent = 'View and manage bed assignments';
+			// }
 		}
 
-		function handleLogout() {
-			localStorage.removeItem('wh_token');
-			localStorage.removeItem('wh_user');
-			localStorage.removeItem('wh_api_base');
-			window.location.href = 'index2.html';
-		}
+		// function handleLogout() {
+		// 	localStorage.removeItem('wh_token');
+		// 	localStorage.removeItem('wh_user');
+		// 	localStorage.removeItem('wh_api_base');
+		// 	window.location.href = 'index2.html';
+		// }
 
 		function handleBack() {
 			try {
@@ -535,7 +538,7 @@
 				let guest;
 				if (r.guest_name && r.guest_id) {
 					// Make guest name a clickable link to their details page
-					guest = `<a href="GuestDetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
+					guest = `<a href="AttendanceDetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
 				} else if (r.guest_name) {
 					guest = r.guest_name;
 				} else {
@@ -877,18 +880,12 @@
 			}
 		});
 	</script>
-  
+	<script src="./js/main.js"></script>
 </head>
 <body>
 	<!-- Shared header will be loaded here -->
-	<div id="site-header"></div>
-	<script>
-		fetch('Header.html')
-			.then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
-			.then(html => { document.getElementById('site-header').innerHTML = html; })
-			.catch(err => console.error('Header load error:', err));
-	</script>
 
+	<div id="menu-container"></div>
 	<div class="container">
 
 		<div class="d-flex justify-content-between align-items-center mb-3">
@@ -948,7 +945,15 @@
 			</div>
 		</div>
 	</div>
-
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

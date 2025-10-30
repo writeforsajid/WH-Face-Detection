@@ -125,6 +125,7 @@ def bunch_of_beds():
 
 @router.get("/{guest_id}")
 def get_guest_details(guest_id: str):
+
     result = guest_service.get_guest_with_attendance(guest_id)
     
     if isinstance(result, dict) and "error" in result:
@@ -132,6 +133,17 @@ def get_guest_details(guest_id: str):
     
     return result
     
+
+@router.get("/{guest_id}/history")
+def get_guest_history(guest_id: str):
+    
+    result = guest_service.get_guest_history(guest_id)
+
+    if isinstance(result, dict) and "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"]) 
+    
+    return result
+  
 
 
 

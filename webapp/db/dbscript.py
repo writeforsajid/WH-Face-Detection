@@ -257,8 +257,8 @@ beds = [
  ("504/1/2", "GOLDEN", "Floor 5 Flat 4 Room 1 Bed 2"),
  ("504/2/1", "BRASS", "Floor 5 Flat 4 Room 2 Bed 1"),
  ("504/2/2", "BRASS", "Floor 5 Flat 4 Room 2 Bed 2"),
- ("504/2/3", "BRASS", "Floor 5 Flat 4 Room 2 Bed 3"),
-
+ ("504/2/3", "BRASS", "Floor 5 Flat 4 Room 2 Bed 3")
+]
 
 
 cursor.executemany(
@@ -391,6 +391,18 @@ CREATE TABLE IF NOT EXISTS guest_roles (
 cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_roles_name ON roles(role_name)")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_guest ON guest_roles(guest_id)")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_role ON guest_roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_status ON guests(status)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(name COLLATE NOCASE)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_guest_id ON guest_roles(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_role_id ON guest_roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_roles_role_id ON roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_guest_id ON guest_beds(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_bed_id ON guest_beds(bed_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_bed_id ON beds(bed_id)")
+
+
+
+
 
 guest_roles=[
 ("20250105000001",1,"2025-10-02"),
@@ -600,7 +612,7 @@ cursor.execute('''CREATE TABLE guest_metadata (
     guest_id    VARCHAR(20) NOT NULL,
     name        VARCHAR(20) NOT NULL,
     description VARCHAR(150),
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    timestamp   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (guest_id) REFERENCES guests(guest_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
@@ -768,7 +780,7 @@ guest_metadata = [
 ]
 
 cursor.executemany(
-    "INSERT OR IGNORE INTO guest_metadata (guest_id, name, description,created_at) VALUES (?, ?,?, ?)",
+    "INSERT OR IGNORE INTO guest_metadata (guest_id, name, description,timestamp) VALUES (?, ?,?, ?)",
     guest_metadata
 )
 

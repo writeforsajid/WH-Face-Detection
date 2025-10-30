@@ -539,10 +539,10 @@
             <details>
                 <summary><i class="fas fa-users"></i> Guests</summary>
                 <ul>
-                    <li><a href="GuestDetails.html" onclick="closeMobileMenu()">View All Guests</a></li>
-                    <li><a href="GuestDetails.html" onclick="closeMobileMenu()">Add New Guest</a></li>
-                    <li><a href="GuestDetails.html" onclick="closeMobileMenu()">Manage Guests</a></li>
-                    <li><a href="GuestDetails.html" onclick="closeMobileMenu()">Guest History</a></li>
+                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">View All Guests</a></li>
+                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Add New Guest</a></li>
+                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Manage Guests</a></li>
+                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Guest History</a></li>
                 </ul>
             </details>
 
@@ -605,7 +605,7 @@
 
         <!-- Section 2: Guests -->
         <div class="section" id="guests-section">
-            <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='GuestDetails.html'">
+            <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='AttendanceDetails.html'">
                 <i class="fas fa-users"></i> Guests Management
             </h2>
             <div class="cards-container">
@@ -734,7 +734,7 @@
             }
             // Navigate to Guest Details page for manage guests
             if (action === 'manage-guests') {
-                window.location.href = 'GuestDetails.html';
+                window.location.href = 'Dashboard.html';
                 return;
             }
             alert(`Action: ${action.replace('-', ' ').toUpperCase()}`);

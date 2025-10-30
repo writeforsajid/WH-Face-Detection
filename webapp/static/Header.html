@@ -1,51 +1,58 @@
-<!-- Shared header styles (centralized) -->
+<!-- Shared header styles -->
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="header">
-    <div class="logo"><i class="fas fa-home"></i> WH Admin</div>
-    <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
-    </button>
+  <div class="logo"><i class="fas fa-home"></i> WH Admin</div>
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+  </button>
 
-    <div class="nav-menu">
-        <div class="dropdown role-owner role-employee">
-            <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
-            <div class="dropdown-content">
-                <a href="Bed_Guest_Relationship.html">View All Beds</a>
-                <a href="Bed_Guest_Relationship.html">Add New Bed</a>
-                <a href="Bed_Guest_Relationship.html">Manage Beds</a>
-            </div>
-        </div>
-
-        <div class="dropdown role-owner role-employee">
-            <button class="dropdown-btn"><i class="fas fa-users"></i> Guests</button>
-            <div class="dropdown-content">
-                <a href="GuestDetails.html">View All Guests</a>
-                <a href="GuestDetails.html">Add New Guest</a>
-                <a href="GuestDetails.html">Manage Guests</a>
-            </div>
-        </div>
-
-        <div class="dropdown role-owner role-employee role-resident">
-            <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
-            <div class="dropdown-content">
-                <a href="#">View Attendance</a>
-                <a href="#">Today's Attendance</a>
-                <a href="#">Attendance History</a>
-            </div>
-        </div>
-
-        <div class="dropdown role-owner">
-            <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
-            <div class="dropdown-content">
-                <a href="reports.html">View Reports</a>
-                <a href="reports.html">Monthly Report</a>
-            </div>
-        </div>
+  <div class="nav-menu">
+    <div class="dropdown role-owner role-employee">
+      <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
+      <div class="dropdown-content">
+        <a href="Bed_Guest_Relationship.html">View All Beds</a>
+        <a href="Bed_Guest_Relationship.html">Add New Bed</a>
+        <a href="Bed_Guest_Relationship.html">Manage Beds</a>
+      </div>
     </div>
 
-    <button class="logout-btn" onclick="handleLogout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+    <div class="dropdown role-owner role-employee">
+      <button class="dropdown-btn"><i class="fas fa-users"></i> Guests</button>
+      <div class="dropdown-content">
+        <a href="AttendanceDetails.html">View All Guests</a>
+        <a href="AttendanceDetails.html">Add New Guest</a>
+        <a href="AttendanceDetails.html">Manage Guests</a>
+      </div>
+    </div>
+
+    <div class="dropdown role-owner role-employee role-resident">
+      <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <a href="#">View Attendance</a>
+        <a href="#">Today's Attendance</a>
+        <a href="#">Attendance History</a>
+      </div>
+    </div>
+
+    <div class="dropdown role-owner">
+      <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
+      <div class="dropdown-content">
+        <a href="reports.html">View Reports</a>
+        <a href="reports.html">Monthly Report</a>
+      </div>
+    </div>
+  </div>
+
+<div class="dropdown user-dropdown">
+  <button class="dropdown-btn" id="userMenuBtn">
+    <span id="userName">User</span>
+    <i class="bi bi-caret-down-fill"></i>
+  </button>
+  <div class="dropdown-content">
+    <a href="profile.html">Profile</a>
+    <a href="#" onclick="handleLogout()">Logout</a>
+  </div>
+</div>
 </div>
