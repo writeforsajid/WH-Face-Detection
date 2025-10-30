@@ -1,0 +1,11 @@
+SELECT 
+    g.guest_id,
+    g.name,
+    g.email,
+    g.phone_number,
+    r.role_name as guest_type
+FROM guests AS g
+JOIN guest_roles AS gr 
+    ON g.guest_id = gr.guest_id
+JOIN roles AS r 
+    ON gr.role_id = r.role_id
