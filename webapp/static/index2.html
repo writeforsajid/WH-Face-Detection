@@ -599,30 +599,15 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="header-container">
-            <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
-                <span class="bar"></span>
-            </button>
-            <div class="logo">
-                <div class="logo-icon" style="width:60px; height:60px; font-size:2.5rem;">
-                    <i class="bi bi-building" style="font-size:2.5rem;"></i>
-                </div>
-                <span style="font-size:1.7rem; font-weight:800;">White House</span>
-                
-            </div>
-            <nav class="desktop-nav">
-                <a href="#home">Home</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-                <div class="auth-buttons" id="auth-section">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </nav>
-            <div class="right-spacer" aria-hidden="true" style="display:none"></div>
-        </div>
-    </header>
+    <!-- Shared header will be loaded here -->
+    <div id="site-header"></div>
+    <script>
+        // Load shared header HTML and inject into the page
+        fetch('Header.html')
+            .then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
+            .then(html => { document.getElementById('site-header').innerHTML = html; })
+            .catch(err => console.error('Header load error:', err));
+    </script>
 
     <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobile-menu" role="dialog" aria-label="Main menu">

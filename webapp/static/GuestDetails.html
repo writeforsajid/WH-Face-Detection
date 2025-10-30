@@ -6,7 +6,7 @@
 	<title>Guest Profile - Elegant Details</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="./css/style.css">
+	<!-- header styles moved to Header.html -->
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<style>
 		* {
@@ -842,21 +842,15 @@
 		</div>
 
 	</div>
-	<div id="header-container"></div>
-	<!-- Welcome Header -->
-	<div class="welcome-header">
-		<div class="welcome-header-content">
-			<div>
-				<h1 id="guest-name-header"><i class="bi bi-person-badge-fill"></i> Guest Profile</h1>
-				<div class="subtitle">Comprehensive details and attendance history</div>
-			</div>
-			<div>
-				<button class="btn-back" onclick="handleLogout()">
-					<i class="bi bi-arrow-left"></i> Logout
-				</button>
-			</div>
-		</div>
-	</div>
+	<div id="menu-container"></div>
+	<!-- Shared header will be loaded here -->
+	<div id="site-header"></div>
+	<script>
+		fetch('Header.html')
+			.then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
+			.then(html => { document.getElementById('site-header').innerHTML = html; })
+			.catch(err => console.error('Header load error:', err));
+	</script>
 
 	<!-- Main Content -->
 	<div class="container">

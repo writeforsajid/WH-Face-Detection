@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - WH Face Detection</title>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- header styles moved to Header.html -->
     <style>
         * {
             margin: 0;
@@ -485,39 +484,14 @@
     </style>
 </head>
 <body>
-    <!-- Header Section -->
-    <div class="header">
-        <div class="logo"><i class="fas fa-home"></i> WH Admin</div>
-        
-        <!-- Hamburger button (mobile) -->
-        <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false" onclick="toggleMobileMenu()">
-            <i class="fas fa-bars"></i>
-        </button>
-        
-        <div class="nav-menu">
-            <!-- Beds Dropdown -->
-            <div class="dropdown">
-                <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
-                <div class="dropdown-content">
-                    <a href="Bed_Guest_Relationship.html" onclick="scrollToSection('beds-section')">View All Beds</a>
-                    <a href="Bed_Guest_Relationship.html" onclick="handleAction('add-bed')">Add New Bed</a>
-                    <a href="Bed_Guest_Relationship.html">Manage Beds</a>
-                    <a href="#" onclick="handleAction('bed-history')">Bed History</a>
-                </div>
-            </div>
-
-            <!-- Guests Dropdown -->
-            <div class="dropdown">
-                <button class="dropdown-btn"><i class="fas fa-users"></i> Guests</button>
-                <div class="dropdown-content">
-                    <a href="GuestDetails.html">View All Guests</a>
-                    <a href="GuestDetails.html">Add New Guest</a>
-                    <a href="GuestDetails.html">Manage Guests</a>
-                    <a href="GuestDetails.html">Guest History</a>
-                </div>
-            </div>
-
-            <!-- Attendance Dropdown -->
+    <!-- Shared header will be loaded here -->
+    <div id="site-header"></div>
+    <script>
+        fetch('Header.html')
+            .then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
+            .then(html => { document.getElementById('site-header').innerHTML = html; })
+            .catch(err => console.error('Header load error:', err));
+    </script>
             <div class="dropdown">
                 <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
                 <div class="dropdown-content">

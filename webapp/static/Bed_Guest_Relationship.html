@@ -6,6 +6,7 @@
 	<title>Bed ↔ Guest Assignments</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
 	<style>
 		* {
 			margin: 0;
@@ -879,23 +880,14 @@
   
 </head>
 <body>
-	<!-- Welcome Header (Full Width) -->
-	<div class="welcome-header">
-		<div class="welcome-header-content">
-			<div>
-				<h1 id="welcome-message">Welcome!</h1>
-				<div class="user-info" id="user-info">Loading...</div>
-			</div>
-			<div class="header-actions">
-				<button class="back-btn" onclick="handleBack()">
-					<i class="bi bi-arrow-left"></i> Back
-				</button>
-				<button class="logout-btn" onclick="handleLogout()">
-					<i class="bi bi-box-arrow-right"></i> Logout
-				</button>
-			</div>
-		</div>
-	</div>
+	<!-- Shared header will be loaded here -->
+	<div id="site-header"></div>
+	<script>
+		fetch('Header.html')
+			.then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
+			.then(html => { document.getElementById('site-header').innerHTML = html; })
+			.catch(err => console.error('Header load error:', err));
+	</script>
 
 	<div class="container">
 
