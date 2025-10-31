@@ -1,0 +1,219 @@
+/* menu-header ki css */
+:root{
+    --header-bg: #0f172a; /* slate-900 */
+    --header-contrast: #ffffff;
+    --accent: #3b82f6; /* blue-500 */
+    --muted: #94a3b8;
+    --radius: 10px;
+    --gap: 16px;
+}
+
+/* Global reset for header-related areas */
+body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin: 0;
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+/* Header container */
+.header {
+    background: var(--header-bg);
+    color: var(--header-contrast);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    box-shadow: 0 8px 20px rgba(2,6,23,0.35);
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+}
+
+.header-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--header-contrast);
+}
+
+.logo img{ /* optional logo image */
+    height: 42px;
+    width: 42px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.logo .brand-accent{
+    color: var(--accent);
+}
+
+/* Nav */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-link {
+    color: var(--header-contrast);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background 180ms ease, color 180ms ease, transform 120ms ease;
+    font-weight: 600;
+}
+.nav-link:hover, .nav-link:focus{
+    background: rgba(255,255,255,0.04);
+    color: var(--header-contrast);
+    transform: translateY(-1px);
+}
+
+
+.dropdown-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--header-contrast);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.dropdown-btn:focus{ outline: 2px solid rgba(59,130,246,0.25); }
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background-color: #ffffff;
+    color: #0f172a;
+    min-width: 220px;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(2,6,23,0.2);
+    overflow: hidden;
+    padding: 8px 0;
+    transform-origin: top right;
+    transition: transform 160ms ease, opacity 160ms ease;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+}
+.dropdown.open .dropdown-content,
+.dropdown:hover .dropdown-content {
+    display: block;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 10px 14px;
+    color: #0f172a;
+    text-decoration: none;
+    font-weight: 600;
+}
+.dropdown-content a:hover{ background: #f1f5f9; }
+
+/* User/profile area */
+.user-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+.user-avatar{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,var(--accent),#10b981);
+    color: white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.logout-btn {
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.12);
+    color: var(--header-contrast);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+}
+.logout-btn:hover{ background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+/* Mobile / hamburger */
+.hamburger{
+    display: none;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.08);
+    color: var(--header-contrast);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.hamburger .bar{ display:block; width:18px; height:2px; background:currentColor; margin:3px 0; }
+
+/* Responsive */
+@media (max-width: 900px){
+    .nav-menu{ display:none; }
+    .hamburger{ display:inline-flex; align-items:center; justify-content:center; }
+}
+
+/* Utility: small container used on some pages */
+.login-box { max-width: 360px; margin: 80px auto; padding: 18px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
+.login-box input{ width:100%; padding:10px 12px; margin:8px 0; border-radius:8px; border:1px solid #e6eef6; }
+.login-box button{ padding:10px 14px; border-radius:8px; background:var(--accent); color:white; border:none; cursor:pointer; }
+
+/* Small accessibility helpers */
+.sr-only{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+/* End of header styles */
+
+
+.user-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.user-dropdown .dropdown-content {
+  right: 0;
+  left: auto;
+  text-align: left;
+}
+
+/* Make dropdown show smoothly on hover or when open class is added */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;   /* directly below the button */
+  left: 0;
+}
+
+/* Show when hovered or "open" class applied */
+.dropdown:hover .dropdown-content,
+.dropdown.open .dropdown-content {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}

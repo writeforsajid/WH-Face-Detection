@@ -16,189 +16,220 @@ body {
     color: #0f172a;
 }
 
-/* Header container */
-.header {
-    background: var(--header-bg);
-    color: var(--header-contrast);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    box-shadow: 0 8px 20px rgba(2,6,23,0.35);
-    position: sticky;
-    top: 0;
-    z-index: 1100;
-}
 
-.header-container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    gap: var(--gap);
+/* Basic Layout */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2b2f36;
+  color: #fff;
+  padding: 10px 20px;
+  position: relative;
 }
 
 .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 700;
-    font-size: 1.125rem;
-    color: var(--header-contrast);
+  font-size: 1.3em;
+  font-weight: bold;
 }
 
-.logo img{ /* optional logo image */
-    height: 42px;
-    width: 42px;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-.logo .brand-accent{
-    color: var(--accent);
-}
-
-/* Nav */
 .nav-menu {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.nav-link {
-    color: var(--header-contrast);
-    text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: background 180ms ease, color 180ms ease, transform 120ms ease;
-    font-weight: 600;
-}
-.nav-link:hover, .nav-link:focus{
-    background: rgba(255,255,255,0.04);
-    color: var(--header-contrast);
-    transform: translateY(-1px);
-}
-
-/* Dropdown */
+/* Dropdowns */
 .dropdown {
-    position: relative;
+  position: relative;
 }
-.dropdown-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--header-contrast);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.dropdown-btn:focus{ outline: 2px solid rgba(59,130,246,0.25); }
-
 .dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    background-color: #ffffff;
-    color: #0f172a;
-    min-width: 220px;
-    border-radius: 10px;
-    box-shadow: 0 12px 30px rgba(2,6,23,0.2);
-    overflow: hidden;
-    padding: 8px 0;
-    transform-origin: top right;
-    transition: transform 160ms ease, opacity 160ms ease;
-    opacity: 0;
-    transform: translateY(-6px) scale(0.98);
+  display: none;
+  position: absolute;
+  background: #fff;
+  color: #000;
+  min-width: 180px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 99;
 }
-.dropdown.open .dropdown-content,
-.dropdown:hover .dropdown-content {
-    display: block;
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
-
 .dropdown-content a {
-    display: block;
-    padding: 10px 14px;
-    color: #0f172a;
-    text-decoration: none;
-    font-weight: 600;
+  display: block;
+  padding: 8px 12px;
+  color: #333;
+  text-decoration: none;
 }
-.dropdown-content a:hover{ background: #f1f5f9; }
-
-/* User/profile area */
-.user-profile {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
+.dropdown-content a:hover {
+  background: #f0f0f0;
 }
-.user-avatar{
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg,var(--accent),#10b981);
-    color: white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
+.dropdown:hover .dropdown-content {
+  display: block;
 }
 
-.logout-btn {
-    background: transparent;
-    border: 2px solid rgba(255,255,255,0.12);
-    color: var(--header-contrast);
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: background 150ms ease, color 150ms ease, transform 120ms ease;
-}
-.logout-btn:hover{ background: rgba(255,255,255,0.06); transform: translateY(-2px); }
-
-/* Mobile / hamburger */
-.hamburger{
-    display: none;
-    background: transparent;
-    border: 2px solid rgba(255,255,255,0.08);
-    color: var(--header-contrast);
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-.hamburger .bar{ display:block; width:18px; height:2px; background:currentColor; margin:3px 0; }
-
-/* Responsive */
-@media (max-width: 900px){
-    .nav-menu{ display:none; }
-    .hamburger{ display:inline-flex; align-items:center; justify-content:center; }
-}
-
-/* Utility: small container used on some pages */
-.login-box { max-width: 360px; margin: 80px auto; padding: 18px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
-.login-box input{ width:100%; padding:10px 12px; margin:8px 0; border-radius:8px; border:1px solid #e6eef6; }
-.login-box button{ padding:10px 14px; border-radius:8px; background:var(--accent); color:white; border:none; cursor:pointer; }
-
-/* Small accessibility helpers */
-.sr-only{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
-
-/* End of header styles */
-
-
+/* User dropdown */
 .user-dropdown {
   position: relative;
-  display: inline-block;
+}
+.user-dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background: #fff;
+  color: #000;
+  min-width: 150px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+.user-dropdown-content a {
+  display: block;
+  padding: 8px 12px;
+  color: #333;
+  text-decoration: none;
+}
+.user-dropdown-content a:hover {
+  background: #f0f0f0;
+}
+.user-dropdown.open .user-dropdown-content {
+  display: block;
 }
 
-.user-dropdown .dropdown-content {
-  right: 0;
-  left: auto;
-  text-align: left;
+/* Hamburger */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5em;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    background: #2b2f36;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    padding: 10px;
+  }
+
+  .nav-menu.show {
+    display: flex;
+  }
+
+  .dropdown-content,
+  .user-dropdown-content {
+    position: static;
+    background: #3c4048;
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .dropdown-content a,
+  .user-dropdown-content a {
+    color: #fff;
+  }
+}
+
+
+* mobile menu base */
+.nav-menu {
+  background: rgba(255, 255, 255, 0.9); /* semi-transparent */
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* optional if you want darker glass look */
+@media (max-width: 768px) {
+  .nav-menu {
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+  }
+}
+
+/* hamburger position — always right side */
+.hamburger {
+  margin-left: auto;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* === Desktop Base (unchanged layout) === */
+.nav-menu {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* === Mobile Overrides === */
+@media (max-width: 768px) {
+  .nav-menu {
+    position: absolute;
+    top: 60px; /* adjust based on your header height */
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.555); /* semi-transparent background */
+    backdrop-filter: blur(2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: none; /* hidden by default */
+  }
+
+  .nav-menu.show {
+    display: flex; /* shown when hamburger toggles */
+  }
+
+  /* Hamburger visible only on mobile */
+  #hamburger-btn {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #333; 
+  }
+
+  /* Hide desktop menu initially */
+  .header .nav-menu {
+    width: 100%;
+  }
+}
+
+/* === Desktop only hamburger hidden === */
+@media (min-width: 769px) {
+  #hamburger-btn {
+    display: none;
+  }
+}
+
+
+#hamburger-btn {
+  color: white;         /* visible on dark header */
+  z-index: 2000;        /* stays above blurred menu background */
+}
+
 
