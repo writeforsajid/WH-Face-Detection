@@ -14,6 +14,24 @@
       padding: 0;
       box-sizing: border-box;
     }
+
+    /* Page wrapper: constrain and center header + page content
+       Overrides the previous full-bleed page-header so it sits inside the wrapper. */
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* The page-header previously used negative margins to stretch full width.
+       When placed inside the .page-wrapper we remove that behaviour so the
+       header aligns with the page content. */
+    .page-wrapper .page-header {
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+      border-radius: 12px;
+    }
     
     body { 
       background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
@@ -231,33 +249,39 @@
 </head>
 <body class="bg-light">
 
-<div id="menu-container"></div>
+
+<!-- Wrap header + page header + table into a single page wrapper so the injected header
+     and the page content share the same containing block -->
+<div class="page-wrapper">
+  <div id="menu-container"></div>
+
   <!-- Page Header (Full Width) -->
-<div class="page-header">
-  <div class="page-header-content">
-    <div>
-      <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
+  <div class="page-header">
+    <div class="page-header-content">
+      <div>
+        <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="container mt-4">
-  <!-- Guest Table -->
-  <table class="table table-striped table-bordered">
-    <thead class="table-dark">
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Room</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="guestTable"></tbody>
-  </table>
+  <div class="container mt-4">
+    <!-- Guest Table -->
+    <table class="table table-striped table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Room</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="guestTable"></tbody>
+    </table>
 
-  <nav><ul class="pagination justify-content-center" id="pagination"></ul></nav>
+    <nav><ul class="pagination justify-content-center" id="pagination"></ul></nav>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>

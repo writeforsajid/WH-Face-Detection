@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports & Analytics - WH Face Detection</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="./css/style.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="./js/main.js"></script>
 
 <style>
 * {
@@ -521,21 +525,8 @@ textarea {
 </head>
 
 <body>
-  <!-- Header -->
-  <div class="header">
-    <div class="logo" onclick="window.location.href='admin_dashboard.html'">
-      <i class="fas fa-chart-line"></i>
-      <span>Reports & Analytics</span>
-    </div>
-    <div class="nav-buttons">
-      <a href="admin_dashboard.html" class="nav-btn secondary">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
-      </a>
-      <button class="nav-btn" onclick="handleLogout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </button>
-    </div>
-  </div>
+  <!-- Shared header will be loaded here -->
+  <div id="menu-container"></div>
 
   <div class="container">
     <!-- Report Types Section -->

@@ -1,236 +1,240 @@
-/* menu-header ki css */
-:root{
-    --header-bg: #0f172a; /* slate-900 */
-    --header-contrast: #ffffff;
-    --accent: #3b82f6; /* blue-500 */
-    --muted: #94a3b8;
-    --radius: 10px;
-    --gap: 16px;
+/* Header / nav styles updated to contrast the purple gradient admin page
+   - Purpose: provide a bright, colorful header with high contrast against
+     the purple/pink background used in admin_dashboard.html
+   - file: webapp/static/css/style.css
+*/
+
+:root {
+  --purple-1: #667eea; /* admin purple start */
+  --purple-2: #764ba2; /* admin purple end */
+  --header-bg: #ffffff; /* keep header bright */
+  --header-text: #0f172a; /* dark text for contrast */
+  --muted: #6b7280;
+  --accent: linear-gradient(90deg, var(--purple-1), var(--purple-2));
+  --pill-radius: 10px;
 }
 
-/* Global reset for header-related areas */
+/* Base page defaults (only header-related overrides here) */
 body {
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    margin: 0;
-    background: #f8fafc;
-    color: #0f172a;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
 }
 
-
-/* Basic Layout */
+/* Header container */
 .header {
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
-  background: #2b2f36;
-  color: #fff;
-  padding: 10px 20px;
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 14px 20px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(8, 15, 52, 0.12);
   position: relative;
-  z-index: 10000; /* or slightly higher than any other z-index in your page */
+  z-index: 1000;
+}
+
+/* thin colorful top accent to link visually with the purple page */
+.header::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: -6px;
+  height: 6px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  background: var(--accent);
 }
 
 .logo {
-  font-size: 1.3em;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--purple-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo .brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.28);
 }
 
 .nav-menu {
   display: flex;
+  gap: 12px;
   align-items: center;
-  gap: 20px;
 }
 
-/* Dropdowns */
+/* Primary nav buttons / dropdown trigger */
+.nav-menu .nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-btn {
+  background: var(--purple-1);
+  background-image: linear-gradient(90deg, var(--purple-1), var(--purple-2));
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--pill-radius);
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(118, 75, 162, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dropdown-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(118, 75, 162, 0.22);
+}
+
+.logout-btn {
+  background: linear-gradient(90deg, #ff6b6b, #ff4757);
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Dropdown content */
 .dropdown {
   position: relative;
 }
+
 .dropdown-content {
   display: none;
   position: absolute;
+  /* reduce the gap between the dropdown trigger and the panel for tighter UI */
+  top: calc(100% + 0px);
+  left: 0;
+  /* narrower dropdown to match toolbar spacing */
+  min-width: 160px;
+  max-width: 260px;
+  width: auto;
   background: #fff;
-  color: #000;
-  min-width: 180px;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  z-index: 99;
+  color: var(--header-text);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  z-index: 1200;
 }
+
 .dropdown-content a {
   display: block;
-  padding: 8px 12px;
-  color: #333;
+  padding: 10px 14px;
+  color: var(--header-text);
   text-decoration: none;
 }
+
+/* Default subtle hover fallback */
 .dropdown-content a:hover {
-  background: #f0f0f0;
+  background: rgba(15,23,42,0.04);
 }
+
+/* High-contrast per-item hover colors (desktop dropdown)
+   - 1: red, 2: golden, 3: blue, 4: green, 5: pink
+   These use gradients and adjust text color for readability. */
+.dropdown-content a:nth-child(1):hover {
+  background: linear-gradient(90deg, #ff6b6b, #ff4757);
+  color: #fff;
+}
+.dropdown-content a:nth-child(2):hover {
+  background: linear-gradient(90deg, #ffd166, #f9a825);
+  color: #0f172a; /* dark text on light golden */
+}
+.dropdown-content a:nth-child(3):hover {
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
+  color: #fff;
+}
+.dropdown-content a:nth-child(4):hover {
+  background: linear-gradient(90deg, #43e97b, #38f9d7);
+  color: #0f172a;
+}
+.dropdown-content a:nth-child(5):hover {
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+  color: #0f172a;
+}
+
+/* Mobile menu: links are inside list items; apply the same palette by li position */
+.mobile-menu details li:nth-child(1) a:hover {
+  background: linear-gradient(90deg, #ff6b6b, #ff4757);
+  color: #fff;
+}
+.mobile-menu details li:nth-child(2) a:hover {
+  background: linear-gradient(90deg, #ffd166, #f9a825);
+  color: #0f172a;
+}
+.mobile-menu details li:nth-child(3) a:hover {
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
+  color: #fff;
+}
+.mobile-menu details li:nth-child(4) a:hover {
+  background: linear-gradient(90deg, #43e97b, #38f9d7);
+  color: #0f172a;
+}
+.mobile-menu details li:nth-child(5) a:hover {
+  background: linear-gradient(90deg, #f093fb, #f5576c);
+  color: #0f172a;
+}
+
 .dropdown:hover .dropdown-content {
   display: block;
 }
 
-/* User dropdown */
-.user-dropdown {
-  position: relative;
-}
-.user-dropdown-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  background: #fff;
-  color: #000;
-  min-width: 150px;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  z-index: 100;
-}
-.user-dropdown-content a {
-  display: block;
-  padding: 8px 12px;
-  color: #333;
-  text-decoration: none;
-}
-.user-dropdown-content a:hover {
-  background: #f0f0f0;
-}
-.user-dropdown.open .user-dropdown-content {
-  display: block;
-}
-
-/* Hamburger */
+/* Mobile / hamburger */
 .hamburger {
   display: none;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.5em;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
-
-  .nav-menu {
-    display: none;
-    flex-direction: column;
-    background: #2b2f36;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    right: 0;
-    padding: 10px;
-  }
-
-  .nav-menu.show {
-    display: flex;
-  }
-
-  .dropdown-content,
-  .user-dropdown-content {
-    position: static;
-    background: #3c4048;
-    color: #fff;
-    box-shadow: none;
-  }
-
-  .dropdown-content a,
-  .user-dropdown-content a {
-    color: #fff;
-  }
-}
-
-
-* mobile menu base */
-.nav-menu {
-  background: rgba(255, 255, 255, 0.9); /* semi-transparent */
-  backdrop-filter: blur(5px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-/* optional if you want darker glass look */
-@media (max-width: 768px) {
-  .nav-menu {
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-  }
-}
-
-/* hamburger position — always right side */
-.hamburger {
-  margin-left: auto;
-  font-size: 1.5rem;
-  background: none;
-  border: none;
-  color: inherit;
+  background: transparent;
+  border: 2px solid rgba(15,23,42,0.06);
+  padding: 8px 10px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/* === Desktop Base (unchanged layout) === */
-.nav-menu {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+/* small layout tweaks */
+button {
+  font-family: inherit;
 }
 
-/* === Mobile Overrides === */
+/* Mobile responsive */
 @media (max-width: 768px) {
-  .nav-menu {
-    position: absolute;
-    top: 60px; /* adjust based on your header height */
-    right: 0;
-    left: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    background: rgba(255, 255, 255, 0.555); /* semi-transparent background */
-    backdrop-filter: blur(2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    display: none; /* hidden by default */
-  }
-
-  .nav-menu.show {
-    display: flex; /* shown when hamburger toggles */
-  }
-
-  /* Hamburger visible only on mobile */
-  #hamburger-btn {
-    display: block;
-    background: none;
-    border: none;
-    font-size: 1.8rem;
-    cursor: pointer;
-    color: #333; 
-  }
-
-  /* Hide desktop menu initially */
-  .header .nav-menu {
-    width: 100%;
-  }
+  .nav-menu { display: none; }
+  .hamburger { display: inline-flex; }
+  .header { padding: 12px; }
 }
 
-/* === Desktop only hamburger hidden === */
-@media (min-width: 769px) {
-  #hamburger-btn {
-    display: none;
-  }
+/* Utility: small muted text in header */
+.header .muted {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
-
-#hamburger-btn {
-  color: white;         /* visible on dark header */
-  z-index: 2000;        /* stays above blurred menu background */
+/* Accessibility: focus outlines */
+.dropdown-btn:focus, .logout-btn:focus, .hamburger:focus {
+  outline: 3px solid rgba(102,126,234,0.18);
+  outline-offset: 2px;
 }
+
+/* Ensure there's no stray broken comment or duplicate rules below */
 
 
