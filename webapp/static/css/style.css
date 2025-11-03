@@ -20,6 +20,15 @@ body {
     "Helvetica Neue", Arial;
 }
 
+/* Re-usable admin page background (matches admin_dashboard) */
+.admin-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  background-attachment: fixed;
+  color: #fff;
+}
+
 /* Header container */
 .header {
   display: flex;
@@ -29,24 +38,14 @@ body {
   background: var(--header-bg);
   color: var(--header-text);
   padding: 14px 20px;
+  margin-bottom: 40px;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(8, 15, 52, 0.12);
   position: relative;
   z-index: 1000;
 }
 
-/* thin colorful top accent to link visually with the purple page */
-.header::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: -6px;
-  height: 6px;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  background: var(--accent);
-}
+/* header accent intentionally removed to avoid visual distraction */
 
 .logo {
   font-size: 1.25rem;
