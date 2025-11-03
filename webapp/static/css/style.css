@@ -26,6 +26,7 @@ body {
   color: #fff;
   padding: 10px 20px;
   position: relative;
+  z-index: 10000; /* or slightly higher than any other z-index in your page */
 }
 
 .logo {

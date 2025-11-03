@@ -253,6 +253,84 @@ def confirm_guest(guest_id: str):
         return False
 
 
+def get_history_records(guest_id, start_date, end_date, page, limit):
+    offset = (page - 1) * limit
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Fetch paginated attendance
+    query = """
+        SELECT 
+            a.meta_id,
+            a.name,
+            a.description,
+            a.timestamp,
+            g.guest_id
+        FROM guest_metadata AS a
+        JOIN guests AS g ON a.guest_id = g.guest_id
+        WHERE a.guest_id = ?
+          AND DATE(a.timestamp) BETWEEN ? AND ?
+        ORDER BY a.timestamp DESC
+        LIMIT ? OFFSET ?
+    """
+    cur.execute(query, (guest_id,start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"), limit, offset))
+    records = cur.fetchall()
+
+
+    # Get guest details
+    cur.execute("""
+        SELECT g.*, ga.bed_id, ga.assign_date
+        FROM guests g
+        LEFT JOIN guest_beds ga ON g.guest_id = ga.guest_id
+        WHERE g.guest_id = ?
+    """, (guest_id,))
+    
+    guest = cur.fetchone()
+    if not guest:
+        conn.close()
+        return {"error": "Guest not found"}
+    
+    guest_data = dict(guest)
+
+
+    data = []
+    for row in records:
+        
+        timestamp = row["timestamp"]
+        if not isinstance(timestamp, str):
+            timestamp = timestamp.strftime("%Y-%m-%d %I:%M %p")
+        
+
+
+        data.append({
+            "id": row["meta_id"],
+            "guest_id": row["guest_id"],
+            "name": row["name"],
+            "description": row["description"],
+            "timestamp": row["timestamp"]
+        })
+
+    # Count total records for pagination
+    count_query = """
+        SELECT COUNT(*) AS total
+        FROM guest_metadata
+        WHERE guest_id = ? AND DATE(timestamp) BETWEEN ? AND ?
+    """
+    cur.execute(count_query, (guest_id, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")))
+    total = cur.fetchone()["total"]
+
+    conn.close()
+    
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "data": data,
+        "guest": guest_data
+    }
+
+
+
 def get_guest_history(guest_id: str):
     """
     Fetch guest details along with their attendance records and bed assignment.
@@ -291,8 +369,33 @@ def get_guest_history(guest_id: str):
         "history": history_records
     }
 
+def add_guest_metadata(meta: dict):
+    guest_id = meta.get("guest_id")
+    name = meta.get("name")
+    description = meta.get("description")
+    timestamp = meta.get("timestamp")
 
+    if not guest_id or not name:
+        raise ValueError("guest_id and name are required.")
 
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO guest_metadata (guest_id, name, description, timestamp)
+            VALUES (?, ?, ?, ?)
+            """,
+            (guest_id, name, description, timestamp),
+        )
+        conn.commit()
+        return{
+                    "lastrowid": cur.lastrowid,
+                    "status": 'success'
+                }
+
+    finally:
+        conn.close()
 
 def get_guest_with_attendance(guest_id: str):
     """

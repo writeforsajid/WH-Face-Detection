@@ -9,849 +9,461 @@
 	<!-- header styles moved to Header.html -->
 	<link rel="stylesheet" href="./css/style.css">
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<style>
-		* {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
-		
-		body { 
-			background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
-			background-attachment: fixed;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			min-height: 100vh;
-			position: relative;
-			overflow-x: hidden;
-		}
-		
-		/* Floating decorative elements */
-		@keyframes float-gentle {
-			0%, 100% {
-				transform: translateY(0) rotate(0deg);
-				opacity: 0.15;
-			}
-			50% {
-				transform: translateY(-20px) rotate(180deg);
-				opacity: 0.25;
-			}
-		}
-		
-		.floating-icon {
-			position: fixed;
-			font-size: 24px;
-			color: #818cf8;
-			animation: float-gentle 8s ease-in-out infinite;
-			pointer-events: none;
-			z-index: 1;
-		}
-		
-		.floating-icon:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-		.floating-icon:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
-		.floating-icon:nth-child(3) { top: 60%; left: 8%; animation-delay: 4s; }
-		.floating-icon:nth-child(4) { top: 70%; right: 10%; animation-delay: 1s; }
-		.floating-icon:nth-child(5) { top: 40%; left: 5%; animation-delay: 3s; }
-		.floating-icon:nth-child(6) { top: 80%; right: 20%; animation-delay: 5s; }
-		
-		.welcome-header {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-			color: white;
-			padding: 2.5rem 0;
-			margin-bottom: 2rem;
-			box-shadow: 0 8px 32px rgba(129, 140, 248, 0.25);
-			width: 100%;
-			margin-left: calc(-50vw + 50%);
-			margin-right: calc(-50vw + 50%);
-			backdrop-filter: blur(10px);
-			position: relative;
-			overflow: hidden;
-			z-index: 10;
-		}
-		
-		.welcome-header::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-			            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-			animation: shimmer 10s ease-in-out infinite;
-		}
-		
-		@keyframes shimmer {
-			0%, 100% { opacity: 0.5; }
-			50% { opacity: 1; }
-		}
-		
-		.welcome-header-content {
-			max-width: 1200px;
-			margin: 0 auto;
-			padding: 0 2rem;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.welcome-header h1 {
-			font-size: 2.25rem;
-			font-weight: 700;
-			margin: 0;
-			text-shadow: 0 4px 12px rgba(0,0,0,0.2);
-			animation: fadeInBounce 0.8s ease-out;
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-		}
-		
-		.welcome-header h1 i {
-			font-size: 2rem;
-		}
-		
-		@keyframes fadeInBounce {
-			0% {
-				opacity: 0;
-				transform: translateY(-30px) scale(0.8);
-			}
-			70% {
-				transform: translateY(5px) scale(1.05);
-			}
-			100% {
-				opacity: 1;
-				transform: translateY(0) scale(1);
-			}
-		}
-		
-		.welcome-header .subtitle {
-			font-size: 1rem;
-			opacity: 0.95;
-			margin-top: 0.5rem;
-			animation: fadeInUp 1s ease-out;
-		}
-		
-		@keyframes fadeInUp {
-			from {
-				opacity: 0;
-				transform: translateY(20px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		
-		.btn-back {
-			background: rgba(255, 255, 255, 0.3);
-			backdrop-filter: blur(10px);
-			border: 2px solid rgba(255, 255, 255, 0.5);
-			color: white;
-			padding: 0.625rem 1.75rem;
-			border-radius: 25px;
-			font-size: 0.95rem;
-			font-weight: 600;
-			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-			white-space: nowrap;
-			box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-		}
-		
-		.btn-back:hover {
-			background: rgba(255, 255, 255, 0.5);
-			border-color: rgba(255, 255, 255, 0.8);
-			color: white;
-			transform: translateY(-3px) scale(1.05);
-			box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-		}
-		
-		.container {
-			animation: slideInUp 0.6s ease-out;
-			position: relative;
-			z-index: 10;
-		}
-		
-		@keyframes slideInUp {
-			from {
-				opacity: 0;
-				transform: translateY(40px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		
-		.profile-card {
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 233, 254, 0.98) 100%);
-			backdrop-filter: blur(20px);
-			border-radius: 24px;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			box-shadow: 0 15px 50px rgba(129, 140, 248, 0.15);
-			padding: 2.5rem;
-			margin-bottom: 2rem;
-			transition: all 0.4s ease;
-			position: relative;
-			overflow: hidden;
-		}
-		
-		.profile-card::before {
-			content: '';
-			position: absolute;
-			top: -50%;
-			right: -50%;
-			width: 200%;
-			height: 200%;
-			background: radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%);
-			pointer-events: none;
-		}
-		
-		.profile-card:hover {
-			transform: translateY(-5px);
-			box-shadow: 0 20px 60px rgba(129, 140, 248, 0.25);
-			border-color: rgba(129, 140, 248, 0.3);
-		}
-		
-		.profile-header {
-			display: flex;
-			align-items: center;
-			gap: 2rem;
-			margin-bottom: 2rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.profile-avatar {
-			width: 140px;
-			height: 140px;
-			border-radius: 50%;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 3.5rem;
-			color: white;
-			box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
-			animation: pulse-avatar 3s ease-in-out infinite;
-			border: 4px solid white;
-			position: relative;
-		}
-		
-		.profile-avatar i {
-			font-size: 3.5rem;
-		}
-		
-		@keyframes pulse-avatar {
-			0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3); }
-			50% { transform: scale(1.03); box-shadow: 0 15px 40px rgba(129, 140, 248, 0.4); }
-		}
-		
-		.profile-info h2 {
-			font-size: 2rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-			margin-bottom: 0.5rem;
-		}
-		
-		.badge-status {
-			padding: 0.5rem 1.25rem;
-			border-radius: 20px;
-			font-weight: 600;
-			font-size: 0.875rem;
-			display: inline-flex;
-			align-items: center;
-			gap: 0.5rem;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-		}
-		
-		.badge-active {
-			background: linear-gradient(135deg, #10b981, #059669);
-			color: white;
-		}
-		
-		.badge-inactive {
-			background: linear-gradient(135deg, #ef4444, #dc2626);
-			color: white;
-		}
 
-		.badge-closed {
-			background: linear-gradient(135deg, #9ca3af, #6b7280);
-			color: white;
-		}
-		
-		.info-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-			gap: 1.5rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.info-item {
-			background: rgba(255, 255, 255, 0.7);
-			padding: 1.5rem;
-			border-radius: 16px;
-			border: 1px solid rgba(129, 140, 248, 0.1);
-			transition: all 0.3s ease;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.info-item:hover {
-			background: rgba(255, 255, 255, 0.95);
-			transform: translateY(-3px);
-			box-shadow: 0 8px 20px rgba(129, 140, 248, 0.15);
-			border-color: rgba(129, 140, 248, 0.2);
-		}
-		
-		.info-item .label {
-			font-size: 0.875rem;
-			color: #a78bfa;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			margin-bottom: 0.75rem;
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-		}
-		
-		.info-item .label i {
-			font-size: 1.1rem;
-			color: #818cf8;
-		}
-		
-		.info-item .value {
-			font-size: 1.25rem;
-			color: #4c1d95;
-			font-weight: 600;
-		}
-		
-		.attendance-card {
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 233, 254, 0.98) 100%);
-			backdrop-filter: blur(20px);
-			border-radius: 24px;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			box-shadow: 0 15px 50px rgba(129, 140, 248, 0.15);
-			padding: 2.5rem;
-			position: relative;
-			overflow: hidden;
-		}
-		
-		.attendance-card::before {
-			content: '';
-			position: absolute;
-			top: -50%;
-			left: -50%;
-			width: 200%;
-			height: 200%;
-			background: radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%);
-			pointer-events: none;
-		}
-		
-		.attendance-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 2rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.attendance-header h3 {
-			font-size: 1.75rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-		}
-		
-		.attendance-header h3 i {
-			font-size: 1.5rem;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stats-row {
-			display: flex;
-			gap: 1rem;
-			margin-bottom: 2rem;
-			flex-wrap: wrap;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.stat-box {
-			flex: 1;
-			min-width: 150px;
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(237, 233, 254, 0.9));
-			padding: 1.5rem;
-			border-radius: 16px;
-			text-align: center;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			transition: all 0.3s ease;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.stat-box:hover {
-			transform: translateY(-5px) scale(1.02);
-			box-shadow: 0 10px 30px rgba(129, 140, 248, 0.2);
-			border-color: rgba(129, 140, 248, 0.3);
-		}
-		
-		.stat-box .stat-icon {
-			font-size: 2rem;
-			margin-bottom: 0.75rem;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stat-box .stat-value {
-			font-size: 2rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stat-box .stat-label {
-			font-size: 0.875rem;
-			color: #a78bfa;
-			font-weight: 600;
-			text-transform: uppercase;
-			margin-top: 0.5rem;
-			letter-spacing: 0.5px;
-		}
-		
-		.table-container {
-			position: relative;
-			z-index: 1;
-		}
-		
-		.table {
-			border-radius: 16px;
-			overflow: hidden;
-			background: white;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.table thead {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-		}
-		
-		.table thead th {
-			border: none;
-			padding: 1rem 1.25rem;
-			font-weight: 700;
-			text-transform: uppercase;
-			font-size: 0.875rem;
-			letter-spacing: 0.5px;
-			color: white;
-		}
-		
-		.table tbody tr {
-			transition: all 0.3s ease;
-			border-bottom: 1px solid rgba(0,0,0,0.05);
-		}
-		
-		.table tbody tr:hover {
-			background: linear-gradient(135deg, rgba(129, 140, 248, 0.05), rgba(167, 139, 250, 0.05));
-			transform: scale(1.01);
-		}
-		
-		.table tbody td {
-			padding: 1rem 1.25rem;
-			vertical-align: middle;
-		}
-		
-		.method-badge {
-			padding: 0.5rem 1rem;
-			border-radius: 12px;
-			font-weight: 600;
-			font-size: 0.8rem;
-			display: inline-flex;
-			align-items: center;
-			gap: 0.5rem;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		}
-		
-		.method-badge i {
-			font-size: 0.9rem;
-		}
-		
-		.method-face {
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			color: white;
-		}
-		
-		.method-rfid {
-			background: linear-gradient(135deg, #6366f1, #8b5cf6);
-			color: white;
-		}
-		
-		.method-manual {
-			background: linear-gradient(135deg, #f59e0b, #d97706);
-			color: white;
-		}
-		
-		.empty-state {
-			text-align: center;
-			padding: 3rem;
-			color: #a78bfa;
-		}
-		
-		.empty-state i {
-			font-size: 4rem;
-			margin-bottom: 1rem;
-			opacity: 0.3;
-			color: #818cf8;
-		}
-		
-		.empty-state p {
-			font-size: 1.1rem;
-			font-weight: 500;
-		}
-		
-		#loading-overlay {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: linear-gradient(135deg, rgba(224, 242, 254, 0.98), rgba(237, 233, 254, 0.98));
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			z-index: 9999;
-			backdrop-filter: blur(10px);
-		}
-		
-		.loader {
-			text-align: center;
-		}
-		
-		.loader-spinner {
-			width: 60px;
-			height: 60px;
-			border: 5px solid rgba(129, 140, 248, 0.2);
-			border-top-color: #818cf8;
-			border-radius: 50%;
-			animation: spin 1s linear infinite;
-			margin: 0 auto 1.5rem;
-		}
-		
-		@keyframes spin {
-			to { transform: rotate(360deg); }
-		}
-		
-		.loader-text {
-			font-size: 1.25rem;
-			font-weight: 600;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		@media (max-width: 768px) {
-			.welcome-header h1 {
-				font-size: 1.5rem;
-			}
-			.profile-header {
-				flex-direction: column;
-				text-align: center;
-			}
-			.info-grid {
-				grid-template-columns: 1fr;
-			}
-		}
-	</style>
+  <style>
+    :root { --accent-1: #818cf8; --accent-2: #a78bfa; --muted:#6b7280; --card-bg: rgba(255,255,255,0.98); }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      min-height:100vh;
+      background: linear-gradient(135deg,#e0f2fe 0%, #ddd6fe 50%, #fce7f3 100%);
+      color:#2b2546;
+      padding:20px;
+    }
+    .container-main{max-width:1100px;margin:0 auto}
+    .page-header{background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;padding:14px;border-radius:10px;margin-bottom:14px;box-shadow:0 8px 30px rgba(129,140,248,0.16)}
+    .page-header h1{margin:0;font-size:1.2rem;font-weight:700;display:flex;gap:.6rem;align-items:center}
+
+    /* Profile */
+    .profile-card{background:linear-gradient(180deg,var(--card-bg) 0%, rgba(237,233,254,0.98) 100%);padding:12px;border-radius:10px;border:1px solid rgba(129,140,248,0.12);display:flex;gap:16px;align-items:center;margin-bottom:12px;box-shadow:0 10px 30px rgba(129,140,248,0.06)}
+    .avatar{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:#fff;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));border:4px solid #fff;flex-shrink:0;box-shadow:0 8px 24px rgba(129,140,248,0.12)}
+    .profile-main{display:flex;flex:1;gap:12px;flex-wrap:wrap;align-items:center}
+    .profile-name { display:flex; flex-direction:column; gap:6px; min-width:200px; }
+    .profile-name h2{margin:0;font-size:1.25rem;font-weight:700}
+    .profile-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .meta-badge { padding:6px 10px; border-radius:999px; font-weight:600; font-size:.86rem; display:inline-flex; gap:8px; align-items:center; }
+    .meta-active{ background:linear-gradient(135deg,#10b981,#059669); color:#fff }
+    .meta-inactive{ background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff }
+    .meta-closed{ background:linear-gradient(135deg,#9ca3af,#6b7280); color:#fff }
+
+    .profile-details{ display:flex; gap:12px; align-items:center; margin-left:auto; flex-wrap:wrap; }
+    .info-item{ background: rgba(255,255,255,0.9); padding:8px 10px; border-radius:8px; border:1px solid rgba(129,140,248,0.06); min-width:120px; }
+    .info-item .label{ font-size:.75rem; color:var(--accent-2); font-weight:700; text-transform:uppercase }
+    .info-item .value{ font-weight:700; color:#3f2a7a; margin-top:4px }
+
+    /* Attendance card */
+    .attendance-card{ background:var(--card-bg); padding:12px; border-radius:10px; border:1px solid rgba(129,140,248,0.08); box-shadow:0 8px 24px rgba(129,140,248,0.06) }
+    .filter-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-bottom:10px }
+    .filter-row label{ font-size:.8rem; color:var(--muted); display:block; margin-bottom:4px }
+
+    .table{ border-radius:8px; overflow:hidden; }
+    .table thead th{ background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); color:#fff; border:none; font-size:.82rem }
+    .table tbody td{ vertical-align:middle; font-size:.88rem; padding:.6rem .8rem }
+
+    .empty{ padding:14px; text-align:center; color:var(--muted) }
+
+    #loading-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.85); z-index:9999; }
+    .loader-spinner{ width:54px; height:54px; border-radius:50%; border:6px solid rgba(129,140,248,0.18); border-top-color:var(--accent-1); animation:spin 1s linear infinite }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
+
+    @media (max-width:767px){
+      .profile-card{ flex-direction:column; align-items:flex-start; gap:10px }
+      .profile-details{ margin-left:0; }
+      .filter-row{ flex-direction:column; align-items:stretch }
+    }
+  </style>
+
 	<script src="./js/main.js"></script>
 
-	<script>
-		// API Base URL
 
-		const API_BASE_URL = (function(){
-			const saved = localStorage.getItem('wh_api_base');
-			if (saved) return saved;
-			if (window.location.port === '8000') return window.location.origin;
-			return 'http://localhost:8000';
-		})();
-
-		async function ensureLoggedInOrRedirect() {
-			const token = localStorage.getItem('wh_token');
-			if (!token) {
-				window.location.href = 'login.html';
-				return null;
-			}
-			return token;
-		}
-
-		function getGuestIdFromUrl() {
-			const params = new URLSearchParams(window.location.search);
-			return params.get('id');
-		}
-
-		function formatDate(dateString) {
-			if (!dateString) return '-';
-			const date = new Date(dateString);
-			return date.toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric'
-			});
-		}
-
-		function formatDateTime(dateString) {
-			if (!dateString) return '-';
-			const date = new Date(dateString);
-			return date.toLocaleString('en-US', {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit'
-			});
-		}
-
-		function getMethodBadgeClass(method) {
-			const lowerMethod = (method || '').toLowerCase();
-			if (lowerMethod === 'face') return 'method-face';
-			if (lowerMethod === 'rfid') return 'method-rfid';
-			return 'method-manual';
-		}
-
-		function getMethodIcon(method) {
-			const lowerMethod = (method || '').toLowerCase();
-			if (lowerMethod === 'face') return '<i class="bi bi-person-bounding-box"></i>';
-			if (lowerMethod === 'rfid') return '<i class="bi bi-credit-card-2-front"></i>';
-			return '<i class="bi bi-pencil-square"></i>';
-		}
-
-		function renderGuestProfile(guest) {
-			const nameInitial = (guest.name || '?').charAt(0).toUpperCase();
-			const status = String(guest.status || '').toLowerCase();
-			let statusBadge = '';
-			if (status === 'active') {
-				statusBadge = '<span class="badge-status badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>';
-			} else if (status === 'inactive') {
-				statusBadge = '<span class="badge-status badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>';
-			} else if (status === 'closed') {
-				statusBadge = '<span class="badge-status badge-closed"><i class="bi bi-slash-circle"></i> Closed</span>';
-			} else {
-				statusBadge = '<span class="badge-status badge-inactive"><i class="bi bi-question-circle"></i> Unknown</span>';
-			}
-
-			document.getElementById('profile-section').innerHTML = `
-				<div class="profile-card">
-					<div class="profile-header">
-						<div class="profile-avatar"><i class="bi bi-person-circle"></i></div>
-						<div class="profile-info">
-							<h2>${guest.name || 'Unknown'}</h2>
-							${statusBadge}
-						</div>
-					</div>
-					<div class="info-grid">
-						<div class="info-item">
-							<div class="label"><i class="bi bi-fingerprint"></i> Guest ID</div>
-							<div class="value">${guest.guest_id || '-'}</div>
-						</div>
-						<div class="info-item">
-							<div class="label"><i class="bi bi-house-door"></i> Bed Assignment</div>
-							<div class="value">${guest.bed_id || guest.bed_no || 'Not Assigned'}</div>
-						</div>
-						<div class="info-item">
-							<div class="label"><i class="bi bi-calendar-check"></i> Assigned Date</div>
-							<div class="value">${formatDate(guest.assign_date)}</div>
-						</div>
-						<div class="info-item">
-							<div class="label"><i class="bi bi-person-badge"></i> Guest Type</div>
-							<div class="value">${guest.guest_type || 'Standard'}</div>
-						</div>
-					</div>
-				</div>
-			`;
-		}
-
-		function renderAttendance(attendance) {
-			const totalRecords = attendance.length;
-			const faceCount = attendance.filter(a => (a.method || '').toLowerCase() === 'face').length;
-			const rfidCount = attendance.filter(a => (a.method || '').toLowerCase() === 'rfid').length;
-			const manualCount = attendance.filter(a => (a.method || '').toLowerCase() === 'manual').length;
-
-			let tableRows = '';
-			if (attendance.length === 0) {
-				tableRows = `
-					<tr>
-						<td colspan="4" class="empty-state">
-							<i class="bi bi-inbox"></i>
-							<p>No attendance records found</p>
-						</td>
-					</tr>
-				`;
-			} else {
-				tableRows = attendance.map((record, index) => `
-					<tr style="animation: fadeInUp 0.3s ease-out ${index * 0.05}s backwards;">
-						<td><i class="bi bi-clock-history" style="color: #a855f7; margin-right: 0.5rem;"></i>${formatDateTime(record.timestamp)}</td>
-						<td><span class="method-badge ${getMethodBadgeClass(record.method)}">${getMethodIcon(record.method)} ${record.method || 'Unknown'}</span></td>
-						<td><i class="bi bi-router" style="color: #ec4899; margin-right: 0.5rem;"></i>${record.device_id || '-'}</td>
-						<td>
-							<i class="bi ${record.synced ? 'bi-check-circle-fill text-success' : 'bi-clock text-warning'}"></i>
-							${record.synced ? 'Synced' : 'Pending'}
-						</td>
-					</tr>
-				`).join('');
-			}
-
-			document.getElementById('attendance-section').innerHTML = `
-				<div class="attendance-card">
-					<div class="attendance-header">
-						<h3><i class="bi bi-bar-chart-line"></i> Attendance Records</h3>
-					</div>
-					<div class="stats-row">
-						<div class="stat-box">
-							<div class="stat-icon"><i class="bi bi-collection"></i></div>
-							<div class="stat-value">${totalRecords}</div>
-							<div class="stat-label">Total Records</div>
-						</div>
-						<div class="stat-box">
-							<div class="stat-icon"><i class="bi bi-person-bounding-box"></i></div>
-							<div class="stat-value">${faceCount}</div>
-							<div class="stat-label">Face Recognition</div>
-						</div>
-						<div class="stat-box">
-							<div class="stat-icon"><i class="bi bi-credit-card-2-front"></i></div>
-							<div class="stat-value">${rfidCount}</div>
-							<div class="stat-label">RFID</div>
-						</div>
-						<div class="stat-box">
-							<div class="stat-icon"><i class="bi bi-pencil-square"></i></div>
-							<div class="stat-value">${manualCount}</div>
-							<div class="stat-label">Manual</div>
-						</div>
-					</div>
-					<div class="table-container">
-						<div class="table-responsive">
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th><i class="bi bi-clock"></i> Timestamp</th>
-										<th><i class="bi bi-layout-text-sidebar"></i> Method</th>
-										<th><i class="bi bi-router"></i> Device</th>
-										<th><i class="bi bi-check2-circle"></i> Status</th>
-									</tr>
-								</thead>
-								<tbody>
-									${tableRows}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			`;
-		}
-
-		async function loadGuestDetails() {
-			const token = await ensureLoggedInOrRedirect();
-			if (!token) return;
-
-			const guestId = getGuestIdFromUrl();
-			if (!guestId) {
-				alert('No guest ID provided');
-				window.location.href = 'Guests.html';
-				return;
-			}
-
-			try {
-				const res = await fetch(`${API_BASE_URL}/guests/${guestId}`, {
-					headers: { 'Authorization': `Bearer ${token}` }
-				});
-
-				if (!res.ok) {
-					if (res.status === 401) {
-						window.location.href = 'login.html';
-						return;
-					}
-					const err = await res.json().catch(() => ({}));
-					throw new Error(err.detail || `Request failed (${res.status})`);
-				}
-				debugger;
-				const data = await res.json();
-				
-				// Hide loading overlay
-				document.getElementById('loading-overlay').style.display = 'none';
-				
-				// Update header
-				//document.getElementById('guest-name-header').textContent = data.guest.name || 'Guest Details';
-				
-				// Render profile and attendance
-				renderGuestProfile(data.guest);
-				renderAttendance(data.attendance || []);
-
-			} catch (e) {
-				console.error(e);
-				alert(e.message || 'Failed to load guest details');
-				window.location.href = 'Guests.html';
-			}
-		}
-
-		// function handleLogout() {
-		// 	// Optionally clear local/session storage if you want to fully log out
-		// 	localStorage.removeItem('wh_token');
-		// 	localStorage.removeItem('wh_user');
-		// 	// Redirect to dashboard
-		// 	window.location.href = 'index2.html';
-		// }
-
-		// Create floating decorative elements
-		function createFloatingElements() {
-			const icons = ['bi-star-fill', 'bi-heart-fill', 'bi-gem', 'bi-flower1', 'bi-award-fill', 'bi-brightness-high-fill'];
-			
-			for (let i = 0; i < 6; i++) {
-				const icon = document.createElement('i');
-				icon.className = `bi ${icons[i]} floating-icon`;
-				document.body.appendChild(icon);
-			}
-		}
-
-		document.addEventListener('DOMContentLoaded', () => {
-			createFloatingElements();
-			loadGuestDetails();
-		});
-	</script>
 </head>
 <body>
+<!-- Page JS -->
+  <script>
+    /* ============================
+       Configuration & small helpers
+       ============================ */
+
+	   
+
+    function formatDate(dStr) {
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    function formatDateTime(dStr) {
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function showLoader(show=true) {
+      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function getTokenHeader() {
+      const token = localStorage.getItem('wh_token') || '';
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    /* ============================
+       Profile loading (keeps original fields)
+       ============================ */
+    async function loadGuestProfile() {
+      // This function only populates profile fields and hides loader when done.
+      // You asked to ignore menu/API specifics — we will still call /guests/{guestId}
+      const token = localStorage.getItem('wh_token');
+      if (!token) { window.location.href = 'login.html'; return; }
+
+      const guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+      if (!guestId) {
+        // no guest -> redirect back
+        return;
+      }
+
+      try {
+        showLoader(true);
+        const res = await fetch(`${API_BASE_URL}/guests/${guestId}`, { headers: { ...getTokenHeader() }});
+        if (!res.ok) throw new Error('Failed to load profile');
+        const data = await res.json();
+
+        // preserve formatting you asked: Name, Guest ID, Active, Bed Assignment, Assigned Date
+        const g = data.guest || {};
+        document.getElementById('guest-name').textContent = g.name || 'Unknown';
+        document.getElementById('guest-id').textContent = g.guest_id || '-';
+        document.getElementById('guest-bed').textContent = g.bed_id || g.bed_no || 'Not Assigned';
+        document.getElementById('guest-assigned').textContent = formatDate(g.assign_date);
+
+        const statusEl = document.getElementById('guest-status');
+        const status = String(g.status || '').toLowerCase();
+        statusEl.className = 'meta-badge';
+        if (status === 'active') { statusEl.classList.add('meta-active'); statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i> Active'; }
+        else if (status === 'inactive') { statusEl.classList.add('meta-inactive'); statusEl.innerHTML = '<i class="bi bi-x-circle-fill"></i> Inactive'; }
+        else if (status === 'closed') { statusEl.classList.add('meta-closed'); statusEl.innerHTML = '<i class="bi bi-slash-circle"></i> Closed'; }
+        else { statusEl.classList.add('meta-inactive'); statusEl.textContent = 'Unknown'; }
+
+      } catch (e) {
+        console.error(e);
+        // keep placeholders
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    /* ============================
+       Attendance fetching and rendering
+       ============================ */
+
+    // default dates: current month
+    function setDefaultDates() {
+      const now = new Date();
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      const last = new Date(now.getFullYear(), now.getMonth()+1, 0);
+      document.getElementById('start-date').value = first.toISOString().slice(0,10);
+      document.getElementById('end-date').value = last.toISOString().slice(0,10);
+    }
+
+ 
+  </script>
 
 
 
-	<!-- Loading Overlay -->
-	<div id="loading-overlay">
-		<div class="loader">
-			<div class="loader-spinner"></div>
-			<div class="loader-text">Loading guest details...</div>
-		</div>
-
-	</div>
-	<div id="menu-container"></div>
-	<!-- Shared header will be loaded here -->
 
 
-	<!-- Main Content -->
-	<div class="container">
-		<div id="profile-section"></div>
-		<div id="attendance-section"></div>
-	</div>
+
+
+
+
+
+
+
+<div id="menu-container"></div>
+
+  <div class="container-main">
+    <header class="page-header">
+      <h1><i class="bi bi-person-lines-fill"></i> Guest Profile — Attendance</h1>
+    </header>
+
+    <!-- Profile -->
+    <section id="profile-section" class="profile-card" aria-live="polite">
+      <div class="avatar"><i class="bi bi-person-circle"></i></div>
+
+      <div class="profile-main">
+        <div class="profile-name">
+          <h2 id="guest-name">Loading…</h2>
+          <div id="guest-status" class="meta-badge meta-inactive">—</div>
+        </div>
+
+        <div class="profile-details" id="profile-details-block">
+          <div class="info-item">
+            <div class="label">Guest ID</div>
+            <div id="guest-id" class="value">—</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Bed</div>
+            <div id="guest-bed" class="value">—</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Assigned Date</div>
+            <div id="guest-assigned" class="value">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Attendance -->
+    <section class="attendance-card" id="attendance-section" aria-live="polite">
+      <div class="filter-row">
+        <div style="min-width:160px">
+          <label for="start-date">Start Date</label>
+          <input id="start-date" type="date" class="form-control form-control-sm" />
+        </div>
+
+        <div style="min-width:160px">
+          <label for="end-date">End Date</label>
+          <input id="end-date" type="date" class="form-control form-control-sm" />
+        </div>
+
+        <div style="align-self:flex-end">
+          <button id="fetch-btn" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Fetch / Filter</button>
+        </div>
+
+        
+      </div>
+
+      <!-- Loading overlay -->
+      <div id="loading-overlay" style="display:none;">
+        <div>
+          <div class="loader-spinner"></div>
+          <div style="text-align:center; margin-top:0.75rem; color:#4c3a97; font-weight:600;">Fetching attendance…</div>
+        </div>
+      </div>
+      <table id="attendanceTable" class="table table-striped table-bordered">
+          <thead>
+              <tr>
+                  <th>ID</th>
+                  <th>Method</th>
+                  <th>Device</th>
+                  <th>In Time</th>
+                  <th>Out Time</th>
+              </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+
+
+      <div id="pagination" class="mt-3 d-flex justify-content-center"></div>
+
+      <!-- <nav id="attendance-pagination" class="d-flex justify-content-center mt-3" aria-label="Attendance pagination"></nav> -->
+    </section>
+  </div>
+
+  <!-- Loader -->
+  <div id="loading-overlay" style="display:none;">
+    <div style="text-align:center;">
+      <div class="loader-spinner"></div>
+      <div style="margin-top:10px;color:#4c3a97;font-weight:600">Working…</div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ---------------------------
+    // Configuration & helpers
+    // ---------------------------
+    const API_BASE_URL = (function(){
+      const saved = localStorage.getItem('wh_api_base');
+      if (saved) return saved;
+      if (window.location.port === '8000') return window.location.origin;
+      return 'http://localhost:8000';
+    })();
+
+    const PAGE_LIMIT = 50;   // fixed server-side page size per your request
+
+    function showLoader(v=true){ document.getElementById('loading-overlay').style.display = v ? 'flex' : 'none'; }
+    function getTokenHeader(){ const token = localStorage.getItem('wh_token') || ''; return token ? { 'Authorization': `Bearer ${token}` } : {}; }
+
+    function formatDate(dStr){
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+    }
+    function formatDateTime(dStr){
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleString('en-GB', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+
+    // ---------------------------
+
+
+
+
+
+    
+  async function fetchAttendance(page = 1) {
+    const token = localStorage.getItem('wh_token');
+    if (!token) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+    if (!guestId) {
+      alert('No guest selected');
+      return;
+    }
+
+    const start = document.getElementById('start-date').value;
+    const end = document.getElementById('end-date').value;
+    if (!start || !end) {
+      alert('Select both start and end dates');
+      return;
+    }
+
+    showLoader(true);
+
+
+    try {
+      const url = new URL(`${API_BASE_URL}/attendance/records`);
+      url.searchParams.set('guest_id', guestId);
+      url.searchParams.set('start_date', start);
+      url.searchParams.set('end_date', end);
+      url.searchParams.set('page', page);
+      url.searchParams.set('limit', PAGE_LIMIT);
+
+      const res = await fetch(url.toString(), {
+        headers: { ...getTokenHeader() }
+      });
+
+      if (!res.ok)
+        throw new Error(`Request failed (${res.status})`);
+
+      debugger;
+      const payload = await res.json();
+      const events = payload.events || payload.attendance || [];
+
+      const meta = {
+        total_pages: payload.total_pages || Math.ceil((payload.total_records || events.length) / PAGE_LIMIT),
+        current_page: payload.current_page || page,
+        total_records: payload.total_records || (payload.total || events.length),
+        limit: payload.limit || PAGE_LIMIT
+      };
+
+
+      renderAttendanceTable(payload.data);          // your render function
+
+      setupPagination(meta.total_records, meta.current_page);
+
+
+    } catch (err) {
+      console.error(err);
+
+      document.getElementById('attendance-pagination').innerHTML = '';
+    } finally {
+      showLoader(false);
+    }
+  }
+
+
+function renderAttendanceTable(data) {
+    const tableBody = document.querySelector("#attendanceTable tbody");
+    if (!tableBody) return;
+
+    tableBody.innerHTML = ""; // Clear old data
+
+    if (!data || data.length === 0) {
+        tableBody.innerHTML = `
+            <tr><td colspan="6" class="text-center text-muted">No records found</td></tr>
+        `;
+        return;
+    }
+
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${row.method}</td>
+            <td>${row.device_id}</td>
+            <td>${row.in_time || ""}</td>
+            <td>${row.out_time || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function setupPagination(total, currentPage) {
+    const limit = 50;
+    const totalPages = Math.ceil(total / limit);
+    const pagination = document.getElementById("pagination");
+
+    if (!pagination) return;
+
+    pagination.innerHTML = "";
+
+    // Previous button
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "Prev";
+    prevBtn.className = "btn btn-sm btn-outline-primary me-2";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => fetchAttendance(currentPage - 1);
+    pagination.appendChild(prevBtn);
+
+    // Number buttons
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = `btn btn-sm ${i === currentPage ? "btn-primary" : "btn-outline-primary"} me-1`;
+        btn.onclick = () => fetchAttendance(i);
+        pagination.appendChild(btn);
+    }
+
+    // Next button
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "Next";
+    nextBtn.className = "btn btn-sm btn-outline-primary ms-2";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => fetchAttendance(currentPage + 1);
+    pagination.appendChild(nextBtn);
+}
+
+
+
+
+
+
+
+
+
+    
+
+    </script>
+<script>
+  function initAttendancePage() {
+    console.log("Initializing Attendance Page...");
+
+    // 1️⃣ Default date range
+    setDefaultDates();
+
+    // 2️⃣ Load guest profile info
+    loadGuestProfile();
+
+    // 3️⃣ Bind fetch button
+    $("#fetch-btn").off("click").on("click", function () {
+		
+      console.log("Fetch button clicked");
+      fetchAttendance(1);
+    });
+
+    
+
+    console.log("Attendance page ready ✅");
+  }
+
+  // When header and layout are ready, call init
+  $(window).on("load", function () {
+    if ($("#fetch-btn").length) {
+      initAttendancePage();
+    } else {
+      console.warn("Attendance UI not ready yet!");
+    }
+  });
+</script>
+
+
 	<script>
 		$(document).ready(function(){
 	

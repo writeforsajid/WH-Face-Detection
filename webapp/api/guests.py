@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Header,Form
 from typing import Optional, Dict
 from db.database import get_connection
 from services import guest_service
-from datetime import datetime, timezone
+from datetime import date,datetime, timezone
 
 router = APIRouter()
 
@@ -90,6 +90,71 @@ def list_guests(
 ):
     return guest_service.get_guests(page=page, limit=limit, search=search, status=status)
 
+    
+@router.get("/bed_numbers")
+def bunch_of_beds():
+    
+    return guest_service.get_bunch_of_beds()
+
+  
+
+@router.get("/history")
+def get_history_records(
+    
+    guest_id: str = Query(..., description="ID of the guest"),
+    start_date: date = Query(..., description="Start date in YYYY-MM-DD"),
+    end_date: date = Query(..., description="End date in YYYY-MM-DD"),
+    page: int = Query(1, description="Page number"),
+    limit: int = Query(50, description="Records per page"),
+):
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+ 
+    try:
+        result = guest_service.get_history_records(guest_id, start_date, end_date, page, limit)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="Attendance data not found")
+    return result
+
+
+@router.post("/add_metadata")
+def add_guest_metadata(meta: dict):
+    try:
+        result = guest_service.add_guest_metadata(meta)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return {"message": "Metadata added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.post("/{guest_id}/change_password")
+async def change_password(guest_id: str,
+    old_password: str = Form(None),
+    secret_key: str = Form(None),
+    new_password: str = Form(...),
+):
+    """
+    Change or reset a user's password.
+    Either old_password OR secret_key must be provided.
+    """
+    if not old_password and not secret_key:
+        raise HTTPException(status_code=400, detail="Provide either old password or secret key")
+
+    try:
+        result = await guest_service.change_password(guest_id,old_password, secret_key, new_password)
+        return {"message": result}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    
 @router.delete("/{guest_id}")
 def delete_guest(guest_id: str):
     deleted = guest_service.delete_guest(guest_id)
@@ -117,11 +182,6 @@ def confirm_guest(guest_id: str):
         raise HTTPException(status_code=404, detail=result["error"]) 
     
     return result
-    
-@router.get("/bed_numbers")
-def bunch_of_beds():
-    
-    return guest_service.get_bunch_of_beds()
 
 @router.get("/{guest_id}")
 def get_guest_details(guest_id: str):
@@ -133,43 +193,4 @@ def get_guest_details(guest_id: str):
     
     return result
     
-
-@router.get("/{guest_id}/history")
-def get_guest_history(guest_id: str):
-    
-    result = guest_service.get_guest_history(guest_id)
-
-    if isinstance(result, dict) and "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"]) 
-    
-    return result
-  
-
-
-
-@router.post("/{guest_id}/change_password")
-async def change_password(guest_id: str,
-    old_password: str = Form(None),
-    secret_key: str = Form(None),
-    new_password: str = Form(...),
-):
-    """
-    Change or reset a user's password.
-    Either old_password OR secret_key must be provided.
-    """
-    if not old_password and not secret_key:
-        raise HTTPException(status_code=400, detail="Provide either old password or secret key")
-
-    try:
-        result = await guest_service.change_password(guest_id,old_password, secret_key, new_password)
-        return {"message": result}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    
-
-
-
 

@@ -1,9 +1,14 @@
 $(document).ready(function () {
   // ✅ Load header first
+
   $("#menu-container").load("header.html", function () {
     console.log("Header loaded successfully");
 
+    
+
     const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+    console.log(user.name);
+
     if (!user.name) {
       window.location.href = "login.html";
       return;

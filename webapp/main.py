@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from api import  reports,guests,upload_video
+from api import  reports,guests,upload_video,attendance
 from api import beds as beds_router
 from static import auth as auth_router
 from db import database
@@ -48,6 +48,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
 
 app.include_router(guests.router, prefix="/guests", tags=["Guests"])
 app.include_router(guests.router, prefix="/login", tags=["login"])
