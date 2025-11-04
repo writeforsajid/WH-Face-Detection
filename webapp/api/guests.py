@@ -132,6 +132,23 @@ def add_guest_metadata(meta: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/update")
+def update_guest(meta: dict, authorization: str = Header(None)):
+    try:
+        # Token validation
+        if not authorization or authorization != "Bearer VALID_TOKEN":
+            raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+        result = guest_service.update_guest(meta)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return {"message": "Guest updated successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/{guest_id}/change_password")
 async def change_password(guest_id: str,

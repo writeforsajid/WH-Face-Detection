@@ -5,6 +5,7 @@ from utilities.environment_variables import load_environment
 import json
 from typing import List, Dict
 from fastapi import HTTPException
+import re
 #from passlib.context import CryptContext
 #import ffmpeg
 
@@ -472,3 +473,45 @@ async def change_password(guest_id,old_password, secret_key, new_password):
     conn.close()
 
     return "Password updated successfully"
+
+
+
+
+
+
+def update_guest(meta: dict):
+    try:
+        guest_id = meta.get("guest_id")
+        name = meta.get("name", "").strip()
+        email = meta.get("email", "").strip()
+        phone = meta.get("phone_number", "").strip()
+        comments = meta.get("comments", "").strip()
+        status = meta.get("status", "").strip()
+
+        # === Validation ===
+        if not all([guest_id, name, email, phone, comments, status]):
+            return {"error": "All fields are required"}
+        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+            return {"error": "Invalid email format"}
+        if not phone.isdigit() or len(phone) != 10:
+            return {"error": "Phone number must be 10 digits"}
+        if status not in ['active', 'inactive', 'closed', 'leave']:
+            return {"error": "Invalid status value"}
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        UPDATE guests 
+        SET name=?, email=?, phone_number=?, comments=?, status=? 
+        WHERE guest_id=?
+    """, (name, email, phone, comments, status, guest_id))
+        conn.commit()
+        conn.close()
+
+        if cursor.rowcount == 0:
+            return {"error": "Guest not found"}
+
+        return {"success": True}
+
+    except Exception as e:
+        return {"error": str(e)}

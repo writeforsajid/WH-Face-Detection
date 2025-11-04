@@ -1,0 +1,52 @@
+.employee-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  max-width: 900px;
+  margin: 10px auto;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 180px;
+}
+
+label {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+input[type="date"],
+select {
+  padding: 8px;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.fetch-btn {
+  margin-top: 23px;
+  padding: 10px 20px;
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.fetch-btn:hover {
+  background: #005fa3;
+}
+
+@media (max-width: 768px) {
+  .employee-filter {
+    flex-direction: column;
+  }
+}
