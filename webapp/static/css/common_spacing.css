@@ -1,0 +1,105 @@
+/* Shared content width + horizontal padding for all pages
+   This file provides a single place to control left/right spacing so
+   pages look consistent with Guests.html.
+*/
+:root{
+  --site-max-width:1200px;
+  --site-side-padding:1rem; /* adjust for more/less side gap */
+}
+
+/* Apply the same max-width and horizontal padding to common container classes
+   used across the site. This preserves full-bleed headers that deliberately
+   escape the container (they use negative margins or a separate full-bleed rule).
+*/
+.page-wrapper,
+.container-main,
+.page-content,
+.dashboard-container,
+.header-container,
+.service-hero,
+.card-service,
+.content-wrapper{
+  max-width: var(--site-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--site-side-padding);
+  padding-right: var(--site-side-padding);
+  box-sizing: border-box;
+}
+
+/* Some pages intentionally use full-bleed header bars. If a header must
+   stretch edge-to-edge keep using the existing negative margin technique
+   or add the .full-bleed utility class to opt-out of the constrained width. */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+/* Responsive tweak: reduce side padding on small screens */
+@media (max-width: 640px){
+  :root{ --site-side-padding: 0.5rem; }
+}
+
+/* Small helper for pages that want centered-inner content regardless of
+   container class used (use .site-inner where needed) */
+.site-inner{ max-width: var(--site-max-width); margin:0 auto; padding:0 var(--site-side-padding); box-sizing:border-box }
+
+/* Header layout: place logo and nav-menu side-by-side and keep responsive
+   - On wide screens the .site-inner is a flex row with logo and nav aligned
+   - On small screens the nav-menu hides and the hamburger/button appears
+   - Keeps spacing consistent with the site container
+*/
+.header .site-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+}
+
+.header .nav-container { display: none; }
+
+.header .nav-menu {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.header .nav-menu a,
+.header .nav-menu .dropdown-btn {
+  text-decoration: inherit;
+  /* color: inherit; */
+}
+
+/* Hamburger styles (hidden by default) */
+.header .hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Responsive: collapse nav into hamburger on narrow screens */
+@media (max-width: 992px) {
+  .header .nav-menu { display: none; }
+  .header .nav-container { display: block; }
+  .header .hamburger { display: inline-flex; }
+  .header .site-inner { padding-left: var(--site-side-padding); padding-right: var(--site-side-padding); }
+}
+
+/* Override Bootstrap utility .mt-4 to slightly larger top spacing across the site.
+   We place . */
+.mt-4 { margin-top: 0.5rem !important; }
+

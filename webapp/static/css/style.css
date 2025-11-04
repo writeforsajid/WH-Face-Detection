@@ -236,4 +236,35 @@ button {
 
 /* Ensure there's no stray broken comment or duplicate rules below */
 
+/* ==========================
+   Global dropdown icon for buttons
+   - Appends a small, subtle down-triangle to buttons/links that act like
+     triggers. Keeps layout unaffected and allows opt-out with `.no-dropdown`.
+   - Uses Unicode ▾ (U+25BE) so no extra asset is required.
+   - Pointer events disabled on the pseudo-element so clicks land on the
+     button itself. Screen readers ignore ::after by default.
+*/
+button::after,
+input[type="button"]::after,
+input[type="submit"]::after,
+.btn::after,
+.nav-link::after,
+.dropdown-btn::after,
+.logout-btn::after {
+  content: "\25BE"; /* small down triangle */
+  display: inline-block;
+  margin-left: 0.35rem;
+  /* margin-bottom: 0.35rem; */
+  font-size: 20px; /* slightly larger per request */
+  vertical-align: middle;
+  opacity: 0.95;
+  transform: translateY(0.08em);
+  pointer-events: none; /* let the button receive clicks */
+  color: currentColor; /* match the button text color */
+}
+
+/* Opt-out helper: add class="no-dropdown" to remove the icon when not wanted */
+.no-dropdown::after { content: none !important; }
+
+
 

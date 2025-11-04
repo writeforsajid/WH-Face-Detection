@@ -30,8 +30,9 @@ $(document).ready(function () {
       // --- Hamburger toggle ---
       if (hamburger && hamburger.contains(e.target)) {
         e.stopPropagation();
+        alert("SDFDSDF");
         navMenu.classList.toggle("show");
-        // userDropdown.classList.remove("open"); // close user dropdown
+        //userDropdown.classList.remove("open"); // close user dropdown
         return;
       }
 
