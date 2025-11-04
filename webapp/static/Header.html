@@ -64,3 +64,19 @@
 
   </nav>
 </div>
+
+<!-- Small script to populate username from localStorage for pages that fetch this header -->
+<script>
+  (function(){
+    try {
+      var stored = localStorage.getItem('wh_user') || '{}';
+      var user = JSON.parse(stored);
+      var el = document.getElementById('userName');
+      if (el && user && user.name) {
+        el.textContent = user.name;
+      }
+    } catch (err) {
+      console && console.error && console.error('Header user load error', err);
+    }
+  })();
+</script>

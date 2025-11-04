@@ -19,252 +19,6 @@
             padding: 20px;
         }
 
-        /* Header Styles */
-        .header {
-            background: white;
-            border-radius: 15px;
-            padding: 15px 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-            margin-right: 30px;
-        }
-
-        .nav-menu {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            flex-wrap: wrap;
-        }
-
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-btn {
-            background: #667eea;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dropdown-btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .dropdown-btn::after {
-            content: '▼';
-            font-size: 10px;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            z-index: 1;
-            /* margin-top: 2px; */
-            overflow: hidden;
-        }
-
-        .dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: background 0.3s ease;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        .logout-btn {
-            background: #ff4757;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin-left: 10px;
-        }
-
-        .logout-btn:hover {
-            background: #ee5a6f;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
-        }
-
-        /* Hamburger (mobile only) */
-        .hamburger {
-            display: none;
-            background: white;
-            color: #667eea;
-            padding: 5px 5px;
-            border: 2px solid #e6e8ff;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 20px;
-            transition: all 0.2s ease;
-        }
-
-        .hamburger:hover {
-            background: #f5f6ff;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.25);
-            transform: translateY(-1px);
-        }
-
-        /* Mobile slide-out menu */
-        .mobile-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-            z-index: 1000;
-        }
-
-        .mobile-backdrop.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .mobile-menu {
-            position: fixed;
-            top: 0;
-            right: 0;
-            height: 100vh;
-            width: 82%;
-            max-width: 340px;
-            background: #ffffff;
-            box-shadow: -12px 0 30px rgba(0,0,0,0.2);
-            transform: translateX(100%);
-            transition: transform 0.28s ease;
-            z-index: 1001;
-            padding: 20px 18px 28px;
-            overflow-y: auto;
-        }
-
-        .mobile-menu.open {
-            transform: translateX(0);
-        }
-
-        .mobile-menu .menu-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .mobile-menu .menu-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .mobile-menu .close-btn {
-            background: #f3f4ff;
-            color: #667eea;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            padding: 8px 10px;
-            cursor: pointer;
-        }
-
-        .mobile-menu .section-list {
-            margin-top: 10px;
-        }
-
-        .mobile-menu details {
-            border: 1px solid #eef0ff;
-            border-radius: 10px;
-            padding: 8px 10px;
-            margin: 10px 0;
-            background: #fafbff;
-        }
-
-        .mobile-menu summary {
-            list-style: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .mobile-menu summary::-webkit-details-marker { display: none; }
-
-        .mobile-menu details ul {
-            margin-top: 10px;
-            padding-left: 6px;
-        }
-
-        .mobile-menu details li {
-            list-style: none;
-            border-radius: 8px;
-        }
-
-        .mobile-menu details a {
-            display: block;
-            padding: 10px 12px;
-            color: #333;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: background 0.2s ease;
-        }
-
-        .mobile-menu details a:hover {
-            background: #eef0ff;
-        }
-
-        .mobile-menu .logout-btn-mobile {
-            width: 100%;
-            margin-top: 12px;
-            background: #ff4757;
-            color: white;
-            padding: 12px 16px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
         /* Dashboard Container */
         .dashboard-container {
             max-width: 1400px;
@@ -489,10 +243,24 @@
     <script>
         fetch('Header.html')
             .then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
-            .then(html => { document.getElementById('site-header').innerHTML = html; })
+            .then(html => {
+                document.getElementById('site-header').innerHTML = html;
+                // After inserting header via innerHTML, inline scripts won't execute.
+                // Populate username from localStorage so admin_dashboard shows the name.
+                try {
+                    var stored = localStorage.getItem('wh_user') || '{}';
+                    var user = JSON.parse(stored);
+                    var el = document.getElementById('userName');
+                    if (el && user && user.name) {
+                        el.textContent = user.name;
+                    }
+                } catch (err) {
+                    console && console.error && console.error('Header post-load error', err);
+                }
+            })
             .catch(err => console.error('Header load error:', err));
     </script>
-            <div class="dropdown">
+            <!-- <div class="dropdown">
                 <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
                 <div class="dropdown-content">
                     <a href="#" onclick="scrollToSection('attendance-section')">View Attendance</a>
@@ -502,8 +270,8 @@
                 </div>
             </div>
 
-            <!-- Reports Dropdown -->
-            <div class="dropdown">
+             Reports Dropdown -->
+            <!-- <div class="dropdown">
                 <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
                 <div class="dropdown-content">
                     <a href="reports.html">View Reports</a>
@@ -513,19 +281,19 @@
                     <a href="reports.html">Custom Report</a>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div>
+        <!-- <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div> --> 
 
     <!-- Mobile Menu (slide-out) -->
-    <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobileMenu()"></div>
+    <!-- <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobileMenu()"></div>
     <nav class="mobile-menu" id="mobile-menu" aria-hidden="true">
         <div class="menu-header">
             <div class="menu-title"><i class="fas fa-home"></i> Menu</div>
             <button class="close-btn" aria-label="Close menu" onclick="closeMobileMenu()"><i class="fas fa-xmark"></i></button>
-        </div>
-        <div class="section-list">
+        </div> -->
+        <!-- <div class="section-list">
             <details>
                 <summary><i class="fas fa-bed"></i> Beds</summary>
                 <ul>
@@ -567,7 +335,7 @@
                 </ul>
             </details>
 
-            <button class="logout-btn-mobile" onclick="closeMobileMenu(); handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button class="logout-btn-mobile" onclick="closeMobileMenu(); handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button> -->
         </div>
     </nav>
 
