@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee Filter Demo</title>
+  <script type="module" src="/static/components/employee-filter.js"></script>
+
+</head>
+<body>
+  <h2 style="text-align:center;">Employee Attendance Viewer</h2>
+
+  <!-- Custom Web Component -->
+  <employee-filter></employee-filter>
+
+  <!-- Result Container -->
+  <div id="result-container" style="max-width:900px;margin:20px auto;white-space:pre;background:#fff;padding:10px;border-radius:6px;border:1px solid #ccc;"></div>
+
+  <script>
+    // Listen to event emitted from employee-filter
+    document.addEventListener("filter-data", async (e) => {
+      const filter = e.detail;
+      console.log("Filter Data Received:", filter);
+
+      // Simulate fetching records using filter
+      const fakeResponse = {
+        status: "success",
+        message: "Data fetched successfully",
+        filter
+      };
+
+      // Render JSON in container
+      document.getElementById("result-container").textContent =
+        JSON.stringify(fakeResponse, null, 2);
+    });
+  </script>
+</body>
+</html>
