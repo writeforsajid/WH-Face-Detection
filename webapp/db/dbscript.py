@@ -268,6 +268,10 @@ cursor.executemany(
 
 # 5️⃣ Insert Dummy Guests
 guests = [
+("20260105000001","Runa","writeforsajid@gmail.com","8319940394"),
+("20260105000002","Ashmat","ashmat@gmail.com","9336980752"),
+("20260105000003","Mujeeb","mujeeb@gmail.com","9760775533"),
+("20260105000004","Arjeena","arjeena@gmail.com","9997255787"),
 ("20250105000001","Rakshita","writeforsajid@gmail.com","8319940394"),
 ("20250105000002","Ramsha","arish@gmail.com","9336980752"),
 ("20250105000003","Aqsa Amroha.","mock+9760775533@crib.in","9760775533"),
@@ -405,6 +409,10 @@ cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_bed_id ON beds(bed_id)")
 
 
 guest_roles=[
+("20260105000001",2,"2025-10-02"),
+("20260105000002",2,"2025-10-02"),
+("20260105000003",2,"2025-10-02"),
+("20260105000004",2,"2025-10-02"),
 ("20250105000001",1,"2025-10-02"),
 ("20250105000002",1,"2025-10-02"),
 ("20250105000003",1,"2025-10-02"),

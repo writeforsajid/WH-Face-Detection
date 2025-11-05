@@ -4,14 +4,18 @@
   <meta charset="UTF-8" />
   <title>Employee Filter Demo</title>
   <script type="module" src="/static/components/employee-filter.js"></script>
-
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+  <div id="menu-container"></div>
   <h2 style="text-align:center;">Employee Attendance Viewer</h2>
 
   <!-- Custom Web Component -->
-  <employee-filter></employee-filter>
-
+  <employee-filter 
+  date-diff="7" 
+  data-api="http://localhost:8000/employees/active">
+</employee-filter>
+  <!-- data-api="/static/temp/sample.json"> -->
   <!-- Result Container -->
   <div id="result-container" style="max-width:900px;margin:20px auto;white-space:pre;background:#fff;padding:10px;border-radius:6px;border:1px solid #ccc;"></div>
 
@@ -33,5 +37,17 @@
         JSON.stringify(fakeResponse, null, 2);
     });
   </script>
+
+
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
 </body>
 </html>

@@ -7,9 +7,19 @@ class EmployeeFilter extends HTMLElement {
 
   connectedCallback() {
     this.render();
+    this.setupDefaults();
     this.loadEmployeeList();
-    this.setDefaultDates();
     this.addEventListeners();
+  }
+
+  get dateDiff() {
+    // Number of days to subtract from end date (default 0)
+    return parseInt(this.getAttribute("date-diff")) || 0;
+  }
+
+  get dataApi() {
+    // API endpoint to fetch employee list
+    return this.getAttribute("data-api") || "/data/sample.json";
   }
 
   render() {
@@ -24,7 +34,7 @@ class EmployeeFilter extends HTMLElement {
           <label for="endDate">End Date:</label>
           <input type="date" id="endDate" name="endDate" required>
         </div>
-        <div class="filter-field">
+        <div class="filter-field role-owner role-employee">
           <label for="employeeSelect">Employee:</label>
           <select id="employeeSelect">
             <option value="all">All Employees</option>
@@ -35,33 +45,75 @@ class EmployeeFilter extends HTMLElement {
         </div>
       </div>
     `;
+    console.log("EmployeeFilter component rendered.");
   }
 
-  setDefaultDates() {
-    const today = new Date().toISOString().split("T")[0];
-    this.shadowRoot.getElementById("startDate").value = today;
-    this.shadowRoot.getElementById("endDate").value = today;
+  setupDefaults() {
+    const today = new Date();
+    const endDateEl = this.shadowRoot.getElementById("endDate");
+    const startDateEl = this.shadowRoot.getElementById("startDate");
+
+    // Set end date to today
+    const todayStr = today.toISOString().split("T")[0];
+    endDateEl.value = todayStr;
+
+    // Subtract dateDiff days from end date to get start date
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - this.dateDiff);
+    const startStr = startDate.toISOString().split("T")[0];
+    startDateEl.value = startStr;
   }
 
   async loadEmployeeList() {
     try {
-      const response = await fetch("/static/temp/sample.json");
+      debugger;
+      const response = await fetch(this.dataApi);
       const employees = await response.json();
       const select = this.shadowRoot.getElementById("employeeSelect");
-      employees.forEach(emp => {
-        const option = document.createElement("option");
-        option.value = emp.id;
-        option.textContent = emp.name;
-        select.appendChild(option);
-      });
+
+      const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+      const guestId = user.guest_id || '';
+      const role = user.role || '';
+      // Clear old options except "All Employees"
+      select.innerHTML = `<option value="all">All Employees</option>`;
+
+      if (Array.isArray(employees)) {
+        employees.forEach(emp => {
+          const option = document.createElement("option");
+          option.value = emp.id;
+          option.textContent = emp.name;
+          if (role === "employee" && emp.id == guestId) {
+            option.selected = true;
+            select.disabled = true;
+          }
+
+
+          select.appendChild(option);
+        });
+      }
     } catch (error) {
       console.error("Failed to load employee list:", error);
     }
   }
 
   addEventListeners() {
+    const endDateEl = this.shadowRoot.getElementById("endDate");
     const fetchBtn = this.shadowRoot.getElementById("fetchBtn");
+
+    // When end date changes → auto-update start date based on dateDiff
+    endDateEl.addEventListener("change", () => this.updateStartFromEnd());
+
+    // Fetch button click
     fetchBtn.addEventListener("click", () => this.handleFetch());
+  }
+
+  updateStartFromEnd() {
+    const endDateEl = this.shadowRoot.getElementById("endDate");
+    const startDateEl = this.shadowRoot.getElementById("startDate");
+    const endDate = new Date(endDateEl.value);
+    endDate.setDate(endDate.getDate() - this.dateDiff);
+    const newStart = endDate.toISOString().split("T")[0];
+    startDateEl.value = newStart;
   }
 
   handleFetch() {
@@ -69,7 +121,6 @@ class EmployeeFilter extends HTMLElement {
     const endDate = this.shadowRoot.getElementById("endDate").value;
     const employeeId = this.shadowRoot.getElementById("employeeSelect").value;
 
-    // ✅ Client-side validation
     if (!startDate || !endDate) {
       alert("Please select both start and end dates.");
       return;
@@ -79,7 +130,6 @@ class EmployeeFilter extends HTMLElement {
       return;
     }
 
-    // ✅ Emit JSON event to parent
     const data = { startDate, endDate, employeeId };
     this.dispatchEvent(
       new CustomEvent("filter-data", {
@@ -89,6 +139,9 @@ class EmployeeFilter extends HTMLElement {
       })
     );
   }
+
+ 
+
 }
 
 customElements.define("employee-filter", EmployeeFilter);

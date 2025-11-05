@@ -56,13 +56,30 @@ $(document).ready(function () {
 
 // --- Role visibility ---
 function applyRoleMenu() {
-  const role = JSON.parse(localStorage.getItem('wh_user') || '{}').role || '';
+  const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+  const role = user.role || '';
+
   $(".role-owner, .role-employee, .role-resident").hide();
 
-  if (role === "owner") $(".role-owner").show();
-  else if (role === "employee") $(".role-employee").show();
-  else if (role === "resident") $(".role-resident").show();
+  // Show based on role
+  if (role) $(`.role-${role}`).show();
+
+  // 🔹 ALSO apply the same logic inside Web Components (like <employee-filter>)
+  $("*").each(function() {
+    if (this.shadowRoot) {
+      const shadow = this.shadowRoot;
+      $(shadow).find(".role-owner, .role-employee, .role-resident").hide();
+
+      if (role === "owner") $(shadow).find(".role-owner").show();
+      else if (role === "employee") $(shadow).find(".role-employee").show();
+      else if (role === "resident") $(shadow).find(".role-resident").show();
+    }
+  });
+
+  console.log("applyRoleMenu executed for role:", role);
 }
+
+
 
 // --- Set username ---
 function setupUserMenu() {
