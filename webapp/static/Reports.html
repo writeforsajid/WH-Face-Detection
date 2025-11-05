@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/common_spacing.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="./js/main.js"></script>
 
@@ -25,15 +26,15 @@ body {
 
 /* Header Styles */
 .header {
-  background: white;
-  border-radius: 15px;
+  /* background: white; */
+  /* border-radius: 15px;
   padding: 15px 30px;
   margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); */
+  /* display: flex; 
+  justify-content: space-between; */
+  /* align-items: center; */
+  /* flex-wrap: wrap; */
   max-width: 1200px;
   margin: 0 auto 30px;
 }
@@ -92,7 +93,7 @@ body {
 
 /* Main Container */
 .container {
-  max-width: 1200px;
+  max-width: 1223px;
   margin: 0 auto;
 }
 
@@ -465,11 +466,24 @@ textarea {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .header {
+  .container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+    width: 100%;
+    padding-right: calc(var(--bs-gutter-x) * .0.1);
+    padding-left: calc(var(--bs-gutter-x) * .0.1);
+    margin-right: none;
+    margin-left: none;
+}
+  /* .header {
     flex-direction: column;
     align-items: stretch;
     gap: 15px;
-  }
+  } */
 
   .nav-buttons {
     flex-direction: column;
@@ -517,6 +531,7 @@ textarea {
 .report-section,
 .form-section {
   animation: fadeIn 0.5s ease;
+}
 }
 </style>
 </head>
