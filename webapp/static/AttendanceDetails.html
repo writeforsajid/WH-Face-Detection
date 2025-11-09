@@ -8,60 +8,13 @@
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<!-- header styles moved to Header.html -->
 	<link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/common_spacing.css">
+
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+	<script type="module" src="/static/components/employee-filter.js"></script>
   <style>
-    :root { --accent-1: #818cf8; --accent-2: #a78bfa; --muted:#6b7280; --card-bg: rgba(255,255,255,0.98); }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      color:#2b2546;
-    }
-    .container-main{max-width:1100px;margin:0 auto}
-    .page-header{background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;padding:14px;border-radius:10px;margin-bottom:14px;box-shadow:0 8px 30px rgba(129,140,248,0.16)}
-    .page-header h1{margin:0;font-size:1.2rem;font-weight:700;display:flex;gap:.6rem;align-items:center}
-
-    /* Profile */
-    .profile-card{background:linear-gradient(180deg,var(--card-bg) 0%, rgba(237,233,254,0.98) 100%);padding:12px;border-radius:10px;border:1px solid rgba(129,140,248,0.12);display:flex;gap:16px;align-items:center;margin-bottom:12px;box-shadow:0 10px 30px rgba(129,140,248,0.06)}
-    .avatar{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:#fff;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));border:4px solid #fff;flex-shrink:0;box-shadow:0 8px 24px rgba(129,140,248,0.12)}
-    .profile-main{display:flex;flex:1;gap:12px;flex-wrap:wrap;align-items:center}
-    .profile-name { display:flex; flex-direction:column; gap:6px; min-width:200px; }
-    .profile-name h2{margin:0;font-size:1.25rem;font-weight:700}
-    .profile-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .meta-badge { padding:6px 10px; border-radius:999px; font-weight:600; font-size:.86rem; display:inline-flex; gap:8px; align-items:center; }
-    .meta-active{ background:linear-gradient(135deg,#10b981,#059669); color:#fff }
-    .meta-inactive{ background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff }
-    .meta-closed{ background:linear-gradient(135deg,#9ca3af,#6b7280); color:#fff }
-
-    .profile-details{ display:flex; gap:12px; align-items:center; margin-left:auto; flex-wrap:wrap; }
-    .info-item{ background: rgba(255,255,255,0.9); padding:8px 10px; border-radius:8px; border:1px solid rgba(129,140,248,0.06); min-width:120px; }
-    .info-item .label{ font-size:.75rem; color:var(--accent-2); font-weight:700; text-transform:uppercase }
-    .info-item .value{ font-weight:700; color:#3f2a7a; margin-top:4px }
-
-    /* Attendance card */
-    .attendance-card{ background:var(--card-bg); padding:12px; border-radius:10px; border:1px solid rgba(129,140,248,0.08); box-shadow:0 8px 24px rgba(129,140,248,0.06) }
-    .filter-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-bottom:10px }
-    .filter-row label{ font-size:.8rem; color:var(--muted); display:block; margin-bottom:4px }
-
-    .table{ border-radius:8px; overflow:hidden; }
-    .table thead th{ background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); color:#fff; border:none; font-size:.82rem }
-    .table tbody td{ vertical-align:middle; font-size:.88rem; padding:.6rem .8rem }
-
-    .empty{ padding:14px; text-align:center; color:var(--muted) }
-
-    #loading-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.85); z-index:9999; }
-    .loader-spinner{ width:54px; height:54px; border-radius:50%; border:6px solid rgba(129,140,248,0.18); border-top-color:var(--accent-1); animation:spin 1s linear infinite }
-    @keyframes spin{ to{ transform:rotate(360deg) } }
-
-    @media (max-width:767px){
-      .profile-card{ flex-direction:column; align-items:flex-start; gap:10px }
-      .profile-details{ margin-left:0; }
-      .filter-row{ flex-direction:column; align-items:stretch }
-    }
   </style>
 
-	<script src="./js/main.js"></script>
+
 
 
 </head>
@@ -72,7 +25,22 @@
        Configuration & small helpers
        ============================ */
 
-	   
+	  debugger; 
+		let currentFilter = {
+		startDate: new Date().toISOString().split("T")[0],
+		endDate: new Date().toISOString().split("T")[0],
+		employeeId: "all"
+		};
+		document.addEventListener("filter-data", async (e) => {
+          const filter = e.detail;
+		  console.log("Filter Data Received:", filter);
+			currentFilter = {
+				status: "success",
+				message: "Data fetched successfully",
+				filter
+			};
+      fetchAttendance(1);
+		});
 
     function formatDate(dStr) {
       if (!dStr) return '-';
@@ -111,6 +79,11 @@
 
       try {
         showLoader(true);
+        
+
+
+
+        
         const res = await fetch(`${API_BASE_URL}/guests/${guestId}`, { headers: { ...getTokenHeader() }});
         if (!res.ok) throw new Error('Failed to load profile');
         const data = await res.json();
@@ -144,11 +117,16 @@
 
     // default dates: current month
     function setDefaultDates() {
-      const now = new Date();
-      const first = new Date(now.getFullYear(), now.getMonth(), 1);
-      const last = new Date(now.getFullYear(), now.getMonth()+1, 0);
-      document.getElementById('start-date').value = first.toISOString().slice(0,10);
-      document.getElementById('end-date').value = last.toISOString().slice(0,10);
+				if (!currentFilter) {
+					console.warn("Filter not yet set!");
+				}
+
+				const { startDate, endDate } = currentFilter;
+				debugger;
+				if (!startDate || !endDate) {
+				alert('Select both start and end dates');
+				return;
+				}
     }
 
  
@@ -163,46 +141,27 @@
 
 
 
+      <!-- Page Header (Full Width) -->
 
 
 
 
-  <div class="container-main">
+  <div class="page-wrapper">
     <div id="menu-container"></div>
-    <header class="page-header">
-      <h1><i class="bi bi-person-lines-fill"></i> Guest Profile — Attendance</h1>
-    </header>
 
-    <!-- Profile -->
-    <section id="profile-section" class="profile-card" aria-live="polite">
-      <div class="avatar"><i class="bi bi-person-circle"></i></div>
-
-      <div class="profile-main">
-        <div class="profile-name">
-          <h2 id="guest-name">Loading…</h2>
-          <div id="guest-status" class="meta-badge meta-inactive">—</div>
-        </div>
-
-        <div class="profile-details" id="profile-details-block">
-          <div class="info-item">
-            <div class="label">Guest ID</div>
-            <div id="guest-id" class="value">—</div>
-          </div>
-          <div class="info-item">
-            <div class="label">Bed</div>
-            <div id="guest-bed" class="value">—</div>
-          </div>
-          <div class="info-item">
-            <div class="label">Assigned Date</div>
-            <div id="guest-assigned" class="value">—</div>
-          </div>
+    
+    <div class="page-header">
+      <div class="page-header-content">
+        <div>
+          <h1><i class="bi bi-people-fill"></i> Guest Profile — Attendance</h1>
         </div>
       </div>
-    </section>
+    </div>
+
 
     <!-- Attendance -->
     <section class="attendance-card" id="attendance-section" aria-live="polite">
-      <div class="filter-row">
+      <!-- <div class="filter-row">
         <div style="min-width:160px">
           <label for="start-date">Start Date</label>
           <input id="start-date" type="date" class="form-control form-control-sm" />
@@ -218,7 +177,12 @@
         </div>
 
         
-      </div>
+      </div> -->
+  <!-- Custom Web Component -->
+    <employee-filter  data-api="http://localhost:8000/employees/active"> </employee-filter>
+
+    
+
 
       <!-- Loading overlay -->
       <div id="loading-overlay" style="display:none;">
@@ -294,6 +258,7 @@
 
     
   async function fetchAttendance(page = 1) {
+    debugger;
     const token = localStorage.getItem('wh_token');
     if (!token) {
       window.location.href = 'login.html';
@@ -305,12 +270,12 @@
       alert('No guest selected');
       return;
     }
-
-    const start = document.getElementById('start-date').value;
-    const end = document.getElementById('end-date').value;
-    if (!start || !end) {
-      alert('Select both start and end dates');
-      return;
+    debugger;
+    const { startDate, endDate } = currentFilter.filter;
+    debugger;
+    if (!startDate || !endDate) {
+    alert('Select both start and end dates');
+    return;
     }
 
     showLoader(true);
@@ -319,8 +284,8 @@
     try {
       const url = new URL(`${API_BASE_URL}/attendance/records`);
       url.searchParams.set('guest_id', guestId);
-      url.searchParams.set('start_date', start);
-      url.searchParams.set('end_date', end);
+      url.searchParams.set('start_date', startDate);
+      url.searchParams.set('end_date', endDate);
       url.searchParams.set('page', page);
       url.searchParams.set('limit', PAGE_LIMIT);
 
@@ -435,7 +400,7 @@ function setupPagination(total, currentPage) {
     console.log("Initializing Attendance Page...");
 
     // 1️⃣ Default date range
-    setDefaultDates();
+    //setDefaultDates();
 
     // 2️⃣ Load guest profile info
     loadGuestProfile();
@@ -462,7 +427,7 @@ function setupPagination(total, currentPage) {
   });
 </script>
 
-
+	<script src="./js/main.js"></script>
 	<script>
 		$(document).ready(function(){
 	

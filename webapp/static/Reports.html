@@ -4,98 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reports & Analytics - WH Face Detection</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/common_spacing.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="./js/main.js"></script>
+	<script type="module" src="/static/components/employee-filter.js"></script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #222;
-}
-
-/* Header Styles */
-.header {
-  /* background: white; */
-  /* border-radius: 15px;
-  padding: 15px 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); */
-  /* display: flex; 
-  justify-content: space-between; */
-  /* align-items: center; */
-  /* flex-wrap: wrap; */
-  max-width: 1200px;
-  margin: 0 auto 30px;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #667eea;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.logo:hover {
-  transform: translateY(-2px);
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.nav-btn {
-  background: #667eea;
-  color: white;
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nav-btn:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.nav-btn.secondary {
-  background: #f5f7fa;
-  color: #667eea;
-}
-
-.nav-btn.secondary:hover {
-  background: #e8ecf1;
-}
-
-/* Main Container */
-.container {
-  max-width: 1223px;
-  margin: 0 auto;
-}
 
 /* Report Section */
 .report-section {
@@ -470,29 +390,8 @@ textarea {
   max-width: 700px;
   margin: 0 auto;
 }
-.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
-    --bs-gutter-x: 1.5rem;
-    --bs-gutter-y: 0;
-    width: 100%;
-    padding-right: calc(var(--bs-gutter-x) * .0.1);
-    padding-left: calc(var(--bs-gutter-x) * .0.1);
-    margin-right: none;
-    margin-left: none;
-}
-  /* .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  } */
+*/
 
-  .nav-buttons {
-    flex-direction: column;
-  }
-
-  .nav-btn {
-    width: 100%;
-    justify-content: center;
-  }
 
   .date-row {
     grid-template-columns: 1fr;
@@ -532,62 +431,23 @@ textarea {
 .form-section {
   animation: fadeIn 0.5s ease;
 }
-}
+
 </style>
 </head>
 
 <body class="admin-bg">
   <!-- Shared header will be loaded here -->
+  <div class="page-wrapper">
   <div id="menu-container"></div>
-
+		<div class="page-header">
+			<div class="page-header-content">
+			<div>
+				<h1><i class="bi bi-people-fill"></i> Reports</h1>
+			</div>
+			</div>
+		</div>
   <div class="container">
     <!-- Report Types Section -->
-    <div class="report-section">
-      <div class="section-header">
-        <div class="section-icon">
-          <i class="fas fa-file-alt"></i>
-        </div>
-        <div>
-          <h2>Report Types</h2>
-          <p>Select a report type or customize your own date range below</p>
-        </div>
-      </div>
-
-      <div class="cards-grid">
-        <div class="report-card" onclick="selectReportType('daily')">
-          <div class="report-card-icon">
-            <i class="fas fa-calendar-day"></i>
-          </div>
-          <h3>Daily Report</h3>
-          <p>View attendance and activity for a specific day</p>
-        </div>
-
-        <div class="report-card" onclick="selectReportType('weekly')">
-          <div class="report-card-icon">
-            <i class="fas fa-calendar-week"></i>
-          </div>
-          <h3>Weekly Report</h3>
-          <p>Summarize the past 7 days of attendance data</p>
-        </div>
-
-        <div class="report-card" onclick="selectReportType('monthly')">
-          <div class="report-card-icon">
-            <i class="fas fa-calendar-alt"></i>
-          </div>
-          <h3>Monthly Report</h3>
-          <p>Comprehensive monthly attendance overview</p>
-        </div>
-
-        <div class="report-card" onclick="selectReportType('custom')">
-          <div class="report-card-icon">
-            <i class="fas fa-calendar-check"></i>
-          </div>
-          <h3>Custom Range</h3>
-          <p>Define your own date range for reporting</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Generate Report Section -->
     <div class="form-section">
       <div class="section-header">
@@ -600,37 +460,12 @@ textarea {
         </div>
       </div>
 
-      <div class="form-group">
-        <label><i class="fas fa-calendar-alt"></i> Select Date Range</label>
-        <div class="date-row">
-          <input type="date" id="fromDate" placeholder="From Date">
-          <input type="date" id="toDate" placeholder="To Date">
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label><i class="fas fa-clock"></i> Quick Date Selection</label>
-        <div class="btn-grid">
-          <button class="quick-btn" id="btnToday">
-            <i class="fas fa-sun"></i> Today
-          </button>
-          <button class="quick-btn" id="btnYesterday">
-            <i class="fas fa-moon"></i> Yesterday
-          </button>
-          <button class="quick-btn" id="btnThisWeek">
-            <i class="fas fa-calendar-week"></i> This Week
-          </button>
-          <button class="quick-btn" id="btnThisMonth">
-            <i class="fas fa-calendar"></i> This Month
-          </button>
-          <button class="quick-btn" id="btnLastMonth">
-            <i class="fas fa-calendar-minus"></i> Last Month
-          </button>
-          <button class="quick-btn" id="btnTillDate">
-            <i class="fas fa-infinity"></i> Till Date
-          </button>
-        </div>
-      </div>
+      <employee-filter  data-api="http://localhost:8000/employees/active" data-disable='["endDate1","employeeSelect","fetchBtn"]' data-hidden='["fetchBtn",""]'></employee-filter>
+
+
+
+
 
       <div class="form-group">
         <label for="email"><i class="fas fa-envelope"></i> Email Recipients</label>
@@ -652,88 +487,60 @@ textarea {
       </button>
     </div>
   </div>
-
+</div>
   <script>
-  $(document).ready(function() {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    let currentFilter = {
+		startDate: new Date().toISOString().split("T")[0],
+		endDate: new Date().toISOString().split("T")[0],
+		employeeId: "all"
+		};
+		document.addEventListener("filter-data", async (e) => {
+          const filter = e.detail;
+		  debugger;
+      console.log("Filter Data Received:", filter);
+			currentFilter = {
+				status: "success",
+				message: "Data fetched successfully",
+				filter
+			};
+		});
 
-    // Set default dates
-    $("#fromDate").val(today);
-    $("#toDate").val(today);
 
-    // Show alert on page load
-    setTimeout(() => {
-      $("#alertBox").fadeIn();
-    }, 500);
 
-    // --- Quick date buttons ---
-    $("#btnToday").click(() => {
-      $("#fromDate").val(today);
-      $("#toDate").val(today);
-      showAlert("Date range set to today", "success");
-    });
-
-    $("#btnYesterday").click(() => {
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      $("#fromDate").val(yesterdayStr);
-      $("#toDate").val(yesterdayStr);
-      showAlert("Date range set to yesterday", "success");
-    });
-
-    $("#btnThisWeek").click(() => {
-      const firstDayOfWeek = new Date(now);
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      firstDayOfWeek.setDate(diff);
-      const first = firstDayOfWeek.toISOString().split('T')[0];
-      $("#fromDate").val(first);
-      $("#toDate").val(today);
-      showAlert("Date range set to this week", "success");
-    });
-
-    $("#btnThisMonth").click(() => {
-      const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      $("#fromDate").val(first);
-      $("#toDate").val(today);
-      showAlert("Date range set to this month", "success");
-    });
-
-    $("#btnLastMonth").click(() => {
-      const first = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-      const last = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
-      $("#fromDate").val(first);
-      $("#toDate").val(last);
-      showAlert("Date range set to last month", "success");
-    });
-
-    $("#btnTillDate").click(() => {
-      $("#fromDate").val("2024-01-01");
-      $("#toDate").val(today);
-      showAlert("Date range set from 2024 till today", "success");
-    });
-
+$(document).ready(function() {
+    debugger;
+   
+    
     // --- Send Email logic ---
     $("#sendEmail").click(function() {
-      const $btn = $(this);
-      const fromDate = $("#fromDate").val();
-      const toDate = $("#toDate").val();
-      const email = $("#email").val().trim();
+      console.log("Fetching data...");
+      debugger;
+      currentFilter.startDate = document.querySelector("employee-filter").shadowRoot.getElementById("startDate").value;
+      currentFilter.endDate =  document.querySelector("employee-filter").shadowRoot.getElementById("endDate").value;
+      currentFilter.employeeId =  document.querySelector("employee-filter").shadowRoot.getElementById("employeeSelect").value;
 
-      if (!fromDate || !toDate) {
+      
+      const $btn = $(this);
+      // const fromDate = $("#fromDate").val();
+      // const toDate = $("#toDate").val();
+      const email = $("#email").val().trim();
+      debugger;
+      const { startDate, endDate } = currentFilter;
+      debugger;
+      if (!startDate || !endDate) {
         showAlert("Please select a date range", "error");
         return;
       }
+
+      
       if (!email) {
         showAlert("Please enter at least one email address", "error");
         return;
       }
 
       const report = {
-        from_date: fromDate,
-        to_date: toDate,
+        from_date: startDate,
+        to_date: endDate,
         emails: email.split(",").map(e => e.trim()).filter(e => e)
       };
 
@@ -768,41 +575,8 @@ textarea {
     });
   });
 
-  // Select report type (pre-fill dates)
-  function selectReportType(type) {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    
-    switch(type) {
-      case 'daily':
-        $("#fromDate").val(today);
-        $("#toDate").val(today);
-        showAlert("Daily report selected - dates set to today", "success");
-        break;
-      case 'weekly':
-        const weekAgo = new Date(now);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        $("#fromDate").val(weekAgo.toISOString().split('T')[0]);
-        $("#toDate").val(today);
-        showAlert("Weekly report selected - last 7 days", "success");
-        break;
-      case 'monthly':
-        const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        $("#fromDate").val(first);
-        $("#toDate").val(today);
-        showAlert("Monthly report selected - current month", "success");
-        break;
-      case 'custom':
-        showAlert("Custom range selected - choose your dates below", "success");
-        break;
-    }
-    
-    // Smooth scroll to form
-    $('html, body').animate({
-      scrollTop: $(".form-section").offset().top - 20
-    }, 500);
-  }
 
+  
   // Show alert message
   function showAlert(message, type = 'info') {
     const $alert = $("#alertBox");
@@ -865,5 +639,15 @@ textarea {
     // Redirected in checkAuthorization()
   }
   </script>
+
+<script src="./js/main.js"></script>
+<script>
+    $(document).ready(function(){
+        
+        const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+    });
+</script>
 </body>
 </html>

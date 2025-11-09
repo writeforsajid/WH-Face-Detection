@@ -8,572 +8,14 @@
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<!-- header styles moved to Header.html -->
 	<link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/common_spacing.css">
+	<link rel="stylesheet" href="./css/profile.css">
+	
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script type="module" src="/static/components/employee-filter.js"></script>
+	
+	
 	<style>
-		* {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
-		
-		body { 
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			position: relative;
-			overflow-x: hidden;
-		}
-		
-		/* Floating decorative elements */
-		@keyframes float-gentle {
-			0%, 100% {
-				transform: translateY(0) rotate(0deg);
-				opacity: 0.15;
-			}
-			50% {
-				transform: translateY(-20px) rotate(180deg);
-				opacity: 0.25;
-			}
-		}
-		
-		.floating-icon {
-			position: fixed;
-			font-size: 24px;
-			color: #818cf8;
-			animation: float-gentle 8s ease-in-out infinite;
-			pointer-events: none;
-			z-index: 1;
-		}
-		
-		.floating-icon:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-		.floating-icon:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
-		.floating-icon:nth-child(3) { top: 60%; left: 8%; animation-delay: 4s; }
-		.floating-icon:nth-child(4) { top: 70%; right: 10%; animation-delay: 1s; }
-		.floating-icon:nth-child(5) { top: 40%; left: 5%; animation-delay: 3s; }
-		.floating-icon:nth-child(6) { top: 80%; right: 20%; animation-delay: 5s; }
-		
-		.welcome-header {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-			color: white;
-			padding: 2.5rem 0;
-			margin-bottom: 2rem;
-			box-shadow: 0 8px 32px rgba(129, 140, 248, 0.25);
-			width: 100%;
-			margin-left: calc(-50vw + 50%);
-			margin-right: calc(-50vw + 50%);
-			backdrop-filter: blur(10px);
-			position: relative;
-			overflow: hidden;
-			z-index: 10;
-		}
-		
-		.welcome-header::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-			            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-			animation: shimmer 10s ease-in-out infinite;
-		}
-		
-		@keyframes shimmer {
-			0%, 100% { opacity: 0.5; }
-			50% { opacity: 1; }
-		}
-		
-		.welcome-header-content {
-			max-width: 1200px;
-			margin: 0 auto;
-			padding: 0 2rem;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.welcome-header h1 {
-			font-size: 2.25rem;
-			font-weight: 700;
-			margin: 0;
-			text-shadow: 0 4px 12px rgba(0,0,0,0.2);
-			animation: fadeInBounce 0.8s ease-out;
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-		}
-		
-		.welcome-header h1 i {
-			font-size: 2rem;
-		}
-		
-		@keyframes fadeInBounce {
-			0% {
-				opacity: 0;
-				transform: translateY(-30px) scale(0.8);
-			}
-			70% {
-				transform: translateY(5px) scale(1.05);
-			}
-			100% {
-				opacity: 1;
-				transform: translateY(0) scale(1);
-			}
-		}
-		
-		.welcome-header .subtitle {
-			font-size: 1rem;
-			opacity: 0.95;
-			margin-top: 0.5rem;
-			animation: fadeInUp 1s ease-out;
-		}
-		
-		@keyframes fadeInUp {
-			from {
-				opacity: 0;
-				transform: translateY(20px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		
-		.btn-back {
-			background: rgba(255, 255, 255, 0.3);
-			backdrop-filter: blur(10px);
-			border: 2px solid rgba(255, 255, 255, 0.5);
-			color: white;
-			padding: 0.625rem 1.75rem;
-			border-radius: 25px;
-			font-size: 0.95rem;
-			font-weight: 600;
-			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-			white-space: nowrap;
-			box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-		}
-		
-		.btn-back:hover {
-			background: rgba(255, 255, 255, 0.5);
-			border-color: rgba(255, 255, 255, 0.8);
-			color: white;
-			transform: translateY(-3px) scale(1.05);
-			box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-		}
-		
-		.container {
-			animation: slideInUp 0.6s ease-out;
-			position: relative;
-			z-index: 10;
-		}
-		
-		@keyframes slideInUp {
-			from {
-				opacity: 0;
-				transform: translateY(40px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		
-		.profile-card {
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 233, 254, 0.98) 100%);
-			backdrop-filter: blur(20px);
-			border-radius: 24px;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			box-shadow: 0 15px 50px rgba(129, 140, 248, 0.15);
-			padding: 2.5rem;
-			margin-bottom: 2rem;
-			transition: all 0.4s ease;
-			position: relative;
-			overflow: hidden;
-		}
-		
-		.profile-card::before {
-			content: '';
-			position: absolute;
-			top: -50%;
-			right: -50%;
-			width: 200%;
-			height: 200%;
-			background: radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%);
-			pointer-events: none;
-		}
-		
-		.profile-card:hover {
-			transform: translateY(-5px);
-			box-shadow: 0 20px 60px rgba(129, 140, 248, 0.25);
-			border-color: rgba(129, 140, 248, 0.3);
-		}
-		
-		.profile-header {
-			display: flex;
-			align-items: center;
-			gap: 2rem;
-			margin-bottom: 2rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.profile-avatar {
-			width: 140px;
-			height: 140px;
-			border-radius: 50%;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 3.5rem;
-			color: white;
-			box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
-			animation: pulse-avatar 3s ease-in-out infinite;
-			border: 4px solid white;
-			position: relative;
-		}
-		
-		.profile-avatar i {
-			font-size: 3.5rem;
-		}
-		
-		@keyframes pulse-avatar {
-			0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3); }
-			50% { transform: scale(1.03); box-shadow: 0 15px 40px rgba(129, 140, 248, 0.4); }
-		}
-		
-		.profile-info h2 {
-			font-size: 2rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-			margin-bottom: 0.5rem;
-		}
-		
-		.badge-status {
-			padding: 0.5rem 1.25rem;
-			border-radius: 20px;
-			font-weight: 600;
-			font-size: 0.875rem;
-			display: inline-flex;
-			align-items: center;
-			gap: 0.5rem;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-		}
-		
-		.badge-active {
-			background: linear-gradient(135deg, #10b981, #059669);
-			color: white;
-		}
-		
-		.badge-inactive {
-			background: linear-gradient(135deg, #ef4444, #dc2626);
-			color: white;
-		}
-
-		.badge-closed {
-			background: linear-gradient(135deg, #9ca3af, #6b7280);
-			color: white;
-		}
-		
-		.info-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-			gap: 1.5rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.info-item {
-			background: rgba(255, 255, 255, 0.7);
-			padding: 1.5rem;
-			border-radius: 16px;
-			border: 1px solid rgba(129, 140, 248, 0.1);
-			transition: all 0.3s ease;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.info-item:hover {
-			background: rgba(255, 255, 255, 0.95);
-			transform: translateY(-3px);
-			box-shadow: 0 8px 20px rgba(129, 140, 248, 0.15);
-			border-color: rgba(129, 140, 248, 0.2);
-		}
-		
-		.info-item .label {
-			font-size: 0.875rem;
-			color: #a78bfa;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			margin-bottom: 0.75rem;
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-		}
-		
-		.info-item .label i {
-			font-size: 1.1rem;
-			color: #818cf8;
-		}
-		
-		.info-item .value {
-			font-size: 1.25rem;
-			color: #4c1d95;
-			font-weight: 600;
-		}
-		
-		.attendance-card {
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 233, 254, 0.98) 100%);
-			backdrop-filter: blur(20px);
-			border-radius: 24px;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			box-shadow: 0 15px 50px rgba(129, 140, 248, 0.15);
-			padding: 2.5rem;
-			position: relative;
-			overflow: hidden;
-		}
-		
-		.attendance-card::before {
-			content: '';
-			position: absolute;
-			top: -50%;
-			left: -50%;
-			width: 200%;
-			height: 200%;
-			background: radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%);
-			pointer-events: none;
-		}
-		
-		.attendance-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 2rem;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.attendance-header h3 {
-			font-size: 1.75rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-		}
-		
-		.attendance-header h3 i {
-			font-size: 1.5rem;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stats-row {
-			display: flex;
-			gap: 1rem;
-			margin-bottom: 2rem;
-			flex-wrap: wrap;
-			position: relative;
-			z-index: 1;
-		}
-		
-		.stat-box {
-			flex: 1;
-			min-width: 150px;
-			background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(237, 233, 254, 0.9));
-			padding: 1.5rem;
-			border-radius: 16px;
-			text-align: center;
-			border: 1px solid rgba(129, 140, 248, 0.15);
-			transition: all 0.3s ease;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.stat-box:hover {
-			transform: translateY(-5px) scale(1.02);
-			box-shadow: 0 10px 30px rgba(129, 140, 248, 0.2);
-			border-color: rgba(129, 140, 248, 0.3);
-		}
-		
-		.stat-box .stat-icon {
-			font-size: 2rem;
-			margin-bottom: 0.75rem;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stat-box .stat-value {
-			font-size: 2rem;
-			font-weight: 700;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		.stat-box .stat-label {
-			font-size: 0.875rem;
-			color: #a78bfa;
-			font-weight: 600;
-			text-transform: uppercase;
-			margin-top: 0.5rem;
-			letter-spacing: 0.5px;
-		}
-		
-		.table-container {
-			position: relative;
-			z-index: 1;
-		}
-		
-		.table {
-			border-radius: 16px;
-			overflow: hidden;
-			background: white;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-		}
-		
-		.table thead {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-		}
-		
-		.table thead th {
-			border: none;
-			padding: 1rem 1.25rem;
-			font-weight: 700;
-			text-transform: uppercase;
-			font-size: 0.875rem;
-			letter-spacing: 0.5px;
-			color: white;
-		}
-		
-		.table tbody tr {
-			transition: all 0.3s ease;
-			border-bottom: 1px solid rgba(0,0,0,0.05);
-		}
-		
-		.table tbody tr:hover {
-			background: linear-gradient(135deg, rgba(129, 140, 248, 0.05), rgba(167, 139, 250, 0.05));
-			transform: scale(1.01);
-		}
-		
-		.table tbody td {
-			padding: 1rem 1.25rem;
-			vertical-align: middle;
-		}
-		
-		.method-badge {
-			padding: 0.5rem 1rem;
-			border-radius: 12px;
-			font-weight: 600;
-			font-size: 0.8rem;
-			display: inline-flex;
-			align-items: center;
-			gap: 0.5rem;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		}
-		
-		.method-badge i {
-			font-size: 0.9rem;
-		}
-		
-		.method-face {
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			color: white;
-		}
-		
-		.method-rfid {
-			background: linear-gradient(135deg, #6366f1, #8b5cf6);
-			color: white;
-		}
-		
-		.method-manual {
-			background: linear-gradient(135deg, #f59e0b, #d97706);
-			color: white;
-		}
-		
-		.empty-state {
-			text-align: center;
-			padding: 3rem;
-			color: #a78bfa;
-		}
-		
-		.empty-state i {
-			font-size: 4rem;
-			margin-bottom: 1rem;
-			opacity: 0.3;
-			color: #818cf8;
-		}
-		
-		.empty-state p {
-			font-size: 1.1rem;
-			font-weight: 500;
-		}
-		
-		#loading-overlay {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: linear-gradient(135deg, rgba(224, 242, 254, 0.98), rgba(237, 233, 254, 0.98));
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			z-index: 9999;
-			backdrop-filter: blur(10px);
-		}
-		
-		.loader {
-			text-align: center;
-		}
-		
-		.loader-spinner {
-			width: 60px;
-			height: 60px;
-			border: 5px solid rgba(129, 140, 248, 0.2);
-			border-top-color: #818cf8;
-			border-radius: 50%;
-			animation: spin 1s linear infinite;
-			margin: 0 auto 1.5rem;
-		}
-		
-		@keyframes spin {
-			to { transform: rotate(360deg); }
-		}
-		
-		.loader-text {
-			font-size: 1.25rem;
-			font-weight: 600;
-			background: linear-gradient(135deg, #818cf8, #a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-		
-		@media (max-width: 768px) {
-			.welcome-header h1 {
-				font-size: 1.5rem;
-			}
-			.profile-header {
-				flex-direction: column;
-				text-align: center;
-			}
-			.info-grid {
-				grid-template-columns: 1fr;
-			}
-		}
+		@media(max-width:768px){.welcome-header h1{font-size:1.5rem;}.profile-header{flex-direction:column;text-align:center;}.info-grid{grid-template-columns:1fr;}}
 	</style>
 
 
@@ -591,8 +33,20 @@
 		let g_events = [];
 		let g_meta = {};
 		let page = 1;
-		
-		
+		let currentFilter = {
+		startDate: new Date().toISOString().split("T")[0],
+		endDate: new Date().toISOString().split("T")[0],
+		employeeId: "all"
+		};
+		document.addEventListener("filter-data", async (e) => {
+          const filter = e.detail;
+		  console.log("Filter Data Received:", filter);
+			currentFilter = {
+				status: "success",
+				message: "Data fetched successfully",
+				filter
+			};
+		});
 		function getTokenHeader(){ const token = localStorage.getItem('wh_token') || ''; return token ? { 'Authorization': `Bearer ${token}` } : {}; }
 		async function ensureLoggedInOrRedirect() {
 			const token = localStorage.getItem('wh_token');
@@ -650,15 +104,8 @@
       document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
     }
 		
-		function setDefaultDates() {
-			const now = new Date();
-			const first = new Date(now.getFullYear()-1, now.getMonth(), 1);
-			const last = new Date(now.getFullYear(), now.getMonth()+1, 0);
-			document.getElementById('start-date').value = first.toISOString().slice(0,10);
-			document.getElementById('end-date').value = last.toISOString().slice(0,10);
-			}
+
 		function renderGuestProfile(guest) {
-			debugger;
 			if (!guest || typeof guest !== 'object') {
 				console.warn("Invalid guest data");
 				return;
@@ -756,7 +203,6 @@
 		}
 
 		async function loadGuestDetails() {
-			debugger;
 			const token = await ensureLoggedInOrRedirect();
 			if (!token) return;
 			const guestId = getGuestIdFromSession();
@@ -773,7 +219,6 @@
 			try {
 
 				document.getElementById('loading-overlay').style.display = 'none';
-				setDefaultDates();
 
 				const token = localStorage.getItem('wh_token');
 				if (!token) {
@@ -787,9 +232,16 @@
 				return;
 				}
 
-				const start = document.getElementById('start-date').value;
-				const end = document.getElementById('end-date').value;
-				if (!start || !end) {
+				// const start = document.getElementById('start-date').value;
+				// const end = document.getElementById('end-date').value;
+				debugger;
+				if (!currentFilter) {
+					console.warn("Filter not yet set!");
+				}
+
+				const { startDate, endDate } = currentFilter;
+				debugger;
+				if (!startDate || !endDate) {
 				alert('Select both start and end dates');
 				return;
 				}
@@ -798,8 +250,8 @@
 				if (!page) page = 1;
 				const url = new URL(`${API_BASE_URL}/guests/history`);
 				url.searchParams.set('guest_id', guestId);
-				url.searchParams.set('start_date', start);
-				url.searchParams.set('end_date', end);
+				url.searchParams.set('start_date', startDate);
+				url.searchParams.set('end_date', endDate);
 				url.searchParams.set('page', page );
 				url.searchParams.set('limit', PAGE_LIMIT);
 				const res = await fetch(url.toString(), {
@@ -835,7 +287,6 @@
 			try {
 			
 			//showLoader(true);
-			debugger;
 			renderAttendanceTable(g_payload.data);
 			setupPagination(g_meta.total_records, g_meta.current_page);
 			showLoader(false);
@@ -853,7 +304,6 @@
 		}
 
 		function renderAttendanceTable(data) {
-			debugger;
 			const tableBody = document.querySelector("#attendanceTable tbody");
 			if (!tableBody) return;
 
@@ -960,7 +410,6 @@
 				const data = await res.json();
 
 				alert("Metadata added successfully!");
-				debugger;
 				// Automatically trigger your existing "Filter" button
 				fetchAttendance(1);
 
@@ -1011,9 +460,6 @@
 	</script>
 </head>
 <body class="admin-bg">
-
-
-
 	<!-- Loading Overlay -->
 	<div id="loading-overlay">
 		<div class="loader">
@@ -1022,21 +468,25 @@
 		</div>
 
 	</div>
-
-	<!-- Shared header will be loaded here -->
-	<!-- <div id="site-header"></div>
-	<script>
-		fetch('Header.html')
-			.then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
-			.then(html => { document.getElementById('site-header').innerHTML = html; })
-			.catch(err => console.error('Header load error:', err));
-	</script> -->
-
 	<!-- Main Content -->
-	<div class="container">
-	<div id="menu-container"></div>
-		<div id="profile-section">
+	<div class="page-wrapper">
+		<div id="menu-container"></div>
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
+          </div>
+        </div>
+      </div>
+
+
+	  <div id="profile-section">
 			<div class="profile-card">
+
+
+
+
+
 				<div class="profile-header">
 				<div class="profile-avatar">
 					<i class="bi bi-person-circle"></i>
@@ -1093,7 +543,12 @@
 		</div>
 
 		<section class="attendance-card" id="attendance-section" aria-live="polite">
-		<div class="filter-row">
+		
+		<employee-filter 
+        data-api="http://localhost:8000/employees/active">
+        </employee-filter>
+		
+			<!-- <div class="filter-row">
 			<div style="min-width:160px">
 			<label for="start-date">Start Date</label>
 			<input id="start-date" type="date" class="form-control form-control-sm" />
@@ -1108,7 +563,7 @@
 			<button id="fetch-btn" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Fetch / Filter</button>
 			</div>
 
-			
+			 -->
 		</div>
 
 		<!-- Loading overlay -->

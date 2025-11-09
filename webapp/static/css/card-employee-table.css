@@ -1,0 +1,44 @@
+.card{overflow:visible;padding:3px}
+
+.employee-table-container {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  scrollbar-width: thin;
+}
+
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  color: white;
+}
+
+.employee-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.employee-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.employee-table tr.on-duty { color: #43f7a4; font-weight: 500; }
+.employee-table tr.left { color: #ffd166; font-weight: 500; }
+.employee-table tr.absent { color: #ff6b6b; font-weight: 500; }
+
+.employee-table td i {
+  margin-right: 6px;
+  font-size: 1.1rem;
+}
+
+

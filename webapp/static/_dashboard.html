@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/cards.css">
+    <!-- <link rel="stylesheet" href="./css/common_spacing.css"> -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+
+
+<body class="admin-bg">
+  <div class="page-wrapper">
+    <div id="menu-container"></div>
+
+    <div class="page-header">
+      <div class="page-header-content">
+        <div>
+          <h1><i class="bi bi-people-fill"></i> Dashboard</h1>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-container">
+
+                
+        <!-- Section 1: Beds -->
+        <div class="section" id="beds-section">
+            <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='Bed_Guest_Relationship.html'">
+                <i class="fas fa-bed"></i> Employees Management
+            </h2>
+            <div class="cards-container">
+                <div class="card vacant" onclick="handleCardClick('vacant-beds')">
+                    <span class="card-icon"><i class="fas fa-check-circle"></i></span>
+                    <div class="card-title">Vacant</div>
+                    <div class="card-value" id="vacant-count">--</div>
+                    <div class="card-subtitle">Available beds</div>
+                </div>
+
+
+
+                <div class="card total-beds" onclick="handleCardClick('total-beds')">
+                    <span class="card-icon"><i class="fas fa-hotel"></i></span>
+                    <div class="card-title">Total</div>
+                    <div class="card-value" id="total-beds-count">--</div>
+                    <div class="card-subtitle">Total beds available</div>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>  
+
+
+
+
+
+
+
+
+
+</div>
+<script src="./js/main.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        const username =
+          JSON.parse(localStorage.getItem("wh_user") || "{}").name || "";
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+      });
+    </script>
+</body>
+</html>

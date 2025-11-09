@@ -1,25 +1,131 @@
-.employee-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  background: #f8f9fa;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-  max-width: 900px;
-  margin: 10px auto;
+.employee-filter::before {
+  pointer-events: none;
 }
 
+.quick-buttons {
+  display: flex;
+  justify-content: space-between; /* spreads them evenly */
+  align-items: center;
+  gap: 0.5rem;                   /* nice spacing between buttons */
+  flex-wrap: wrap;                /* ensures they wrap on small screens */
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+
+.quick-buttons button.active {
+  background: rgba(255, 255, 255, 0.35);
+  font-weight: 600;
+}
+
+.quick-buttons button {
+  flex: 1 1 120px;                /* equal width, but flexible */
+  /* padding: 10px 0; */
+  padding: 6px 14px;
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+
+
+
+
+.quick-buttons button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+
+/* 🔹 On mobile — stack or auto-adjust */
+@media (max-width: 600px) {
+  .quick-buttons {
+    gap: 0.5rem;
+  }
+
+  .quick-buttons button {
+    flex: 1 1 45%; /* two per row if needed */
+    font-size: 0.85rem;
+  }
+}
+
+.quick-buttons button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Active button look */
+.quick-buttons button.active {
+  background: #0078d7;
+  color: #fff;
+  border-color: #0078d7;
+}
+
+
+
+
+
+
+
+.fetch-btn {
+  margin-left: auto;
+  width: auto;
+}
+.employee-filter-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  display: flex;
+  justify-content: space-between; /* spreads them evenly */
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.employee-filter {
+  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  color: white;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem);
+  box-shadow: 0 8px 32px rgba(129, 140, 248, 0.25);
+  border-radius: 14px;
+  margin: 25px 0;
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.employee-filter::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>');
+  animation: float 20s linear infinite;
+}
+
+/* --- Form Fields --- */
 .filter-field {
   display: flex;
   flex-direction: column;
-  flex: 1 1 180px;
+  flex: 1 1 10px;
+  min-width: 160px;
+  position: relative;
+  z-index: 1;
 }
 
 label {
   font-weight: 500;
   margin-bottom: 5px;
-  color: #333;
+  color: #fff;
 }
 
 input[type="date"],
@@ -28,25 +134,55 @@ select {
   font-size: 0.95rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  color: #333;
+}
+
+/* --- Fetch Button Styling --- */
+.filter-field button.fetch-btn {
+  margin-top: 0; /* remove default top margin */
+  align-self: flex-start;
+  height: 38px;
+  width:100%;
 }
 
 .fetch-btn {
-  margin-top: 23px;
-  padding: 10px 20px;
+  padding: 10px 22px;
   background: #0078d7;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 120, 215, 0.3);
 }
 
 .fetch-btn:hover {
   background: #005fa3;
+  transform: translateY(-2px);
 }
 
+
+
+/* --- Responsive behavior --- */
 @media (max-width: 768px) {
+  .fetch-btn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 8px;
+  }
   .employee-filter {
     flex-direction: column;
+    align-items: stretch;
   }
+
+  .filter-field {
+    width: 100%;
+  }
+
+  .filter-field:last-child {
+    align-items: stretch;
+  }
+
+
 }

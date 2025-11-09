@@ -1,0 +1,72 @@
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .bar-container {
+            background: #eee;
+            border-radius: 5px;
+            height: 8px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .stat-item {
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .bar.today { background: #27ae60; width: 70%; }
+        .bar.week { background: #e74c3c; width: 70%; }
+        .bar.month { background: #f39c12; width: 60%; }
+        .bar.remaining { background: #3498db; width: 90%; }
+        .bar.overtime { background: #f1c40f; width: 30%; }
+
+
+
+.chart-container {
+  position: relative;
+  height: 260px;
+  max-height: 260px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chart-container canvas {
+  min-width: 600px;
+}
+
+.card.chart-card {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.chart-header {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+

@@ -4,249 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - WH Face Detection</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css?">
+
+    <link rel="stylesheet" href="./css/cards.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- header styles moved to Header.html -->
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding-left:9%;
-            padding-right:9%;
-            padding-top: 2%;
-        }
 
-        /* Dashboard Container */
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* Section Styles */
-        .section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .section-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 8px;
-            height: 30px;
-            background: #667eea;
-            border-radius: 4px;
-        }
-
-        /* Cards Container */
-        .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        /* Card Styles */
-        .card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover::before {
-            transform: translateX(0);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .card-value {
-            font-size: 42px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .card-subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* Color Variations for Cards */
-        .card.vacant {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .card.occupied {
-            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
-        }
-
-        .card.total-beds {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .card.active {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .card.inactive {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .card.closed {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-        }
-
-        .card.total-guests {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
-        }
-
-        .card.attendance-1 {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .card.attendance-2 {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .card.attendance-3 {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .card.attendance-4 {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .card.report-1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .card.report-2 {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .card.report-3 {
-            background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
-            color: #333;
-        }
-
-        /* Icon Styles */
-        .card-icon {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            font-size: 40px;
-            opacity: 0.3;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .logo {
-                margin-bottom: 15px;
-                text-align: center;
-            }
-
-            .nav-menu {
-                flex-direction: column;
-            }
-
-            .dropdown-btn, .logout-btn {
-                width: 100%;
-                margin: 5px 0;
-            }
-
-            .cards-container {
-                grid-template-columns: 1fr;
-            }
-
-            .section-title {
-                font-size: 22px;
-            }
-        }
-
-        /* Mobile overrides */
-        @media (max-width: 768px) {
-            .hamburger { display: block; }
-            /* Hide desktop nav on mobile, use the slide-out instead */
-            .nav-menu { display: none; }
-            .logout-btn { display: none; }
-            .header { gap: 10px; }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
 </head>
-<body>
+<body class="admin-bg">
     <!-- Shared header will be loaded here -->
-    <div id="site-header"></div>
+
+<div class="page-wrapper">
+  <div id="menu-container"></div>
+    <div class="page-header">
+      <div class="page-header-content">
+        <div>
+          <h1><i class="bi bi-people-fill"></i> Employee Attendance Viewer</h1>
+        </div>
+      </div>
+    </div>
+
+
+
     <script>
-        fetch('Header.html')
-            .then(resp => resp.ok ? resp.text() : Promise.reject('Failed to load header'))
-            .then(html => {
-                document.getElementById('site-header').innerHTML = html;
-                // After inserting header via innerHTML, inline scripts won't execute.
+                       // After inserting header via innerHTML, inline scripts won't execute.
                 // Populate username from localStorage so admin_dashboard shows the name.
                 try {
                     var stored = localStorage.getItem('wh_user') || '{}';
@@ -261,84 +45,7 @@
             })
             .catch(err => console.error('Header load error:', err));
     </script>
-            <!-- <div class="dropdown">
-                <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
-                <div class="dropdown-content">
-                    <a href="#" onclick="scrollToSection('attendance-section')">View Attendance</a>
-                    <a href="#" onclick="handleAction('today-attendance')">Today's Attendance</a>
-                    <a href="#" onclick="handleAction('attendance-history')">Attendance History</a>
-                    <a href="#" onclick="handleAction('attendance-settings')">Settings</a>
-                </div>
-            </div>
-
-             Reports Dropdown -->
-            <!-- <div class="dropdown">
-                <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
-                <div class="dropdown-content">
-                    <a href="reports.html">View Reports</a>
-                    <a href="reports.html">Generate Report</a>
-                    <a href="reports.html">Daily Report</a>
-                    <a href="reports.html">Monthly Report</a>
-                    <a href="reports.html">Custom Report</a>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div> --> 
-
-    <!-- Mobile Menu (slide-out) -->
-    <!-- <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobileMenu()"></div>
-    <nav class="mobile-menu" id="mobile-menu" aria-hidden="true">
-        <div class="menu-header">
-            <div class="menu-title"><i class="fas fa-home"></i> Menu</div>
-            <button class="close-btn" aria-label="Close menu" onclick="closeMobileMenu()"><i class="fas fa-xmark"></i></button>
-        </div> -->
-        <!-- <div class="section-list">
-            <details>
-                <summary><i class="fas fa-bed"></i> Beds</summary>
-                <ul>
-                    <li><a href="Bed_Guest_Relationship.html" onclick="closeMobileMenu()">View All Beds</a></li>
-                    <li><a href="Bed_Guest_Relationship.html" onclick="closeMobileMenu(); handleAction('add-bed'); return false;">Add New Bed</a></li>
-                    <li><a href="Bed_Guest_Relationship.html" onclick="closeMobileMenu()">Manage Beds</a></li>
-                    <li><a href="#" onclick="closeMobileMenu(); handleAction('bed-history'); return false;">Bed History</a></li>
-                </ul>
-            </details>
-
-            <details>
-                <summary><i class="fas fa-users"></i> Guests</summary>
-                <ul>
-                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">View All Guests</a></li>
-                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Add New Guest</a></li>
-                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Manage Guests</a></li>
-                    <li><a href="AttendanceDetails.html" onclick="closeMobileMenu()">Guest History</a></li>
-                </ul>
-            </details>
-
-            <details>
-                <summary><i class="fas fa-clipboard-check"></i> Attendance</summary>
-                <ul>
-                    <li><a href="#" onclick="closeMobileMenu(); scrollToSection('attendance-section'); return false;">View Attendance</a></li>
-                    <li><a href="#" onclick="closeMobileMenu(); handleAction('today-attendance'); return false;">Today's Attendance</a></li>
-                    <li><a href="#" onclick="closeMobileMenu(); handleAction('attendance-history'); return false;">Attendance History</a></li>
-                    <li><a href="#" onclick="closeMobileMenu(); handleAction('attendance-settings'); return false;">Settings</a></li>
-                </ul>
-            </details>
-
-            <details>
-                <summary><i class="fas fa-chart-line"></i> Reports</summary>
-                <ul>
-                    <li><a href="reports.html" onclick="closeMobileMenu()">View Reports</a></li>
-                    <li><a href="reports.html" onclick="closeMobileMenu()">Generate Report</a></li>
-                    <li><a href="reports.html" onclick="closeMobileMenu()">Daily Report</a></li>
-                    <li><a href="reports.html" onclick="closeMobileMenu()">Monthly Report</a></li>
-                    <li><a href="reports.html" onclick="closeMobileMenu()">Custom Report</a></li>
-                </ul>
-            </details>
-
-            <button class="logout-btn-mobile" onclick="closeMobileMenu(); handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button> -->
-        </div>
-    </nav>
+ 
 
     <!-- Dashboard Container -->
     <div class="dashboard-container">
@@ -472,7 +179,7 @@
         </div>
 
     </div>
-
+ </div>
     <script>
         // Scroll to section smoothly
         function scrollToSection(sectionId) {
@@ -608,7 +315,7 @@
                 }
 
                 // Attendance data
-                const attendanceResponse = await fetch(`${apiBase}/api/attendance/stats`, { headers });
+                const attendanceResponse = await fetch(`${apiBase}/attendance/stats`, { headers });
                 if (attendanceResponse.ok) {
                     const attendanceData = await attendanceResponse.json();
                     document.getElementById('attendance-1-count').textContent = attendanceData.today || 0;
@@ -618,7 +325,7 @@
                 }
 
                 // Reports data
-                const reportsResponse = await fetch(`${apiBase}/webapp/reports/stats`, { headers });
+                const reportsResponse = await fetch(`${apiBase}/reports/stats`, { headers });
                 if (reportsResponse.ok) {
                     const reportsData = await reportsResponse.json();
                     document.getElementById('daily-reports-count').textContent = reportsData.daily || 0;
@@ -715,5 +422,14 @@
             }
         });
     </script>
+    <script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
 </body>
 </html>

@@ -1,11 +1,4 @@
-/* Shared content width + horizontal padding for all pages
-   This file provides a single place to control left/right spacing so
-   pages look consistent with Guests.html.
-*/
-:root{
-  --site-max-width:1200px;
-  --site-side-padding:1rem; /* adjust for more/less side gap */
-}
+
 
 /* Apply the same max-width and horizontal padding to common container classes
    used across the site. This preserves full-bleed headers that deliberately
@@ -26,6 +19,8 @@
   padding-right: var(--site-side-padding);
   box-sizing: border-box;
 }
+
+.page-wrapper{padding: 0 10rem}
 
 /* Some pages intentionally use full-bleed header bars. If a header must
    stretch edge-to-edge keep using the existing negative margin technique

@@ -7,11 +7,11 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/common_spacing.css">
+
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<!-- header styles moved to Header.html -->
 	
-	<style>
+	<!-- <style>
 		* {
 			margin: 0;
 			padding: 0;
@@ -465,8 +465,8 @@
 		}
 		.snackbar button:hover { color: #93c5fd; text-decoration: underline; }
 		@keyframes snackIn { from { opacity:0; transform: translateX(-50%) translateY(20px);} to { opacity:1; transform: translateX(-50%) translateY(0);} }
-	</style>
-			<script>
+	</style> -->
+	<script>
 				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
 				const API_BASE_URL = (function(){
 					const saved = localStorage.getItem('wh_api_base');
@@ -879,72 +879,79 @@
 			}
 		});
 	</script>
-	<script src="./js/main.js"></script>
 
 </head>
 <body class="admin-bg">
 	<!-- Shared header will be loaded here -->
 
-	
-	<div class="container">
-		<div id="menu-container"></div>
-		<div class="d-flex justify-content-between align-items-center mb-3">
-			<h2 class="page-title mb-0">Bed ↔ Guest Assignments</h2>
-			<div class="toolbar-actions">
-				<a class="btn btn-outline-secondary btn-sm" href="index2.html">Home</a>
-				<a class="btn btn-outline-primary btn-sm" href="Guests.html">Guests</a>
-			</div>
-		</div>
+	<div class="page-wrapper">
 
-		<div class="card shadow-sm">
-			<div class="card-body">
-				<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
-					<div class="text-muted" id="status"></div>
-					<div class="d-flex align-items-center" style="gap: .5rem;">
-						<div class="input-group input-group-sm" style="width: 260px;">
-							<span class="input-group-text"><i class="bi bi-search"></i></span>
-							<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
+
+			<div id="menu-container"></div>
+
+			<div class="page-header">
+				<div class="page-header-content">
+				<div>
+					<h1><i class="bi bi-people-fill"></i>Bed ↔ Guest Assignments</h1>
+				</div>
+				</div>
+			</div>
+
+
+
+			<div class="card shadow-sm">
+				<div class="card-body">
+					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+						<div class="text-muted" id="status"></div>
+						<div class="d-flex align-items-center" style="gap: .5rem;">
+							<div class="input-group input-group-sm" style="width: 260px;">
+								<span class="input-group-text"><i class="bi bi-search"></i></span>
+								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
+							</div>
+							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
+								<option value="">All Statuses</option>
+								<option value="active">Active</option>
+								<option value="inactive">Inactive</option>
+								<option value="closed">Closed</option>
+							</select>
+							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
 						</div>
-						<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
-							<option value="">All Statuses</option>
-							<option value="active">Active</option>
-							<option value="inactive">Inactive</option>
-							<option value="closed">Closed</option>
-						</select>
-						<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-striped table-hover align-middle">
+							<thead class="table-dark">
+								<tr>
+									<th>Bed Name</th>
+									<th>Description</th>
+									<!-- <th>Assignment ID</th> -->
+									<th>Guest</th>
+									<th>Assigned On</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="rows"></tbody>
+						</table>
 					</div>
 				</div>
-				<div class="table-responsive">
-					<table class="table table-striped table-hover align-middle">
-						<thead class="table-dark">
-							<tr>
-								   <th>Bed Name</th>
-								   <th>Description</th>
-								   <!-- <th>Assignment ID</th> -->
-								   <th>Guest</th>
-								   <th>Assigned On</th>
-								   <th>Action</th>
-							</tr>
-						</thead>
-						<tbody id="rows"></tbody>
-					</table>
+			</div>
+	</div>
+
+		<!-- Inactive Guests Modal -->
+		<div class="modal-overlay" id="inactiveGuestsModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+					<button class="modal-close" onclick="closeModal()">×</button>
+				</div>
+				<div class="modal-body" id="inactiveGuestsBody">
+					<!-- Content will be dynamically loaded here -->
 				</div>
 			</div>
 		</div>
+
 	</div>
 
-	<!-- Inactive Guests Modal -->
-	<div class="modal-overlay" id="inactiveGuestsModal">
-		<div class="modal-card">
-			<div class="modal-header">
-				<h3><i class="bi bi-people"></i> Inactive Guests</h3>
-				<button class="modal-close" onclick="closeModal()">×</button>
-			</div>
-			<div class="modal-body" id="inactiveGuestsBody">
-				<!-- Content will be dynamically loaded here -->
-			</div>
-		</div>
-	</div>
+	<script src="./js/main.js"></script>
 	<script>
 		$(document).ready(function(){
 	

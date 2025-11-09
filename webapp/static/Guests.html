@@ -3,74 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <title>Guest Management</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/common_spacing.css" />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="./js/main.js"></script>
-    <style>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- <style>
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
 
-      /* Page wrapper: constrain and center header + page content
-       Overrides the previous full-bleed page-header so it sits inside the wrapper. */
-      .page-wrapper {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1rem;
-      }
 
-      /* The page-header previously used negative margins to stretch full width.
-       When placed inside the .page-wrapper we remove that behaviour so the
-       header aligns with the page content. */
-      .page-wrapper .page-header {
-        margin-left: 0;
-        margin-right: 0;
-        width: 100%;
-        border-radius: 12px;
-      }
+
+
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
           "Oxygen", "Ubuntu", sans-serif;
         min-height: 100vh;
       }
-      .container.mt-4 {
-      }
-      .page-header {
-        background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-        color: white;
-        padding: 2rem 0;
-        /* margin-bottom: 2rem; */
-        box-shadow: 0 8px 32px rgba(129, 140, 248, 0.25);
-        width: 95%;
-        margin-left: calc(-50vw + 50%);
-        margin-right: calc(-50vw + 50%);
-        backdrop-filter: blur(10px);
-        position: relative;
-        overflow: hidden;
-      }
 
-      .page-header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>');
-        animation: float 20s linear infinite;
-      }
+
 
       @keyframes float {
         0% {
@@ -81,24 +38,7 @@
         }
       }
 
-      .page-header-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-      }
 
-      .page-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        animation: slideInLeft 0.6s ease-out;
-      }
 
       @keyframes slideInLeft {
         from {
@@ -271,7 +211,7 @@
           font-size: 0.875rem;
         }
       }
-    </style>
+    </style> -->
   </head>
   <body class="admin-bg">
     <!-- Wrap header + page header + table into a single page wrapper so the injected header
@@ -288,7 +228,7 @@
         </div>
       </div>
 
-      <div class="container mt-4">
+      <div class="">
         <!-- Guest Table -->
         <table class="table table-striped table-bordered">
           <thead class="table-dark">
@@ -427,6 +367,7 @@
       loadGuests();
     </script>
 
+    <script src="./js/main.js"></script>
     <script>
       $(document).ready(function () {
         const username =

@@ -96,7 +96,24 @@ def bunch_of_beds():
     
     return guest_service.get_bunch_of_beds()
 
+
+@router.get("/active")
+def get_active_guests():
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+ 
+    try:
+        result = guest_service.get_active_guests()
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="Attendance data not found")
+    return result
   
+
+
 
 @router.get("/history")
 def get_history_records(

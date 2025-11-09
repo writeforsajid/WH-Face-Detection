@@ -1,272 +1,95 @@
-/* Header / nav styles updated to contrast the purple gradient admin page
-   - Purpose: provide a bright, colorful header with high contrast against
-     the purple/pink background used in admin_dashboard.html
-   - file: webapp/static/css/style.css
-*/
+* { margin: 0;padding: 0;box-sizing: border-box;}
+:root { font-size: 16px;--purple-1:#667eea; --purple-2:#764ba2; --header-bg:#ffffff; --header-text:#0f172a; --muted:#6b7280; --accent:linear-gradient(90deg,var(--purple-1),var(--purple-2)); --pill-radius:10px; }
+/*div {  width: 50%;padding: 1em;font-size: 1rem; height: 100vh;} */
+body { font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; font-size: clamp(0.9rem, 1.2vw, 1.1rem); line-height: 1.6;margin:8px; }
+.admin-bg { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh;  background-attachment:fixed; color:#fff; }
+.header { display:flex; gap:16px; align-items:center; justify-content:space-between; background:var(--header-bg); color:var(--header-text); padding:14px 20px; margin-bottom:25px; border-radius:14px; box-shadow:0 10px 30px rgba(8,15,52,0.12); position:relative; z-index:1000; }
 
-:root {
-  --purple-1: #667eea; /* admin purple start */
-  --purple-2: #764ba2; /* admin purple end */
-  --header-bg: #ffffff; /* keep header bright */
-  --header-text: #0f172a; /* dark text for contrast */
-  --muted: #6b7280;
-  --accent: linear-gradient(90deg, var(--purple-1), var(--purple-2));
-  --pill-radius: 10px;
-}
-
-/* Base page defaults (only header-related overrides here) */
-body {
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial;
-}
-
-/* Re-usable admin page background (matches admin_dashboard) */
-.admin-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  padding: 20px;
-  background-attachment: fixed;
-  color: #fff;
-}
-
-/* Header container */
-.header {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--header-bg);
-  color: var(--header-text);
-  padding: 14px 20px;
-  margin-bottom: 40px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(8, 15, 52, 0.12);
-  position: relative;
-  z-index: 1000;
-}
-
-/* header accent intentionally removed to avoid visual distraction */
-
-.logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--purple-2);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo .brand-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: var(--accent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.28);
-}
-
-.nav-menu {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-/* Primary nav buttons / dropdown trigger */
-.nav-menu .nav-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dropdown-btn {
-  background: var(--purple-1);
-  background-image: linear-gradient(90deg, var(--purple-1), var(--purple-2));
-  color: white;
-  padding: 10px 18px;
-  border: none;
-  border-radius: var(--pill-radius);
-  cursor: pointer;
-  font-weight: 600;
-  box-shadow: 0 8px 20px rgba(118, 75, 162, 0.18);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.dropdown-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(118, 75, 162, 0.22);
-}
-
-  
-
-.logout-btn {
-  background: linear-gradient(90deg, #ff6b6b, #ff4757);
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  transition: transform 0.15s ease;
-}
-
-.logout-btn:hover {
-  transform: translateY(-2px);
-}
-
-/* Dropdown content */
-.dropdown {
-  position: relative;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  /* reduce the gap between the dropdown trigger and the panel for tighter UI */
-  top: calc(100% + 0px);
-  left: 0;
-  /* narrower dropdown to match toolbar spacing */
-  min-width: 160px;
-  max-width: 260px;
-  width: auto;
-  background: #fff;
-  color: var(--header-text);
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  overflow: hidden;
-  z-index: 1200;
-}
-
-.dropdown-content a {
-  display: block;
-  padding: 10px 14px;
-  color: var(--header-text);
+.page-header { background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%); color:white; padding:1rem 0; box-shadow:0 8px 32px rgba(129,140,248,0.25);  position:relative; overflow:hidden; border-radius:14px;margin: 25px 0;}
+.page-header::before { content:""; position:absolute; top:0; left:0; right:0; bottom:0; background:url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>'); animation:float 20s linear infinite; }
+ .page-header-content { margin:0 auto; padding:0 1rem; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
+.page-header-content h1 {color:#fff}
+.dashboard-link {
   text-decoration: none;
-}
-
-/* Default subtle hover fallback */
-.dropdown-content a:hover {
-  background: rgba(15,23,42,0.04);
-}
-
-/* High-contrast per-item hover colors (desktop dropdown)
-   - 1: red, 2: golden, 3: blue, 4: green, 5: pink
-   These use gradients and adjust text color for readability. */
-.dropdown-content a:nth-child(1):hover {
-  background: linear-gradient(90deg, #ff6b6b, #ff4757);
-  color: #fff;
-}
-.dropdown-content a:nth-child(2):hover {
-  background: linear-gradient(90deg, #ffd166, #f9a825);
-  color: #0f172a; /* dark text on light golden */
-}
-.dropdown-content a:nth-child(3):hover {
-  background: linear-gradient(90deg, #4facfe, #00f2fe);
-  color: #fff;
-}
-.dropdown-content a:nth-child(4):hover {
-  background: linear-gradient(90deg, #43e97b, #38f9d7);
-  color: #0f172a;
-}
-.dropdown-content a:nth-child(5):hover {
-  background: linear-gradient(90deg, #f093fb, #f5576c);
-  color: #0f172a;
-}
-
-/* Mobile menu: links are inside list items; apply the same palette by li position */
-.mobile-menu details li:nth-child(1) a:hover {
-  background: linear-gradient(90deg, #ff6b6b, #ff4757);
-  color: #fff;
-}
-.mobile-menu details li:nth-child(2) a:hover {
-  background: linear-gradient(90deg, #ffd166, #f9a825);
-  color: #0f172a;
-}
-.mobile-menu details li:nth-child(3) a:hover {
-  background: linear-gradient(90deg, #4facfe, #00f2fe);
-  color: #fff;
-}
-.mobile-menu details li:nth-child(4) a:hover {
-  background: linear-gradient(90deg, #43e97b, #38f9d7);
-  color: #0f172a;
-}
-.mobile-menu details li:nth-child(5) a:hover {
-  background: linear-gradient(90deg, #f093fb, #f5576c);
-  color: #0f172a;
-}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-/* Mobile / hamburger */
-.hamburger {
-  display: none;
-  background: transparent;
-  border: 2px solid rgba(15,23,42,0.06);
-  padding: 8px 10px;
-  border-radius: 10px;
+  color: inherit; /* keeps same color as parent */
   cursor: pointer;
 }
 
-/* small layout tweaks */
-button {
-  font-family: inherit;
+.dashboard-link:hover {
+  text-decoration: underline; /* optional hover effect */
 }
 
-/* Mobile responsive */
+header { padding: 1.5rem 0; text-align: center; }
+h1 { font-size: clamp(1.5rem, 4vw, 2.5rem); color: #222; }
+
+
+.page-wrapper {max-width: 1200px;margin: 0 auto;padding: 1rem clamp(0rem, 0vw, 0rem); }
+
+.logo { font-size:1.25rem; font-weight:700; color:var(--purple-2); display:flex; align-items:center; gap:10px; }
+.logo .brand-mark { width:40px; height:40px; border-radius:8px; background:var(--accent); display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; box-shadow:0 6px 16px rgba(102,126,234,0.28); }
+
+
+
+.nav-menu { display:flex; gap:12px; align-items:center; }
+.nav-menu .nav-item { display:inline-flex; align-items:center; gap:8px; }
+#nav-menu.show {  display: flex; animation: fadeIn 0.25s ease-in-out;}
+
+
+
+
+.dropdown-btn { background:var(--purple-1); background-image:linear-gradient(90deg,var(--purple-1),var(--purple-2)); color:white; padding:10px 18px; border:none; border-radius:var(--pill-radius); cursor:pointer; font-weight:600; box-shadow:0 8px 20px rgba(118,75,162,0.18); transition:transform 0.18s ease,box-shadow 0.18s ease; }
+.dropdown-btn:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(118,75,162,0.22); }
+.logout-btn { background:linear-gradient(90deg,#ff6b6b,#ff4757); color:white; padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:700; transition:transform 0.15s ease; }
+.logout-btn:hover { transform:translateY(-2px); }
+
+
+.dropdown { position:relative; }
+.dropdown-content { display:none; position:absolute; top:calc(100% + 0px); left:0; min-width:160px; max-width:260px; width:auto; background:#fff; color:var(--header-text); border-radius:10px; box-shadow:0 10px 30px rgba(15,23,42,0.12); overflow:hidden; z-index:1200; }
+.dropdown-content a { display:block; padding:10px 14px; color:var(--header-text); text-decoration:none; }
+.dropdown-content a:hover { background:rgba(15,23,42,0.04); }
+.dropdown-content a:nth-child(1):hover { background:linear-gradient(90deg,#ff6b6b,#ff4757); color:#fff; }
+.dropdown-content a:nth-child(2):hover { background:linear-gradient(90deg,#ffd166,#f9a825); color:#0f172a; }
+.dropdown-content a:nth-child(3):hover { background:linear-gradient(90deg,#4facfe,#00f2fe); color:#fff; }
+.dropdown-content a:nth-child(4):hover { background:linear-gradient(90deg,#43e97b,#38f9d7); color:#0f172a; }
+.dropdown-content a:nth-child(5):hover { background:linear-gradient(90deg,#f093fb,#f5576c); color:#0f172a; }
+/* .mobile-menu details li:nth-child(1) a:hover { background:linear-gradient(90deg,#ff6b6b,#ff4757); color:#fff; }
+.mobile-menu details li:nth-child(2) a:hover { background:linear-gradient(90deg,#ffd166,#f9a825); color:#0f172a; }
+.mobile-menu details li:nth-child(3) a:hover { background:linear-gradient(90deg,#4facfe,#00f2fe); color:#fff; }
+.mobile-menu details li:nth-child(4) a:hover { background:linear-gradient(90deg,#43e97b,#38f9d7); color:#0f172a; }
+.mobile-menu details li:nth-child(5) a:hover { background:linear-gradient(90deg,#f093fb,#f5576c); color:#0f172a; } */
+.dropdown:hover .dropdown-content { display:block; }
+
+
+
+.hamburger { display:none; background:transparent; border:2px solid rgba(15,23,42,0.06); padding:8px 10px; border-radius:10px; cursor:pointer; }
+button { font-family:inherit; }
+.header .muted { color:var(--muted); font-size:0.95rem; }
+.dropdown-btn:focus, .logout-btn:focus, .hamburger:focus { outline:3px solid rgba(102,126,234,0.18); outline-offset:2px; }
+button::after, input[type="button"]::after, input[type="submit"]::after, .btn::after, .nav-link::after, .dropdown-btn::after, .logout-btn::after { content:"\25BE"; display:inline-block; margin-left:0.35rem; font-size:20px; vertical-align:middle; opacity:0.95; transform:translateY(0.08em); pointer-events:none; color:currentColor; }
+.no-dropdown::after { content:none !important; }
+
+header #nav-menu.show { display: flex !important; }
+
+
+
+
+
+
+
+
+
+
+
 @media (max-width: 768px) {
-  .nav-menu { display: none; }
-  .hamburger { display: inline-flex; }
-  .header { padding: 12px; }
+  /* --- Overlay behind the menu (blur effect) --- */
+    .nav-menu { display:none; flex-direction:column; align-items:flex-start; background:rgba(255,255,255,0.50); backdrop-filter:blur(1px); -webkit-backdrop-filter:blur(1px); position:absolute; top:100%; left:0; width:100%; border-radius:0 0 12px 12px; box-shadow:0 10px 25px rgba(15,23,42,0.15); padding:10px 0; z-index:999; } 
+    #nav-menu.show { display:flex; animation:fadeIn 0.25s ease-in-out; } 
+    .nav-menu .nav-item { width:100%; padding:10px 20px; justify-content:flex-start; border-bottom:1px solid rgba(15,23,42,0.06); } 
+    .nav-menu .nav-item:last-child { border-bottom:none; } 
+    .hamburger { display:inline-flex; }
 }
 
-/* Utility: small muted text in header */
-.header .muted {
-  color: var(--muted);
-  font-size: 0.95rem;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-/* Accessibility: focus outlines */
-.dropdown-btn:focus, .logout-btn:focus, .hamburger:focus {
-  outline: 3px solid rgba(102,126,234,0.18);
-  outline-offset: 2px;
-}
-
-/* Ensure there's no stray broken comment or duplicate rules below */
-
-/* ==========================
-   Global dropdown icon for buttons
-   - Appends a small, subtle down-triangle to buttons/links that act like
-     triggers. Keeps layout unaffected and allows opt-out with `.no-dropdown`.
-   - Uses Unicode ▾ (U+25BE) so no extra asset is required.
-   - Pointer events disabled on the pseudo-element so clicks land on the
-     button itself. Screen readers ignore ::after by default.
-*/
-button::after,
-input[type="button"]::after,
-input[type="submit"]::after,
-.btn::after,
-.nav-link::after,
-.dropdown-btn::after,
-.logout-btn::after {
-  content: "\25BE"; /* small down triangle */
-  display: inline-block;
-  margin-left: 0.35rem;
-  /* margin-bottom: 0.35rem; */
-  font-size: 20px; /* slightly larger per request */
-  vertical-align: middle;
-  opacity: 0.95;
-  transform: translateY(0.08em);
-  pointer-events: none; /* let the button receive clicks */
-  color: currentColor; /* match the button text color */
-}
-
-/* Opt-out helper: add class="no-dropdown" to remove the icon when not wanted */
-.no-dropdown::after { content: none !important; }
-
-
-

@@ -1,6 +1,5 @@
 $(document).ready(function () {
   // ✅ Load header first
-
   $("#menu-container").load("header.html", function () {
     console.log("Header loaded successfully");
 
@@ -22,6 +21,7 @@ $(document).ready(function () {
     // Get elements
     const hamburger = document.getElementById("hamburger-btn");
     const navMenu = document.getElementById("nav-menu");
+
     //const userMenuBtn = document.getElementById("userMenuBtn");
     const userDropdown = document.querySelector(".user-dropdown");
 
@@ -30,8 +30,9 @@ $(document).ready(function () {
       // --- Hamburger toggle ---
       if (hamburger && hamburger.contains(e.target)) {
         e.stopPropagation();
-        alert("SDFDSDF");
+        //alert("SDFDSDF");
         navMenu.classList.toggle("show");
+
         //userDropdown.classList.remove("open"); // close user dropdown
         return;
       }
@@ -47,6 +48,7 @@ $(document).ready(function () {
       // --- Clicked outside both ---
       if (!navMenu.contains(e.target) && !hamburger.contains(e.target)) {
         navMenu.classList.remove("show");
+
       }
       // if (!userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
       //   userDropdown.classList.remove("open");

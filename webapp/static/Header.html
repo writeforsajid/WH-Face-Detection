@@ -1,49 +1,62 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="./css/common_spacing.css">
+
+<!-- <link rel="stylesheet" href="./css/common_spacing.css"> -->
 
 <div class="header">
-  <div class="site-inner">
-    <div class="logo">
-      <i class="fas fa-home"></i> WH Dashboard
-    </div>
 
-    <!-- Hamburger for mobile -->
-    <!-- <button class="hamburger" id="hamburger-btn" aria-label="Menu">
-      <i class="fas fa-bars"></i>
-    </button> -->
-    <div class="nav-container">
-      <button id="hamburger-btn" class="hamburger">&#9776;</button>
-    </div>
+      <div class="logo-section">
+        <!-- <img src="logo.png" alt="Logo" class="logo" /> -->
+        <!-- <h1 class="dashboard-title">White House</h1> -->
+          <h1 class="dashboard-title">
+            <a href="dashboard.html" class="dashboard-link">White House</a>
+          </h1>
+      </div>
+
+
+  <div class="nav-wrapper">
+    <button id="hamburger-btn" class="hamburger">&#9776;</button>
+
 
     <!-- Navigation -->
     <nav class="nav-menu" id="nav-menu">
-      <div class="dropdown role-owner role-employee">
-        <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
-        <div class="dropdown-content">
-          <a href="admin_dashboard.html">View All Beds</a>
-          <a href="Bed_Guest_Relationship.html">Add New Bed</a>
-          <a href="Bed_Guest_Relationship.html">Manage Beds</a>
-        </div>
-      </div>
+
 
       <div class="dropdown role-owner role-employee">
         <button class="dropdown-btn"><i class="fas fa-users"></i> Guests</button>
         <div class="dropdown-content">
           <a href="guests.html">View All Guests</a>
           <a href="register.html">Add New register</a>
-          <a href="AttendanceDetails.html">Manage Guests</a>
+          <a href="attendancedetails.html">Manage Guests</a>
         </div>
       </div>
+
+      
+      <div class="dropdown role-owner role-employee">
+        <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
+        <div class="dropdown-content">
+          <a href="admin_dashboard.html">View All Beds</a>
+          <a href="bed_guest_relationship.html">Add New Bed</a>
+          <a href="bed_guest_relationship.html">Manage Beds</a>
+        </div>
+      </div>
+
+
+
 
       <div class="dropdown role-owner role-employee role-resident">
         <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
         <div class="dropdown-content">
-          <a href="AttendanceDetails.html">View Attendance</a>
-          <a href="HistoryDetails.html"> History</a>
+          <a href="attendancedetails.html">View Attendance</a>
+          <a href="historydetails.html"> History</a>
         </div>
       </div>
-
+      <div class="dropdown role-owner role-employee role-resident">
+        <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Employees</button>
+        <div class="dropdown-content">
+          <a href="employee_attendance.html">Attendance</a>
+          <a href="#"> History</a>
+        </div>
+      </div>
       <div class="dropdown role-owner">
         <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
         <div class="dropdown-content">
@@ -62,75 +75,10 @@
           <a href="#" onclick="handleLogout()">Logout</a>
         </div>
       </div>
+      
+
     </nav>
-  </div>
-<<<<<<< HEAD
 
-  <!-- Hamburger for mobile -->
-  <!-- <button class="hamburger" id="hamburger-btn" aria-label="Menu">
-    <i class="fas fa-bars"></i>
-  </button> -->
-  <div class="nav-container">
-    <button id="hamburger-btn" class="hamburger">&#9776;</button>
-  </div>
-
-  <!-- Navigation -->
-  <nav class="nav-menu" id="nav-menu">
-    <div class="dropdown role-owner role-employee">
-      <button class="dropdown-btn"><i class="fas fa-bed"></i> Beds</button>
-      <div class="dropdown-content">
-        <a href="admin_dashboard.html">View All Beds</a>
-        <a href="Bed_Guest_Relationship.html">Add New Bed</a>
-        <a href="Bed_Guest_Relationship.html">Manage Beds</a>
-      </div>
-    </div>
-
-    <div class="dropdown role-owner role-employee">
-      <button class="dropdown-btn"><i class="fas fa-users"></i> Guests</button>
-      <div class="dropdown-content">
-        <a href="guests.html">View All Guests</a>
-        <a href="register.html">Add New register</a>
-        <a href="AttendanceDetails.html">Manage Guests</a>
-      </div>
-    </div>
-
-    <div class="dropdown role-owner role-employee role-resident">
-      <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</button>
-      <div class="dropdown-content">
-        <a href="AttendanceDetails.html">View Attendance</a>
-        <a href="HistoryDetails.html"> History</a>
-      </div>
-    </div>
-    <div class="dropdown role-owner role-employee role-resident">
-      <button class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Employees</button>
-      <div class="dropdown-content">
-        <a href="Employee Attendance.html">Attendance</a>
-        <a href="#"> History</a>
-      </div>
-    </div>
-    <div class="dropdown role-owner">
-      <button class="dropdown-btn"><i class="fas fa-chart-line"></i> Reports</button>
-      <div class="dropdown-content">
-        <a href="report_guest_presence.html">View Reports</a>
-        <a href="reports.html">Monthly Report</a>
-      </div>
-    </div>
-
-
-    <div class="dropdown role-owner role-employee role-resident">
-      <button class="dropdown-btn"><i class="fas fa-user-circle"></i> <span id="userName">User</span></button>
-      <div class="dropdown-content">
-        <a href="#">Profile</a>
-        <a href="#">Settings</a>
-        <hr>
-        <a href="#" onclick="handleLogout()">Logout</a>
-      </div>
-    </div>
-    
-
-  </nav>
-=======
->>>>>>> 256f49b7205f8c70520fd892f332c40c1728bd3f
 </div>
 
 <!-- Small script to populate username from localStorage for pages that fetch this header -->

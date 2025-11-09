@@ -480,6 +480,7 @@ async def change_password(guest_id,old_password, secret_key, new_password):
 
 
 def update_guest(meta: dict):
+
     try:
         guest_id = meta.get("guest_id")
         name = meta.get("name", "").strip()
@@ -515,3 +516,25 @@ def update_guest(meta: dict):
 
     except Exception as e:
         return {"error": str(e)}
+    
+
+
+
+
+def get_active_guests():
+    conn = get_connection()
+    cur = conn.cursor()
+    query = """
+        SELECT 
+            g.guest_id as id,
+            g.name
+        FROM guests AS g
+        LEFT JOIN guest_roles AS gr ON g.guest_id = gr.guest_id
+        LEFT JOIN roles AS r ON gr.role_id = r.role_id
+        WHERE r.role_name = 'resident' AND g.status = 'active'
+        ORDER BY id DESC
+    """
+    cur.execute(query)
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
