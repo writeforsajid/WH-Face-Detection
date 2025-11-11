@@ -219,7 +219,6 @@ class EmployeeFilter extends HTMLElement {
   // }
 
   applyVisibilityRules() {
-    debugger;
     const disableList = this.getAttribute("data-disable");
     const hiddenList = this.getAttribute("data-hidden");
 
@@ -281,5 +280,5 @@ class EmployeeFilter extends HTMLElement {
 customElements.define("employee-filter", EmployeeFilter);
 //Samples parmeters
 // data-api="http://localhost:8000/employees/active" 
-// data-disable='["endDate1","employeeSelect","fetchBtn"]' 
+// data-disable='["endDate","employeeSelect","fetchBtn"]' 
 // data-hidden='["fetchBtn",""]'

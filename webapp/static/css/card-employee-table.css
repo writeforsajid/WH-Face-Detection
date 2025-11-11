@@ -1,7 +1,7 @@
 .card{overflow:visible;padding:3px}
 
 .employee-table-container {
-  max-height: 250px;
+  max-height: 275px;
   overflow-y: auto;
   margin-top: 10px;
   background: rgba(255, 255, 255, 0.1);

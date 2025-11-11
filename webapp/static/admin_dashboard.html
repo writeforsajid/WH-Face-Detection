@@ -22,7 +22,7 @@
     <div class="page-header">
       <div class="page-header-content">
         <div>
-          <h1><i class="bi bi-people-fill"></i> Employee Attendance Viewer</h1>
+          <h1><i class="bi bi-people-fill"></i> Bed Management</h1>
         </div>
       </div>
     </div>
@@ -53,7 +53,7 @@
         <!-- Section 1: Beds -->
         <div class="section" id="beds-section">
             <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='Bed_Guest_Relationship.html'">
-                <i class="fas fa-bed"></i> Beds Management
+                <i class="fas fa-bed"></i> Beds Status
             </h2>
             <div class="cards-container">
                 <div class="card vacant" onclick="handleCardClick('vacant-beds')">
@@ -82,33 +82,33 @@
         <!-- Section 2: Guests -->
         <div class="section" id="guests-section">
             <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='AttendanceDetails.html'">
-                <i class="fas fa-users"></i> Guests Management
+                <i class="fas fa-users"></i> Occupancy
             </h2>
             <div class="cards-container">
                 <div class="card active" onclick="handleCardClick('active-guests')">
                     <span class="card-icon"><i class="fas fa-user-check"></i></span>
-                    <div class="card-title">Active</div>
+                    <div class="card-title">BRASS</div>
                     <div class="card-value" id="active-guests-count">--</div>
                     <div class="card-subtitle">Currently active guests</div>
                 </div>
 
                 <div class="card inactive" onclick="handleCardClick('inactive-guests')">
                     <span class="card-icon"><i class="fas fa-user-clock"></i></span>
-                    <div class="card-title">Inactive</div>
+                    <div class="card-title">SILVER</div>
                     <div class="card-value" id="inactive-guests-count">--</div>
                     <div class="card-subtitle">Temporarily inactive</div>
                 </div>
 
                 <div class="card closed" onclick="handleCardClick('closed-guests')">
                     <span class="card-icon"><i class="fas fa-user-times"></i></span>
-                    <div class="card-title">Closed</div>
+                    <div class="card-title">GOLDEN</div>
                     <div class="card-value" id="closed-guests-count">--</div>
                     <div class="card-subtitle">Checked out guests</div>
                 </div>
 
                 <div class="card total-guests" onclick="handleCardClick('total-guests')">
                     <span class="card-icon"><i class="fas fa-users"></i></span>
-                    <div class="card-title">Total</div>
+                    <div class="card-title">REST</div>
                     <div class="card-value" id="total-guests-count">--</div>
                     <div class="card-subtitle">All registered guests</div>
                 </div>

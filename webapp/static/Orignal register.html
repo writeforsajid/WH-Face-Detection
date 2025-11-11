@@ -1,44 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>>Guest Registration</title>
-
+  <meta charset="UTF-8">
+  <title>Guest Registration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-	<!-- header styles moved to Header.html -->
-	<link rel="stylesheet" href="./css/style.css">
-
-	  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- <link rel="stylesheet" href="./css/common_spacing.css"> -->
-
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <style>
     body { background: #f8f9fa; }
     .form-label span { color: #dc3545; }
   </style>
-
-  </head>
-
-
+  <link rel="stylesheet" href="./css/common_spacing.css">
+</head>
 
 
 
-<body class="admin-bg">
-  	<!-- Main Content -->
-<div class="page-wrapper">
-  <div id="menu-container"></div>
-    <div class="page-header">
-      <div class="page-header-content">
-        <div>
-          <h1><i class="bi bi-people-fill"></i> Guest Registration (5s Video Capture)</h1>
-        </div>
-      </div>
-    </div>
-
+<body class="bg-light">
 <div class="container mt-4 mb-5">
   <div class="card shadow-sm">
-
+    <div class="card-header bg-success text-white text-center">
+      <h4 class="mb-0">Guest Registration (5s Video Capture)</h4>
+    </div>
 
     <div class="card-body">
       <form id="guestForm" novalidate>
@@ -108,13 +92,6 @@
     </div>
   </div>
 </div>
-
-
-
-
-
-
-  </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 
@@ -308,18 +285,10 @@ $("#guestForm").submit(function (e) {
 
 
 // ------------------ Init ------------------
+$(document).ready(function () {
+
+  startCamera();
+});
 </script>
-
-  <script src="./js/main.js"></script>
-	<script>
-		$(document).ready(function(){
-			
-			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
-			if (!username) window.location.href = "login.html";
-			$("#username").text(username);
-    startCamera();
-
-    });
-	</script>
 </body>
 </html>

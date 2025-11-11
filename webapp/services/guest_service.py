@@ -81,7 +81,8 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
     cur = conn.cursor()
 
     # Build WHERE filters dynamically
-    where_clauses = []
+    # where_clauses = []
+    where_clauses = ["LOWER(r.role_name) = 'resident'"]  # 👈 force only employees
     params = []
     
     if status:
@@ -199,11 +200,12 @@ def toggle_guest_status(guest_id: str):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Cycle through statuses: active -> inactive -> closed -> active
+    # Cycle through statuses: active -> leave -> inactive -> closed -> active
     cur.execute("""
         UPDATE guests
         SET status = CASE 
-            WHEN status = 'active' THEN 'inactive'
+            WHEN status = 'active' THEN 'leave'
+            WHEN status = 'leave' THEN 'inactive'                
             WHEN status = 'inactive' THEN 'closed'
             ELSE 'active'
         END
@@ -258,6 +260,7 @@ def get_history_records(guest_id, start_date, end_date, page, limit):
     offset = (page - 1) * limit
     conn = get_connection()
     cur = conn.cursor()
+
 
     # Fetch paginated attendance
     query = """
@@ -336,6 +339,7 @@ def get_guest_history(guest_id: str):
     """
     Fetch guest details along with their attendance records and bed assignment.
     """
+
     conn = get_connection()
     cur = conn.cursor()
     
@@ -404,7 +408,6 @@ def get_guest_with_attendance(guest_id: str):
     """
     conn = get_connection()
     cur = conn.cursor()
-    
     # Get guest details
     cur.execute("""
         SELECT g.*, ga.bed_id, ga.assign_date

@@ -46,6 +46,33 @@ def _validate_session(token: str) -> str:
 
 
 
+@router.get("/")
+def list_employees(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None, description="Search by guest name"),
+    status: Optional[str] = Query(
+        None,
+        description="Filter by status: active|inactive|closed",
+        regex="^(active|inactive|closed)$",
+    ),
+):
+    return employee_service.get_employees(page=page, limit=limit, search=search, status=status)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @router.get("/active")
 def get_active_employee():
     """
