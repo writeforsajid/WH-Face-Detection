@@ -1,0 +1,42 @@
+[
+  {
+    "question": "How do I register a new user?",
+    "answer": "Open the Register page from the main menu, fill in the required fields (name, email, password) and submit the form. The system will store the user in the database and you will be redirected to the login page."
+  },
+  {
+    "question": "How do I log in?",
+    "answer": "Go to the Login page, enter your email and password, then click 'Sign In'. If two-factor or additional authentication is configured, follow the on-screen steps."
+  },
+  {
+    "question": "How do I upload a video for attendance/face detection?",
+    "answer": "Use the Upload Video endpoint or the Upload button in the Reports/Attendance area. Supported formats include MP4 and AVI. After upload, the video will be processed by the face recognition worker; processing time depends on video length and machine performance."
+  },
+  {
+    "question": "What video formats and codecs are supported?",
+    "answer": "Common container formats (MP4, AVI, MOV) are supported. If processing fails due to codec issues, convert the video to H.264 MP4 using a tool like ffmpeg and re-upload."
+  },
+  {
+    "question": "How accurate is the face recognition?",
+    "answer": "Accuracy depends on the quality of the input video, lighting, camera angle, and the size of the face in the frame. The system uses pre-trained YOLO models for detection and a face recognition pipeline; for best results use clear, frontal faces and good lighting."
+  },
+  {
+    "question": "How do I add or update people in the faces database?",
+    "answer": "Use the employee/guest management pages to add new persons and upload reference images. The worker will index faces from those images into the master faces database used for recognition."
+  },
+  {
+    "question": "Is data and video stored securely?",
+    "answer": "By default, videos and sensitive data should be stored on the server with access controls. For production, enable HTTPS, use secure storage (e.g., encrypted disk or cloud storage), and keep private keys and credentials out of the repository."
+  },
+  {
+    "question": "What should I do if the application runs slowly?",
+    "answer": "Performance depends on CPU/GPU and model size. Use a smaller model (like yolov8n) for faster processing, or run the face detection worker on a machine with a GPU. Also ensure only required services run and increase available memory if possible."
+  },
+  {
+    "question": "Where can I configure environment variables and secrets?",
+    "answer": "See `webapp/utilities/environment_variables.py` and `webapp/data/environment_variables.py` for environment handling. Store secrets in a `.env` file or a secure secrets manager; do not commit them to source control."
+  },
+  {
+    "question": "Who do I contact for support or to contribute?",
+    "answer": "Open an issue in the repository or contact the project maintainer listed in the `README.md`. Contributions via pull requests are welcome—follow the repository's contributing guidelines."
+  }
+]
