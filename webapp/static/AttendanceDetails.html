@@ -25,7 +25,6 @@
        Configuration & small helpers
        ============================ */
 
-	  debugger; 
 		let currentFilter = {
 		startDate: new Date().toISOString().split("T")[0],
 		endDate: new Date().toISOString().split("T")[0],
@@ -39,6 +38,8 @@
 				message: "Data fetched successfully",
 				filter
 			};
+      debugger;
+      currentFilter=filter;
       fetchAttendance(1);
 		});
 
@@ -258,20 +259,25 @@
 
     
   async function fetchAttendance(page = 1) {
-    debugger;
+    
     const token = localStorage.getItem('wh_token');
+    const userrole = (JSON.parse(localStorage.getItem('wh_user') || '{}').role) || '';
+    let guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
     if (!token) {
       window.location.href = 'login.html';
       return;
     }
-
-    const guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+    if (userrole === 'employee' || userrole === 'owner')
+    {
+      guestId = 'all';
+    }
+   
     if (!guestId) {
       alert('No guest selected');
       return;
     }
     debugger;
-    const { startDate, endDate } = currentFilter.filter;
+    const { startDate, endDate } = currentFilter;
     debugger;
     if (!startDate || !endDate) {
     alert('Select both start and end dates');
@@ -284,6 +290,7 @@
     try {
       const url = new URL(`${API_BASE_URL}/attendance/records`);
       url.searchParams.set('guest_id', guestId);
+      url.searchParams.set('role_name', 'resident');
       url.searchParams.set('start_date', startDate);
       url.searchParams.set('end_date', endDate);
       url.searchParams.set('page', page);

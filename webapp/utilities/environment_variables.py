@@ -10,7 +10,7 @@ def load_environment(ENV_FILE_PATH: str):
     """
     
     app_dir = os.path.dirname(os.path.abspath(__file__))
-
+    
     # ✅ construct absolute path to .env.webapp
     env_path = os.path.join(app_dir, ENV_FILE_PATH) #"../data/.env.webapp")
 

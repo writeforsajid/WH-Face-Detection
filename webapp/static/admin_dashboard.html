@@ -30,20 +30,6 @@
 
 
     <script>
-                       // After inserting header via innerHTML, inline scripts won't execute.
-                // Populate username from localStorage so admin_dashboard shows the name.
-                try {
-                    var stored = localStorage.getItem('wh_user') || '{}';
-                    var user = JSON.parse(stored);
-                    var el = document.getElementById('userName');
-                    if (el && user && user.name) {
-                        el.textContent = user.name;
-                    }
-                } catch (err) {
-                    console && console.error && console.error('Header post-load error', err);
-                }
-            })
-            .catch(err => console.error('Header load error:', err));
     </script>
  
 
@@ -295,23 +281,34 @@
             }
             
             try {
+                
                 // Beds data
+                debugger;
                 const bedsResponse = await fetch(`${apiBase}/beds/stats`, { headers });
+                
+                bedsData  = await bedsResponse.json();
+
+                 
+                  // Access individual sharing types
+                const brass = bedsData.brass || "0/0";
+                const silver = bedsData.silver || "0/0";
+                const golden = bedsData.golden || "0/0";
+
                 if (bedsResponse.ok) {
-                    const bedsData = await bedsResponse.json();
+                    //bedsData = await bedsResponse.json();
+                    const { total = 0, occupied = 0, vacant = 0 } = bedsData.summary || {};
                     document.getElementById('vacant-count').textContent = bedsData.vacant || 0;
                     document.getElementById('occupied-count').textContent = bedsData.occupied || 0;
                     document.getElementById('total-beds-count').textContent = bedsData.total || 0;
                 }
 
                 // Guests data
-                const guestsResponse = await fetch(`${apiBase}/guests/stats`, { headers });
-                if (guestsResponse.ok) {
-                    const guestsData = await guestsResponse.json();
-                    document.getElementById('active-guests-count').textContent = guestsData.active || 0;
-                    document.getElementById('inactive-guests-count').textContent = guestsData.inactive || 0;
-                    document.getElementById('closed-guests-count').textContent = guestsData.closed || 0;
-                    document.getElementById('total-guests-count').textContent = guestsData.total || 0;
+
+                if (bedsResponse.ok) {
+                    document.getElementById('active-guests-count').textContent = bedsData.brass_total-bedsData.brass+"/"+bedsData.brass_total || 0;
+                    document.getElementById('inactive-guests-count').textContent =bedsData.silver_total-bedsData.silver+"/"+bedsData.silver_total || 0;
+                    document.getElementById('closed-guests-count').textContent = bedsData.golden_total-bedsData.golden+"/"+bedsData.golden_total || 0;
+                    document.getElementById('total-guests-count').textContent =  0;
                 }
 
                 // Attendance data

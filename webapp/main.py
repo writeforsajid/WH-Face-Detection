@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import routers
 from api import  reports,guests,upload_video,attendance,employees
 from api import beds as beds_router
-from static import auth as auth_router
+from api import auth as auth_router
 from db import database
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment
@@ -48,8 +48,9 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
 
+app.include_router(auth_router.router, prefix="/auth", tags=["Auth"])
+app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
 app.include_router(guests.router, prefix="/guests", tags=["Guests"])
 app.include_router(employees.router, prefix="/employees", tags=["Employees"])
 app.include_router(guests.router, prefix="/login", tags=["login"])

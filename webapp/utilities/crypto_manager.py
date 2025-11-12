@@ -1,9 +1,17 @@
 import os
 from cryptography.fernet import Fernet
-from dotenv import load_dotenv
-
+#from dotenv import load_dotenv
+from db.environment_variables import load_environment
+load_environment("./../../data/.env.webapp")
 # Load environment variables from .env file
 #load_dotenv()
+#
+# from utilities.environment_variables import load_environment
+# # print("abc");
+# # breakpoint();
+# # DB_PATH = "./../data/.env.webapp"
+
+
 
 class CryptoManager:
     """
@@ -16,6 +24,9 @@ class CryptoManager:
         Initialize CryptoManager with a secret key.
         If not provided, tries to load from environment variable SECRET_KEY.
         """
+        # print("TEEE");
+        # breakpoint();
+        # SECRET_KEY=os.getenv("SECRET_KEY","./../data/.env.webapp")
         self.secret_key = secret_key or os.getenv("SECRET_KEY")
         if not self.secret_key:
             raise ValueError("SECRET_KEY not found. Please generate and set it in .env file.")

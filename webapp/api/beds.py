@@ -61,13 +61,43 @@ def get_beds_stats(authorization: Optional[str] = Header(None)) -> Dict[str, int
     cur = conn.cursor()
     try:
         # Occupied beds: count all rows in guest_beds
+        cur.execute("SELECT COUNT(*) FROM beds")
+        total_beds =  int(cur.fetchone()[0] or 0)
         cur.execute("SELECT COUNT(*) FROM guest_beds")
         occupied = int(cur.fetchone()[0] or 0)
-
-        total = TOTAL_BEDS
+        total = total_beds
         vacant = max(total - occupied, 0)
 
-        return {"total": total, "occupied": occupied, "vacant": vacant}
+        cur.execute(f"""SELECT 
+                b.sharing_type,
+                COUNT(b.bed_id) AS total_beds,
+                COUNT(gb.bed_id) AS occupied_beds,
+                (COUNT(b.bed_id) - COUNT(gb.bed_id)) AS vacant_beds
+                FROM beds b
+                LEFT JOIN guest_beds gb ON b.bed_id = gb.bed_id
+                GROUP BY b.sharing_type
+                ORDER BY b.sharing_type;""")
+        
+
+        rows = cur.fetchall()
+
+        # Convert to desired dictionary format
+        
+        sharing_summary = {}
+        for r in rows:
+            stype = r["sharing_type"].lower()
+            sharing_summary[f"{stype}_total"] = r["total_beds"]
+            sharing_summary[stype] = r["occupied_beds"]
+
+        sharing_summary["total"]=total;
+        sharing_summary["occupied"]=occupied;
+        sharing_summary["vacant"]=vacant;
+
+
+
+        return sharing_summary
+
+
     finally:
         conn.close()
 
@@ -77,6 +107,7 @@ def list_bed_guest_assignments(
     authorization: Optional[str] = Header(None),
     search: Optional[str] = None,
     status: Optional[str] = Query(None, regex="^(active|inactive|closed)$"),
+    sharing_type: Optional[str] = Query(None, regex="^(brass|silver|golden)$"),
 ) -> List[Dict]:
     """
     Returns LEFT JOIN of beds with guest_beds and guest names.
@@ -102,6 +133,11 @@ def list_bed_guest_assignments(
             where_clauses.append("LOWER(g.name) LIKE ?")
             params.append(f"%{str(search).lower().strip()}%")
 
+        # Bed-related filter
+        if sharing_type:
+            where_clauses.append("LOWER(b.sharing_type) = ?")
+            params.append(sharing_type.lower())
+        
         where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
         cur.execute(
@@ -109,7 +145,7 @@ def list_bed_guest_assignments(
             SELECT
                 b.id AS id,
                 b.bed_id AS bed_id,
-                b.description AS bed_description,
+                b.sharing_type AS bed_sharing_type,
                 gra.assignment_id AS assignment_id,
                 gra.guest_id AS guest_id,
                 g.name AS guest_name,

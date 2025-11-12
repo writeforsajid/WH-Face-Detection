@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends, Header, Request,Form
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel, EmailStr, Field
-import re
 from typing import Optional
 from db.database import get_connection
 from utilities.passwords import hash_password, verify_password
 from datetime import datetime, timedelta, timezone
 import sqlite3
 import uuid
-from fastapi.responses import JSONResponse
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -18,13 +17,13 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     phone_number: Optional[str] = Field(None, description="Phone number of the guest")
-    code: Optional[str] = Field(None, min_length=4, max_length=4, description="Last 4 digits of phone number for verification")
     role_name: Optional[str] = Field("resident", description="owner | resident | employee")
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    
 
 
 def _now_utc() -> datetime:
@@ -73,42 +72,6 @@ def signup(payload: SignupRequest, request: Request):
             raise HTTPException(status_code=409, detail="Email already registered")
 
         gid = payload.guest_id
-
-        # If a phone number is provided and no guest_id, try to find an existing guest by phone.
-        # If found, require the provided code to match the last 4 digits of that guest's phone.
-        if not gid and payload.phone_number:
-            # fetch guests with phone numbers and compare cleaned digits
-            cur.execute("SELECT guest_id, phone_number FROM guests WHERE phone_number IS NOT NULL")
-            rows = cur.fetchall()
-            clean_payload_phone = re.sub(r"\D", "", str(payload.phone_number))
-            for r in rows:
-                db_gid, db_phone = r[0], r[1]
-                if not db_phone:
-                    continue
-                clean_db_phone = re.sub(r"\D", "", str(db_phone))
-                if clean_db_phone and clean_db_phone == clean_payload_phone:
-                    # found existing guest by phone
-                    gid = db_gid
-                    # verify code exists and matches last 4 digits
-                    if not payload.code or not payload.code.isdigit() or len(payload.code) != 4:
-                        raise HTTPException(status_code=401, detail="Security code must be 4 digits")
-                    if clean_db_phone[-4:] != payload.code:
-                        raise HTTPException(status_code=401, detail="Invalid security code")
-                    break
-
-        # If guest_id provided, and guest exists, require code verification against that guest's phone
-        if gid:
-            cur.execute("SELECT guest_id FROM guests WHERE guest_id = ?", (gid,))
-            maybe = cur.fetchone()
-            if maybe:
-                # existing guest; verify code if phone exists
-                phone_val = _get_guest_phone(cur, gid)
-                if phone_val:
-                    clean_db_phone = re.sub(r"\D", "", str(phone_val))
-                    if not payload.code or not payload.code.isdigit() or len(payload.code) != 4:
-                        raise HTTPException(status_code=401, detail="Security code must be 4 digits")
-                    if clean_db_phone[-4:] != payload.code:
-                        raise HTTPException(status_code=401, detail="Invalid security code")
 
         # Create guest if not provided
         if not gid:
@@ -171,22 +134,13 @@ def signup(payload: SignupRequest, request: Request):
     finally:
         conn.close()
 
-#@router.post("/login")
-#async def login(username: str = Form(...), password: str = Form(...)):
-#    if username == "owner":
-#        role = "owner"
-#    elif username == "emp":
-#        role = "employee"
-#    else:
-#        role = "resident"
-#    return JSONResponse({"username": username, "role": role, "token": "abc123"})
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = Header(None)):
+    
     conn = get_connection()
     cur = conn.cursor()
     try:
-        
         # Verify credentials from guests table and check auth flags
         cur.execute(
             """
@@ -194,17 +148,12 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
                 g.guest_id,
                 g.name,
                 g.email,
-                g.password,
-                r.role_name AS guest_type,
+                g.password_hash AS password,
+                g.guest_type,
                 g.status,
                 COALESCE(ga.is_active, 1) AS auth_active
-            FROM guests AS g
-            LEFT JOIN guest_auth AS ga 
-                ON ga.guest_id = g.guest_id
-            LEFT JOIN guest_roles AS gr 
-                ON g.guest_id = gr.guest_id
-            LEFT JOIN roles AS r 
-                ON gr.role_id = r.role_id
+            FROM guests g
+            LEFT JOIN guest_auth ga ON ga.email = g.email
             WHERE g.email = ?
             """,
             (str(payload.email),),
@@ -214,7 +163,6 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         if not row:
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
-
         guest_id = row[0]
         name = row[1]
         email = row[2]
@@ -231,8 +179,7 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         if stored_password != payload.password:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        # SKIP security code check
-
+        
         # Create session
         token = uuid.uuid4().hex
         now = _now_utc()
@@ -245,12 +192,13 @@ def login(payload: LoginRequest, request: Request, user_agent: Optional[str] = H
         
         # Map guest_type to lowercase role for frontend
         role_mapping = {
-            'owner': 'owner',
-            'employee': 'employee',
+            'Owner': 'owner',
+            'Employee': 'employee',
             'Resident': 'resident',
             'Others': 'others'
         }
         role = role_mapping.get(guest_type, 'resident')
+
         conn.commit()
         return {
             "access_token": token,

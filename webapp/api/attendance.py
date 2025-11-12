@@ -24,6 +24,7 @@ def get_attendance():
 def get_attendance_records(
     
     guest_id: str = Query(..., description="ID of the guest"),
+    role_name:str = Query(...,description="Role name of the guest"),
     start_date: date = Query(..., description="Start date in YYYY-MM-DD"),
     end_date: date = Query(..., description="End date in YYYY-MM-DD"),
     page: int = Query(1, description="Page number"),
@@ -34,7 +35,7 @@ def get_attendance_records(
     """
     
     try:
-        result = attendance_service.fetch_attendance(guest_id, start_date, end_date, page, limit)
+        result = attendance_service.fetch_attendance(guest_id, role_name, start_date, end_date, page, limit)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

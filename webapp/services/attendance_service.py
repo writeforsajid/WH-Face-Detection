@@ -38,37 +38,52 @@ def get_attendance():
 
 
 
-def fetch_attendance(guest_id, start_date, end_date, page, limit):
+def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     offset = (page - 1) * limit
-
     conn = get_connection()
     cur = conn.cursor()
+    # --- Base query parts ---
+    base_query = """
+        FROM attendance AS a
+        JOIN guests AS g ON a.guest_id = g.guest_id
+        LEFT JOIN guest_roles AS gr ON g.guest_id = gr.guest_id
+        LEFT JOIN roles AS r ON gr.role_id = r.role_id
+        WHERE DATE(a.timestamp) BETWEEN ? AND ?
+    """
 
-    # Fetch paginated attendance
-    query = """
+    params = [start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")]
+
+    # Optional guest filter
+    if guest_id != "all":
+        base_query += " AND a.guest_id = ?"
+        params.append(guest_id)
+
+    # Optional role filter
+    if role_name:
+        base_query += " AND LOWER(r.role_name) = ?"
+        params.append(role_name.lower().strip())
+
+    # --- Fetch paginated records ---
+    cur.execute(f"""
         SELECT 
             a.id,
             a.method,
             a.device_id,
             a.timestamp,
-            g.guest_id
-        FROM attendance AS a
-        JOIN guests AS g ON a.guest_id = g.guest_id
-        WHERE a.guest_id = ?
-          AND DATE(a.timestamp) BETWEEN ? AND ?
+            g.guest_id,
+            COALESCE(r.role_name, '-') AS role_name
+        {base_query}
         ORDER BY a.timestamp DESC
         LIMIT ? OFFSET ?
-    """
-    cur.execute(query, (guest_id,start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"), limit, offset))
+    """, [*params, limit, offset])
     records = cur.fetchall()
-    
     data = []
+
     for row in records:
-        
         timestamp = row["timestamp"]
         if not isinstance(timestamp, str):
             timestamp = timestamp.strftime("%Y-%m-%d %I:%M %p")
-        
+
         if row["device_id"] == "EXIT_CAM":
             in_time, out_time = None, timestamp
         else:
@@ -77,23 +92,19 @@ def fetch_attendance(guest_id, start_date, end_date, page, limit):
         data.append({
             "id": row["id"],
             "guest_id": row["guest_id"],
+            "role_name": row["role_name"],
             "method": row["method"],
             "device_id": row["device_id"],
             "in_time": in_time,
             "out_time": out_time,
         })
 
-    # Count total records for pagination
-    count_query = """
-        SELECT COUNT(*) AS total
-        FROM attendance
-        WHERE guest_id = ? AND DATE(timestamp) BETWEEN ? AND ?
-    """
-    cur.execute(count_query, (guest_id, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")))
+    # --- Total count ---
+    cur.execute(f"SELECT COUNT(*) AS total {base_query}", params)
     total = cur.fetchone()["total"]
 
     conn.close()
-    
+
     return {
         "total": total,
         "page": page,
