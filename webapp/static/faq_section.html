@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/faq_section.css">
+    <script defer src="./js/faq_section.js"></script>	
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!-- <script type="module" src="/static/components/employee-filter.js"></script> -->
+	
+	
+
+</head>
+<body class="admin-bg">
+	<!-- Loading Overlay -->
+	<div id="loading-overlay">
+		<div class="loader">
+			<div class="loader-spinner"></div>
+			<div class="loader-text">Loading guest details...</div>
+		</div>
+
+	</div>
+	<!-- Main Content -->
+	<div class="page-wrapper">
+		<div id="menu-container"></div>
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
+          </div>
+        </div>
+    </div>
+
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+      <!-- card header / controls can go here if needed -->
+    </div>
+    <div class="table-responsive">
+      <section class="faq-section" aria-labelledby="faq-heading">
+        <div class="container">
+    <header class="faq-header">
+      <h1 id="faq-heading">Frequently Asked Questions</h1>
+      <p>Find concise answers to common questions about our PG management system. If you still need help, contact our support team.</p>
+    </header>
+
+    <main class="faq-grid" id="faq-list">
+      <section class="faq-list" aria-label="Frequently asked questions">
+        <!-- FAQ items: duplicate .accordion-item for more entries -->
+        <div class="accordion-item" data-index="1">
+          <button class="accordion-header" id="faq1-header" aria-expanded="false" aria-controls="faq1"> 
+            <span class="faq-question">What is PG accommodation?</span>
+            <span class="accordion-icon" aria-hidden="true">▾</span>
+          </button>
+          <div id="faq1" class="accordion-content" role="region" aria-labelledby="faq1-header">
+            <p>PG (Paying Guest) accommodation is a residential setup where individuals rent a room in a house or apartment, typically sharing facilities such as the kitchen and living area. Some PGs offer meals and laundry services.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item" data-index="2">
+          <button class="accordion-header" id="faq2-header" aria-expanded="false" aria-controls="faq2"> 
+            <span class="faq-question">How do I register a guest?</span>
+            <span class="accordion-icon" aria-hidden="true">▾</span>
+          </button>
+          <div id="faq2" class="accordion-content" role="region" aria-labelledby="faq2-header">
+            <p>To register a guest, go to the Guests section, click "Add Guest", fill in the required fields, and submit. Required fields typically include name, contact details, and ID information.</p>
+          </div>
+        </div>
+
+        <!-- Add more items here as needed -->
+      </section>
+
+      <!-- <aside class="contact-card" aria-labelledby="contact-card-heading">
+        <h3 id="contact-card-heading">Still have questions?</h3>
+        <p>Our support team is here to help you. We aim to respond within one business day.</p>
+        <a class="contact-button" href="/contact" role="button">Contact Support</a>
+      </aside> -->
+    </main>
+  </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

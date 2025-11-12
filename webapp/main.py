@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+import json
 
 # Import routers
 from api import  reports,guests,upload_video,attendance,employees
@@ -83,5 +85,47 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/faq", response_class=HTMLResponse)
+def faq():
+    """Return the FAQ page with the FAQ JSON embedded into the page.
+
+    This endpoint reads the static `faq_section.html` fragment and the JSON
+    file `static/Json/faq_questions.json` and returns a full HTML page that
+    includes the static CSS/JS and an embedded `window.FAQ_DATA` variable
+    so the client-side script can render without a secondary fetch.
+    """
+    try:
+        # static_dir is defined above as the path to webapp/static
+        faq_fragment_path = os.path.join(static_dir, 'faq_section.html')
+        faq_json_path = os.path.join(static_dir, 'Json', 'faq_questions.json')
+
+        with open(faq_fragment_path, 'r', encoding='utf-8') as f:
+            fragment = f.read()
+
+        with open(faq_json_path, 'r', encoding='utf-8') as f:
+            faq_json_text = f.read()
+
+        # Build a minimal HTML document that links the same static assets
+        html = (
+            '<!doctype html>\n'
+            '<html lang="en">\n'
+            '<head>\n'
+            '  <meta charset="utf-8">\n'
+            '  <meta name="viewport" content="width=device-width,initial-scale=1">\n'
+            '  <title>FAQ</title>\n'
+            '  <link rel="stylesheet" href="/static/css/faq_section.css">\n'
+            '</head>\n'
+            '<body>\n'
+            f'{fragment}\n'
+            f'<script>window.FAQ_DATA = {faq_json_text};</script>\n'
+            '<script src="/static/js/faq_section.js"></script>\n'
+            '</body>\n'
+            '</html>'
+        )
+        return HTMLResponse(content=html, status_code=200)
+    except Exception as e:
+        return HTMLResponse(content=f"<pre>Failed to render FAQ: {e}</pre>", status_code=500)
 
 
