@@ -754,16 +754,16 @@ cursor.executemany(
 
 
 
-cursor.execute('''CREATE TABLE auth_sessions (
-        session_id TEXT PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        expires_at TIMESTAMP,
-        user_agent TEXT,
-        ip_address TEXT,
-        revoked INTEGER DEFAULT 0,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )''')
+# cursor.execute('''CREATE TABLE auth_sessions (
+#         session_id TEXT PRIMARY KEY,
+#         user_id INTEGER NOT NULL,
+#         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#         expires_at TIMESTAMP,
+#         user_agent TEXT,
+#         ip_address TEXT,
+#         revoked INTEGER DEFAULT 0,
+#         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+#     )''')
 #cursor.execute('''CREATE TABLE guest_auth (guest_id VARCHAR (20) PRIMARY KEY, email TEXT UNIQUE, password_hash TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
 #cursor.execute('''CREATE TABLE guest_sessions (session_id TEXT PRIMARY KEY, guest_id VARCHAR (20) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP, user_agent TEXT, ip_address TEXT, revoked INTEGER DEFAULT 0, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
 

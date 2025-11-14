@@ -422,7 +422,7 @@
             }
             // Call FastAPI login endpoint
             try {
-                const res = await fetch('http://localhost:8000/auth/login', {
+                const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -440,7 +440,7 @@
                 console.log('Login success:', data);
                 debugger;
                 // Store API base (so other pages know where to call the API from)
-                localStorage.setItem('wh_api_base', 'http://localhost:8000');
+                localStorage.setItem('wh_api_base', window.location.origin);
 
                 // Store token and user info in localStorage
                 localStorage.setItem('wh_token', data.access_token);

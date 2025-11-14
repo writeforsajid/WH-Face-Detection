@@ -152,9 +152,6 @@ CREATE TABLE IF NOT EXISTS roles (
 
 
 
-
-
-
 # Seed default roles (priority: owner=1, resident=2, employee=3)
 cursor.executemany(
     "INSERT OR IGNORE INTO roles (role_name, priority) VALUES (?, ?)",
@@ -167,7 +164,38 @@ cursor.executemany(
 
 
 
+cursor.execute("""
+CREATE TABLE appconfig (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(20) NOT NULL,
+    description JSON,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
 
+# --- JSON you want to save ---
+description_data = {
+    'options': [
+    {'value': 'Apple', 'label': 'Apple'}, 
+    {'value': 'Banana', 'label': 'Banana'}, 
+    {'value': 'Orange', 'label': 'Orange'}, 
+    {'value': 'Grapes', 'label': 'Grapes'}, 
+    {'value': 'Mango', 'label': 'Mango'}, 
+    {'value': 'Pineapple', 'label': 'Pineapple'}, 
+    {'value': 'Watermelon', 'label': 'Watermelon'}, 
+    {'value': 'Strawberry', 'label': 'Strawberry'}, 
+    {'value': 'Papaya', 'label': 'Papaya'}, 
+    {'value': 'Kiwi', 'label': 'Kiwi'}]
+    }
+
+# Convert Python dict to JSON string
+description_json = json.dumps(description_data)
+
+# --- Insert into table ---
+cursor.execute("""
+    INSERT INTO appconfig (name, description)
+    VALUES (?, ?)
+""", ("LOG_ITEMS", description_json))
 
 
 
@@ -796,16 +824,16 @@ cursor.executemany(
 
 
 
-cursor.execute('''CREATE TABLE auth_sessions (
-        session_id TEXT PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        expires_at TIMESTAMP,
-        user_agent TEXT,
-        ip_address TEXT,
-        revoked INTEGER DEFAULT 0,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )''')
+# cursor.execute('''CREATE TABLE auth_sessions (
+#         session_id TEXT PRIMARY KEY,
+#         user_id INTEGER NOT NULL,
+#         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#         expires_at TIMESTAMP,
+#         user_agent TEXT,
+#         ip_address TEXT,
+#         revoked INTEGER DEFAULT 0,
+#         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+#     )''')
 #cursor.execute('''CREATE TABLE guest_auth (guest_id VARCHAR (20) PRIMARY KEY, email TEXT UNIQUE, password_hash TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
 #cursor.execute('''CREATE TABLE guest_sessions (session_id TEXT PRIMARY KEY, guest_id VARCHAR (20) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP, user_agent TEXT, ip_address TEXT, revoked INTEGER DEFAULT 0, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
 
@@ -862,7 +890,7 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
 
 
 ########################################
-generate_attendance_records(start_date="2025-09-01", end_date="2025-10-27", total_records=10000);
+generate_attendance_records(start_date="2025-11-01", end_date="2025-12-27", total_records=10000);
 #######################################3
 
 

@@ -99,7 +99,7 @@ function setupUserMenu() {
 async function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
     const token = localStorage.getItem('wh_token');
-    const apiBase = localStorage.getItem('wh_api_base') || 'http://localhost:8000';
+    const apiBase = localStorage.getItem('wh_api_base') || window.location.origin;
     try {
       if (token) {
         await fetch(`${apiBase}/auth/logout`, {

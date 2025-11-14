@@ -8,6 +8,7 @@ import json
 from api import  reports,guests,upload_video,attendance,employees
 from api import beds as beds_router
 from api import auth as auth_router
+from api import syst as syst_router
 from db import database
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment
@@ -18,8 +19,8 @@ import os
 load_environment("./../data/.env.webapp")
 #load_dotenv(find_dotenv())
 
-API_IPADDRESS=os.getenv("API_IPADDRESS")
-if API_IPADDRESS is None: API_IPADDRESS = "http://127.0.0.1:8000"
+# API_IPADDRESS=os.getenv("API_IPADDRESS")
+# if API_IPADDRESS is None: API_IPADDRESS = "http://127.0.0.1:8000"
 
 API_LOCALHOST=os.getenv("API_LOCALHOST")
 if API_LOCALHOST is None: API_LOCALHOST = "http://localhost:8000"
@@ -32,12 +33,12 @@ app = FastAPI(title="Face Detection Project", version="1.0")
 
 
 origins = [
-    API_IPADDRESS,
+    # API_IPADDRESS,
     API_LOCALHOST,
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:5501",
-    "http://127.0.0.1:5501",
+    # "http://localhost:5500",
+    # "http://127.0.0.1:5500",
+    # "http://localhost:5501",
+    # "http://127.0.0.1:5501",
     "*"  # Allow all origins for development
 ]
 
@@ -50,7 +51,7 @@ app.add_middleware(
 )
 
 # Include routers
-
+app.include_router(syst_router.router, prefix="/system", tags=["System"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Auth"])
 app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
 app.include_router(guests.router, prefix="/guests", tags=["Guests"])

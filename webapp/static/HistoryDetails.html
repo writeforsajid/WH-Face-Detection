@@ -26,7 +26,7 @@
 			const saved = localStorage.getItem('wh_api_base');
 			if (saved) return saved;
 			if (window.location.port === '8000') return window.location.origin;
-			return 'http://localhost:8000';
+			return window.location.origin;
 		})();
     	const PAGE_LIMIT = 50;   // fixed server-side page size per your request
 		let g_payload = {};
@@ -207,7 +207,6 @@
 				};
 
 				renderGuestProfile(g_payload.guest);
-				debugger;
 				//renderHistory(g_payload.data)
 				fetchAttendance(1)
 				showLoader(false);
@@ -461,11 +460,22 @@
 			</div>
 		<!-- Guest Metadata Input Section -->
 			<div class="profile-card">	
-				<div class="metadata-section mt-3 p-3 border rounded shadow-sm bg-light role-owner role-employee ">
+				<div class="metadata-section mt-3 p-3 border rounded shadow-sm bg-light role-owner role-employee">
 						<h6 class="fw-semibold mb-3"><i class="bi bi-pencil-square"></i> Add Metadata</h6>
-						<div class="row g-2 align-items-center">
-							<div class="col-md-3 col-sm-6">
-								<input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" />
+						<div class="row g-2" style="align-items: flex-end;">
+							
+							
+							<div class="col-md-3 col-sm-6" >
+									<select id="comboBox">
+										<option value="">-- Choose an option --</option>
+										<option value="Apple">Apple</option>
+										<option value="Banana">Banana</option>
+										<option value="Orange">Orange</option>
+									</select>
+									<input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" />
+
+
+								<!-- <input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" /> -->
 							</div>
 							<div class="col-md-4 col-sm-6">
 								<input type="text" id="meta-desc" class="form-control" placeholder="Description (optional)" />
@@ -544,6 +554,87 @@
 			$("#username").text(username);
 		});
 	</script>
+
+	<script>
+        async function fetchComboItems() {
+            const apiBase = localStorage.getItem('wh_api_base') || window.location.origin;
+            const token = localStorage.getItem('wh_token');
+            
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+			try {
+					const response = await fetch(`${apiBase}/system/appconfig?name=LOG_ITEMS`, { headers });
+					debugger;
+					if (!response.ok) throw new Error("Failed to fetch app config");
+					const data = await response.json();
+					// Example response: { name: "LOG_ITEMS", description: { options: [...] } }
+					//const options = data.description?.options || [];
+					let desc = data.description;
+					debugger;
+					// Replace single quotes with double quotes safely
+					if (typeof desc === "string") {
+						try {
+							desc = desc.replace(/'/g, '"');
+							desc = JSON.parse(desc);
+						} catch (e) {
+							console.error("Parsing failed:", e);
+							desc = {};
+						}
+					}
+
+
+
+					// Cache in memory for later use
+					window.LOG_ITEMS = desc.options;
+					const comboBox = document.getElementById("comboBox");
+					// Clear existing except first
+					comboBox.length = 1;
+					// Populate dynamically
+					window.LOG_ITEMS.forEach(item => {
+					const opt = document.createElement("option");
+					opt.value = item.value;
+					opt.textContent = item.label;
+					comboBox.appendChild(opt);
+					});
+
+					console.log("✅ LOG_ITEMS loaded:", desc);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                // Set default values on error
+                //setDefaultValues();
+            }
+
+
+		}			
+			
+			
+			$(document).ready(function() {
+			// While typing, reset combo to default
+
+				
+				fetchComboItems();
+				$("#meta-name").on("input", function() {
+					if ($(this).val().trim() !== "") {
+					$("#comboBox").val(""); // reset dropdown
+					}
+				});
+				  // 🔹 When user chooses combo value → set textbox value
+				$("#comboBox").on("change", function() {
+					const selected = $(this).val();
+					$("#meta-name").val(selected);
+				});
+			});
+
+
+
+	</script>
+
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>

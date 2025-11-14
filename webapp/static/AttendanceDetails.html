@@ -180,7 +180,7 @@
         
       </div> -->
   <!-- Custom Web Component -->
-    <employee-filter  data-api="http://localhost:8000/employees/active"> </employee-filter>
+    <employee-filter  data-api="/employees/active"> </employee-filter>
 
     
 
@@ -231,7 +231,7 @@
       const saved = localStorage.getItem('wh_api_base');
       if (saved) return saved;
       if (window.location.port === '8000') return window.location.origin;
-      return 'http://localhost:8000';
+      return window.location.origin;
     })();
 
     const PAGE_LIMIT = 50;   // fixed server-side page size per your request

@@ -242,7 +242,7 @@
 					const saved = localStorage.getItem('wh_api_base');
 					if (saved) return saved;
 					if (window.location.port === '8000') return window.location.origin;
-					return 'http://localhost:8000';
+					return window.location.origin;
 				})();
 
 		async function ensureLoggedInOrRedirect() {
