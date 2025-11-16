@@ -176,9 +176,9 @@ CREATE TABLE appconfig (
 # --- JSON you want to save ---
 description_data = {
     'options': [
-    {'value': 'Apple', 'label': 'Apple'}, 
-    {'value': 'Banana', 'label': 'Banana'}, 
-    {'value': 'Orange', 'label': 'Orange'}, 
+    {'value': 'registered', 'label': 'registered'}, 
+    {'value': 'bed assigned', 'label': 'bed assigned'}, 
+    {'value': 'paid by', 'label': 'paid by'}, 
     {'value': 'Grapes', 'label': 'Grapes'}, 
     {'value': 'Mango', 'label': 'Mango'}, 
     {'value': 'Pineapple', 'label': 'Pineapple'}, 

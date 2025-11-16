@@ -1,7 +1,7 @@
 $(document).ready(function () {
   // ✅ Load header first
   $("#menu-container").load("header.html", function () {
-    console.log("Header loaded successfully");
+
 
     
 
@@ -79,7 +79,6 @@ function applyRoleMenu() {
     }
   });
 
-  console.log("applyRoleMenu executed for role:", role);
 }
 
 

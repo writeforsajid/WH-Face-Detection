@@ -33,11 +33,20 @@
 		let g_events = [];
 		let g_meta = {};
 		let page = 1;
+		
 		let currentFilter = {
-		startDate:  new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split("T")[0],
-		endDate: new Date().toISOString().split("T")[0],
-		employeeId: "all"
+    	status: "success",
+		message: "Data fetched successfully",
+		filter: {startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split("T")[0],
+		endDate: new Date().toISOString().split("T")[0],employeeId: "all"}
 		};
+		
+		
+		// let currentFilter = {
+		// startDate:  new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split("T")[0],
+		// endDate: new Date().toISOString().split("T")[0],
+		// employeeId: "all"
+		// };
 		
 		function getTokenHeader(){ const token = localStorage.getItem('wh_token') || ''; return token ? { 'Authorization': `Bearer ${token}` } : {}; }
 		async function ensureLoggedInOrRedirect() {
@@ -146,7 +155,7 @@
 				if (userrole === 'employee' || userrole === 'owner')
 					window.location.href = 'admin_dashboard.html';
 				else
-					window.location.href = 'Dashboard.html';
+					window.location.href = 'dashboard.html';
 				return;
 			}
 
@@ -176,7 +185,7 @@
 					console.warn("Filter not yet set!");
 				}
 
-				const { startDate, endDate } = currentFilter;
+				const { startDate, endDate } = currentFilter.filter;
 				if (!startDate || !endDate) {
 				alert('Select both start and end dates');
 				return;
@@ -570,13 +579,11 @@
 
 			try {
 					const response = await fetch(`${apiBase}/system/appconfig?name=LOG_ITEMS`, { headers });
-					debugger;
 					if (!response.ok) throw new Error("Failed to fetch app config");
 					const data = await response.json();
 					// Example response: { name: "LOG_ITEMS", description: { options: [...] } }
 					//const options = data.description?.options || [];
 					let desc = data.description;
-					debugger;
 					// Replace single quotes with double quotes safely
 					if (typeof desc === "string") {
 						try {

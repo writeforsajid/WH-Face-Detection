@@ -249,7 +249,6 @@ class EmployeeFilter extends HTMLElement {
     }
   
     handleFetch() {
-    debugger;
     const startDate = this.shadowRoot.getElementById("startDate").value;
     const endDate = this.shadowRoot.getElementById("endDate").value;
     const employeeId = this.shadowRoot.getElementById("employeeSelect").value;
