@@ -231,7 +231,7 @@ def confirm_guest(guest_id: str):
     """
     try:
         filepath = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
-        print(f"❌ File Path: {filepath}")
+        
         # Check if the file exists
         if not os.path.exists(filepath):
             print(f"❌ File not found for guest_id: {guest_id}")
@@ -438,6 +438,21 @@ def get_guest_with_attendance(guest_id: str):
         "guest": guest_data,
         "attendance": attendance_records
     }
+
+
+
+def get_guest_ifemailexist(guest_email: str):
+    """
+    Fetch guest details along with their attendance records and bed assignment.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT guest_id FROM guests WHERE email = ?", (guest_email,))
+    row = cur.fetchone()
+    conn.close()
+
+    return {"exists": row is not None}
+
 
 
 

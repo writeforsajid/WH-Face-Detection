@@ -55,7 +55,7 @@ class GenTable extends HTMLElement {
 :host { display:block; font-family:Arial; }
 .card { border:1px solid #ddd; padding:1rem; border-radius:6px; background:#fff; margin:1rem 0; }
 h3 { margin:0 0 .6rem 0; color: #000; }
-table { width:100%; border-collapse: collapse; color: #000; }
+table { width:100%; border-collapse: collapse; color: #000;border: 1px solid; }
 th, td { padding:8px; border:1px solid #ddd; text-align:left; font-size:14px; }
 .top-bar { display:flex; justify-content:space-between; margin-bottom:8px; }
 .pagination { display:flex; justify-content:center; margin-top:8px; gap:8px; }

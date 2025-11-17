@@ -38,7 +38,7 @@
         
         <!-- Section 1: Beds -->
         <div class="section" id="beds-section">
-            <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='Bed_Guest_Relationship.html'">
+            <h2 class="section-title" style="cursor: pointer;" onclick="window.location.href='bed_guest_relationship.html'">
                 <i class="fas fa-bed"></i> Beds Status
             </h2>
             <div class="cards-container">
@@ -184,23 +184,23 @@
             alert(`Viewing details for: ${cardType.replace('-', ' ').toUpperCase()}`);
         }
 
-        // Handle dropdown actions
-        function handleAction(action) {
-            event.preventDefault();
-            console.log('Action triggered:', action);
-            // Add your action handling logic here
-            // Navigate to Bed-Guest Relationship page for manage beds
-            if (action === 'manage-beds') {
-                window.location.href = 'Bed_Guest_Relationship.html';
-                return;
-            }
-            // Navigate to Guest Details page for manage guests
-            if (action === 'manage-guests') {
-                window.location.href = 'Dashboard.html';
-                return;
-            }
-            alert(`Action: ${action.replace('-', ' ').toUpperCase()}`);
-        }
+        // // Handle dropdown actions
+        // function handleAction(action) {
+        //     event.preventDefault();
+        //     console.log('Action triggered:', action);
+        //     // Add your action handling logic here
+        //     // Navigate to Bed-Guest Relationship page for manage beds
+        //     if (action === 'manage-beds') {
+        //         window.location.href = 'bed_guest_relationship.html';
+        //         return;
+        //     }
+        //     // Navigate to Guest Details page for manage guests
+        //     if (action === 'manage-guests') {
+        //         window.location.href = 'Dashboard.html';
+        //         return;
+        //     }
+        //     alert(`Action: ${action.replace('-', ' ').toUpperCase()}`);
+        // }
 
         // Handle logout
         async function handleLogout() {
@@ -374,7 +374,7 @@
                 // Only owner and employee can access admin dashboard
                 if (userRole !== 'owner' && userRole !== 'employee') {
                     alert('Access Denied: You do not have permission to view this page');
-                    window.location.href = 'Bed_Guest_Relationship.html';
+                    window.location.href = 'mydashboard.html';
                     return false;
                 }
                 

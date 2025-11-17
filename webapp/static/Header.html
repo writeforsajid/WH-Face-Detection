@@ -8,7 +8,7 @@
         <!-- <img src="logo.png" alt="Logo" class="logo" /> -->
         <!-- <h1 class="dashboard-title">White House</h1> -->
           <h1 class="dashboard-title">
-            <a href="mydashboard.html" class="dashboard-link">White House</a>
+            <a href="#" onclick="handleDashboard()" class="dashboard-link">White House</a>
           </h1>
       </div>
 
@@ -124,4 +124,39 @@
       console && console.error && console.error('Header user load error', err);
     }
   })();
+
+
+function handleDashboard() {
+    const user = JSON.parse(localStorage.getItem("wh_user") || "{}");
+    const role = user.role || "";
+    debugger;
+    let target = "mydashboard.html"; // default
+
+    switch (role.toLowerCase()) {
+        case "owner":
+            target = "admin_dashboard.html";
+            break;
+
+        case "employee":
+            target = "admin_dashboard.html";
+            break;
+
+        case "warden":
+            target = "warden-dashboard.html";
+            break;
+
+        case "guest":
+            target = "guest-dashboard.html";
+            break;
+
+        default:
+            target = "mydashboard.html";
+            break;
+    }
+
+    // optional: pass section name
+    window.location.href = `${target}`;
+}
+
+
 </script>

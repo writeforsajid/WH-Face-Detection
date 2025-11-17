@@ -126,7 +126,7 @@ let guest_id = null;
 // ------------------ Validate Form ------------------
 
 // ------------------ Validate Form ------------------
-function validateForm() {
+async function validateForm() {
   let valid = true;
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phonePattern = /^[6-9]\d{9}$/; // Indian mobile format example
@@ -147,6 +147,23 @@ function validateForm() {
   console.log(valid);
   if (!$("#comment").val().trim()) {
     $("#comment").addClass("is-invalid"); valid = false;
+  }
+
+   // --- CHECK EMAIL FROM DATABASE USING API ---
+  const email = $("#email").val().trim();
+  try {
+    const response = await fetch(`/guests/validateemail?guest_email=${email}`);
+    const result = await response.json();
+
+    if (result.exists) {
+      $("#email").addClass("is-invalid");
+      $("#email-error").text("Email already exists!");
+      valid = false;
+    }
+  } catch (err) {
+    console.error("API Error:", err);
+    alert("Something went wrong while checking email.");
+    valid = false;
   }
 
   console.log(valid);
@@ -212,8 +229,17 @@ $("#btnSwitch").click(async () => {
 });
 
 // ------------------ Record Button ------------------
-$("#btnRecord").click(() => {
-  if (!validateForm()) { alert("Please fill in all required fields correctly."); return; }
+$("#btnRecord").click(async function () {
+//  if (!validateForm()) { alert("Please fill in all required fields correctly."); return; }
+
+  const isValid = await validateForm();   // await required
+
+  if (!isValid) {
+    alert("Please fill in all required fields correctly.");
+    return;
+  }
+
+
   if (!mediaRecorder) return startCamera().then(() => $("#btnRecord").click());
   recordedChunks = [];
   mediaRecorder.start();

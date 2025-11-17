@@ -459,17 +459,11 @@
                 console.log('userRole:', userRole, 'guestId:', guestId);
                 // Check if user is owner or employee (admin roles)
                 if (userRole === 'owner' || userRole === 'employee') {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'admin_dashboard.html';
                 } else if (userRole === 'resident') {
-                    if (guestId) {
-                        const url = `Dashboard.html`;
+                        const url = `mydashboard.html`;
                         window.location.href = url;
-                    } else {
-                        window.location.href = 'Bed_Guest_Relationship.html';
-                    }
-                } else {
-                    window.location.href = 'Bed_Guest_Relationship.html';
-                }
+                } 
             } catch (err) {
                 showError(err.message);
                 console.error('Login error:', err);

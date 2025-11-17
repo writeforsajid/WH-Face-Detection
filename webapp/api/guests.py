@@ -167,6 +167,18 @@ def update_guest(meta: dict, authorization: str = Header(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+@router.get("/validateemail")
+def get_guest_details(guest_email: str):
+
+    result = guest_service.get_guest_ifemailexist(guest_email)
+    
+    if isinstance(result, dict) and "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"]) 
+    
+    
+    return result
+
 @router.post("/{guest_id}/change_password")
 async def change_password(guest_id: str,
     old_password: str = Form(None),

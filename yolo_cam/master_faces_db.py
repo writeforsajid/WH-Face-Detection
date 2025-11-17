@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 
 load_environment("./../data/.env.yolocam")
+from utilities.crypto_manager import crypto
 # --- CONFIG ---
 VIDEOS_PATH=os.getenv("VIDEOS_PATH")
 if VIDEOS_PATH is None: VIDEOS_PATH = "./../data/videos"
@@ -50,13 +51,21 @@ def insert_guest(cursor, guest_id, name, guest_type, comments,email,phone_number
         VALUES (?, ?, ?, ?, ?,?)
     """, (guest_id, name,  comments,email,phone_number, 'inactive'))
     
-    
+    password_hash = crypto.encrypt("Pass@123")  
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+    INSERT OR REPLACE INTO guest_auth (guest_id, password_hash, is_active, created_at, updated_at)
+    VALUES (?, ?, 1, ?, ?)
+    """, (guest_id, password_hash, now, now))
+
+
     id = 1 if guest_type.lower() == "resident" else 2 if guest_type.lower() == "employee" else 3
     cursor.execute("""
         INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
         VALUES (?,?, ?)
     """, (guest_id, id, datetime.now().strftime("%Y-%m-%d")))
-    
+
+
 
 
 # -----------------------
