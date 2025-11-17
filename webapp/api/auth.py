@@ -9,6 +9,13 @@ import sqlite3
 import uuid
 from fastapi.responses import JSONResponse
 from utilities.crypto_manager import crypto
+import secrets
+import os
+import smtplib
+from email.message import EmailMessage
+from typing import List
+from utilities.environment_variables import load_environment
+load_environment("./../data/.env.webapp")
 #router = APIRouter(prefix="/auth", tags=["Auth"])
 router = APIRouter()
 
@@ -323,3 +330,149 @@ def logout(authorization: Optional[str] = Header(None)):
         return {"status": "ok"}
     finally:
         conn.close()
+
+
+
+
+
+@router.post("/change_password")
+def change_password(
+    guest_id: str = Form(...),
+    old_password: str = Form(None),
+    new_password: str = Form(...),
+):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Get guest record
+    cur.execute("SELECT password_hash FROM guest_auth WHERE guest_id = ?", (guest_id,))
+    row = cur.fetchone()
+
+    if not row:
+        raise HTTPException(404, "Guest not found.")
+
+    #stored_hash = row["password_hash"]
+    stored_hash =crypto.decrypt(row["password_hash"]); # hash_password(payload.password)
+    # Validate old password
+    if old_password != stored_hash:
+        raise HTTPException(400, "Old password is incorrect")
+    new_hash =crypto.encrypt(new_password); # hash_password(payload.password)
+
+
+
+    # Update DB
+    cur.execute(
+        "UPDATE guest_auth SET password_hash = ? WHERE guest_id = ?",
+        (new_hash, guest_id),
+    )
+    conn.commit()
+
+    return {"message": "Password updated successfully"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+@router.post("/request_password_reset")
+def request_reset_password(email: str = Form(...)):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Find guest by email
+    cur.execute("SELECT guest_id FROM guests WHERE email = ?", (email,))
+    row = cur.fetchone()
+
+    if not row:
+        return {"message": "If this email exists, a reset link was sent."}  # security
+
+    guest_id = row["guest_id"]
+
+    # Generate token
+    token = secrets.token_urlsafe(32)
+    expires = datetime.utcnow() + timedelta(minutes=30)
+
+    cur.execute("""
+        INSERT INTO guest_password_resets (token, guest_id, expires_at)
+        VALUES (?, ?, ?)
+    """, (token, guest_id, expires))
+
+    conn.commit()
+
+    reset_link = f"http://192.168.1.10:8000/static/reset_password.html?token={token}"
+    token = secrets.token_urlsafe(32)
+
+
+    subject = "Reset Your Password"
+    body = f"Click the link below to reset your password:\n\n{reset_link}\n\nIf you did not request this, ignore this email."
+
+    # send email
+    send_email(email, subject, body)
+
+    return {"message": "Reset link sent to your email"}
+
+
+
+
+@router.post("/reset_password")
+def reset_password(token: str = Form(...), new_password: str = Form(...)):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT guest_id, expires_at, used
+        FROM guest_password_resets
+        WHERE token = ?
+    """, (token,))
+    row = cur.fetchone()
+
+    if not row:
+        raise HTTPException(400, "Invalid token")
+
+    if row["used"]:
+        raise HTTPException(400, "Token already used")
+
+    if datetime.utcnow() > datetime.fromisoformat(row["expires_at"]):
+        raise HTTPException(400, "Token expired")
+
+    guest_id = row["guest_id"]
+
+
+        #crypto.encrypt
+    pwd_hash =crypto.encrypt(new_password); # hash_password(payload.password)
+    cur.execute("UPDATE guest_auth SET password_hash = ? WHERE guest_id = ?", (pwd_hash, guest_id))
+    cur.execute("UPDATE guest_password_resets SET used = 1 WHERE token = ?", (token,))
+    
+    conn.commit()
+
+    return {"message": "Password updated successfully"}
+
+
+
+
+def send_email(email: str, subject: str, body: str):
+    EMAIL_USER = os.getenv("EMAIL_USER")
+    EMAIL_PASS = os.getenv("EMAIL_PASS")
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = EMAIL_USER
+    msg["To"] = email      # ← using email directly
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(EMAIL_USER, EMAIL_PASS)
+            smtp.send_message(msg)
+
+        print(f"[EMAIL] Sent to {email}")
+
+    except Exception as e:
+        print(f"[EMAIL ERROR] {e}")
