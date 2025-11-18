@@ -42,3 +42,20 @@ def get_attendance_records(
     if not result:
         raise HTTPException(status_code=404, detail="Attendance data not found")
     return result
+
+@router.get("/guest_logs")
+def get_guest_logs(
+    guest_id: str = Query(..., description="ID of the guest"),
+    limit: int = Query(10, description="Max rows to return")
+):
+    """
+    Fetch recent device-level logs for a guest.
+    Returns array of objects with keys: Device, Entry, Exit
+    """
+    try:
+        result = attendance_service.get_guest_device_logs(guest_id, limit)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Return empty list if no results rather than 404 to make frontend simpler
+    return result or []

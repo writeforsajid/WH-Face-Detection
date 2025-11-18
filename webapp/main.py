@@ -6,6 +6,7 @@ import json
 
 # Import routers
 from api import  reports,guests,upload_video,attendance,employees
+from api import metadata as metadata_router
 from api import beds as beds_router
 from api import auth as auth_router
 from api import syst as syst_router
@@ -72,6 +73,7 @@ app.include_router(reports.router, tags=["Reports"])
 app.include_router(reports.router, prefix="/reports",tags=["Reports"])
 app.include_router(auth_router.router)
 app.include_router(beds_router.router, prefix="/beds", tags=["Beds"])
+app.include_router(metadata_router.router)
 
 
 
