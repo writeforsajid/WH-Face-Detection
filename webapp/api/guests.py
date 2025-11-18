@@ -182,18 +182,17 @@ def get_guest_details(guest_email: str):
 @router.post("/{guest_id}/change_password")
 async def change_password(guest_id: str,
     old_password: str = Form(None),
-    secret_key: str = Form(None),
     new_password: str = Form(...),
 ):
     """
     Change or reset a user's password.
     Either old_password OR secret_key must be provided.
     """
-    if not old_password and not secret_key:
-        raise HTTPException(status_code=400, detail="Provide either old password or secret key")
+    if not old_password :
+        raise HTTPException(status_code=400, detail="Provide either old password")
 
     try:
-        result = await guest_service.change_password(guest_id,old_password, secret_key, new_password)
+        result = await guest_service.change_password(guest_id,old_password,  new_password)
         return {"message": result}
     except HTTPException as e:
         raise e
