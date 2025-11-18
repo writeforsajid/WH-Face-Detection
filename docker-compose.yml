@@ -22,6 +22,7 @@ services:
       - ./data:/data           # ✅ shared persistent folder
       - ./data/videos:/videos
       - ./data/detected_frames:/detected_frames
+      - ./data/google:/google
       - ./data/certs:/certs:ro   # ✅ mount certificates (read-only)
     restart: always
     healthcheck:

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Header,Form
 from typing import Optional, Dict
 from db.database import get_connection
-from services import guest_service
+from services import guest_service,google_contact_service
 from datetime import date,datetime, timezone
 
 router = APIRouter()
@@ -114,6 +114,19 @@ def get_active_guests():
   
 
 
+@router.post("/addupdatecontact")
+def add_update_contact(
+    guest_id: str = Form(...),
+    contact_name: str = Form(...)
+):
+    try:
+        result = google_contact_service.add_or_edit_contact(guest_id, contact_name)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="User data not found")
+    return result
 
 @router.get("/history")
 def get_history_records(
@@ -199,7 +212,11 @@ async def change_password(guest_id: str,
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    
+
+
+
+
+
 @router.delete("/{guest_id}")
 def delete_guest(guest_id: str):
     deleted = guest_service.delete_guest(guest_id)
