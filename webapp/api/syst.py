@@ -79,12 +79,13 @@ def get_appconfig(name: str = Query(..., description="AppConfig name, e.g. LOG_I
 def search_guest_metadata(
     startDate: str = Query(...),
     endDate: str = Query(...),
+    guest_id: Optional[str] = None,
     name: Optional[str] = None,
     text: Optional[str] = None,
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1)
 ):
-    result = log_service.search(startDate, endDate, name, text, page, pageSize)
+    result = log_service.search(startDate, endDate, guest_id, name, text, page, pageSize)
 
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])

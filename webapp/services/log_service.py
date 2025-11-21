@@ -45,7 +45,7 @@ import json
 #         finally:
 #             conn.close()
 
-def search(startDate, endDate, name=None, text=None, page=1, page_size=10):
+def search(startDate, endDate, guest_id=None, name=None, text=None, page=1, page_size=10):
     if not startDate or not endDate:
         return {"error": "start_date & end_date are required."}
 
@@ -56,6 +56,10 @@ def search(startDate, endDate, name=None, text=None, page=1, page_size=10):
         where = ["DATE(m.timestamp) BETWEEN DATE(?) AND DATE(?)"]
         params = [startDate, endDate]
 
+        if guest_id and guest_id.strip():
+            where.append("LOWER(m.guest_id) = ?")
+            params.append(f"{guest_id.lower().strip()}")
+
         if name and name.strip():
             where.append("LOWER(m.name) LIKE ?")
             params.append(f"%{name.lower().strip()}%")
@@ -65,7 +69,6 @@ def search(startDate, endDate, name=None, text=None, page=1, page_size=10):
             params.append(f"%{text.lower().strip()}%")
 
         where_sql = " AND ".join(where)
-
         # Count query
         count_sql = f"""
             SELECT COUNT(*) 
@@ -94,11 +97,11 @@ def search(startDate, endDate, name=None, text=None, page=1, page_size=10):
         """
 
         cur.execute(query, params + [page_size, offset])
+        
         rows = cur.fetchall()
 
         columns = [col[0] for col in cur.description]
         data = [dict(zip(columns, row)) for row in rows]
-
         return {
             "total": total,
             "data": data

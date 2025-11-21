@@ -9,6 +9,7 @@ class GenTable extends HTMLElement {
   }
 
   connectedCallback() {
+    this.loadScripts();   // <-- load libraries
     this.render();
     //this.loadData();
     this.addEvents();
@@ -21,7 +22,14 @@ class GenTable extends HTMLElement {
 
     buildUrl() {
         const url = new URL(this.api, window.location.origin);
-
+        // include filter params
+        const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || '';
+        const userrole = (JSON.parse(localStorage.getItem('wh_user') || '{}').role) || '';
+        debugger;
+        if (userrole === 'resident')
+        {
+          url.searchParams.set('guest_id', guestid);
+        }
         url.searchParams.set("page", this.page);
         url.searchParams.set("pageSize", this.pageSize);
 
@@ -48,7 +56,18 @@ class GenTable extends HTMLElement {
       return [];
     }
   }
+  loadScripts() {
+      const scripts = [
+          "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+          "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+      ];
 
+      scripts.forEach(src => {
+          const script = document.createElement("script");
+          script.src = src;
+          document.head.appendChild(script);
+      });
+  }
   render() {
     this.shadowRoot.innerHTML = `
 <style>
@@ -70,7 +89,9 @@ select { padding:4px; }
         <h3>${this.title}</h3>
 
         <div class="top-bar">
-          <div></div>
+            <div>
+              <button id="pdfBtn">Download PDF</button>
+           </div>
           <div>
             Page size:
             <select id="pageSize">
@@ -107,6 +128,8 @@ select { padding:4px; }
           this.loadData();
         }
       });
+    this.shadowRoot.getElementById("pdfBtn")
+      .addEventListener("click", () => this.downloadPDF());
 
     this.shadowRoot.getElementById("nextBtn")
       .addEventListener("click", () => {
@@ -187,6 +210,34 @@ select { padding:4px; }
 
       tbody.appendChild(tr);
     });
+  }
+  async downloadPDF() {
+      const { jsPDF } = window.jspdf;
+
+      const pdf = new jsPDF("p", "pt", "a4");
+
+      const tableElement = this.shadowRoot.querySelector("table");
+
+      if (!tableElement) {
+          alert("No table found!");
+          return;
+      }
+
+      // Convert table → image
+      const canvas = await html2canvas(tableElement, {
+          scale: 1.5,
+          backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pageWidth - 40; // padding
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+
+      pdf.save(`${this.title || "table"}.pdf`);
   }
 
   updatePagination() {

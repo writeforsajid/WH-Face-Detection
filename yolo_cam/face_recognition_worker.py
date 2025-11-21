@@ -2,7 +2,7 @@ import threading
 import face_recognition
 import sqlite3
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 import os
 import cv2  # ✅ Needed for saving cropped faces
 from dotenv import load_dotenv
@@ -55,7 +55,7 @@ def load_known_faces():
 
     try:
         cur = DB.cursor()
-        cur.execute("SELECT gf.guest_id, gf.encoding FROM guest_faces AS gf JOIN guests AS g ON gf.guest_id = g.guest_id WHERE (g.status = 'active' or g.status = 'leave')")
+        cur.execute("SELECT gf.guest_id, gf.encoding FROM guest_faces AS gf JOIN guests AS g ON gf.guest_id = g.guest_id WHERE (g.status != 'closed')")
         rows = cur.fetchall()
     except Exception:
         rows = []
@@ -69,9 +69,12 @@ def load_known_faces():
     print(f"[INFO] Loaded {len(known_faces_names)} known people")
     
 
-def mark_attendance(photo_id, ts=datetime.now(), device_id="OUT", method="Face"):
+def mark_attendance(photo_id, ts=None, device_id="OUT", method="Face"):
     device_id=os.getenv("CAMERA_ID")
     # Cooldown check
+    if ts is None:
+        ts = datetime.now()
+
     if photo_id in last_seen and ts - last_seen[photo_id] < cooldown:
         print(f"[ATTENDANCE] Skipping {photo_id} (within cooldown)")
         return False

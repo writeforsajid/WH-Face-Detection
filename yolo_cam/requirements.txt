@@ -1,8 +1,8 @@
+numpy==1.26.4
 sqlalchemy
 jinja2
 python-multipart
 opencv-python
 face-recognition
-ultralytics
 python-dotenv
 cryptography

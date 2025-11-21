@@ -1,28 +1,46 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install OS dependencies for OpenCV, dlib, etc.
+# Install essential system dependencies for OpenCV + FFmpeg + ping
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
         cmake \
         libboost-all-dev \
         libgl1 \
-        libglib2.0-0 && \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        ffmpeg \
+        iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy everything from yolo_com folder into the container
-COPY . .
 
-# Copy requirements first (for efficient Docker caching)
+RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime \
+    && echo "Asia/Kolkata" > /etc/timezone
+	
+# Copy requirements and install Python packages
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make sure Python can import local packages
+# Ensure no CPU-only torch was preinstalled
+RUN pip uninstall -y torch torchvision torchaudio || true
+
+# Install CUDA 11.7 compatible torch
+RUN pip install --no-cache-dir \
+    torch==1.13.1+cu117 \
+    torchvision==0.14.1+cu117 \
+    --extra-index-url https://download.pytorch.org/whl/cu117
+
+# Install stable YOLO
+RUN pip install --no-cache-dir ultralytics==8.0.196
+
+# Copy the rest of the project
+COPY . .
+
+# Add project to PYTHONPATH
 ENV PYTHONPATH=/app
 
-# Run the app
+# Run YOLO
 CMD ["python", "-u", "Yolo_Runner.py"]

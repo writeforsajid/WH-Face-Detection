@@ -42,7 +42,7 @@ services:
     network_mode: "host"
     environment:
       - OT=/data/detected_frames
-      - CAMERA_ID=LIFT
+      - CAMERA_ID=LIFT_CAM
       - SHOW_WINDOW=false
       - RTSP_CREDENTIALS=gAAAAABo51b5zBBGgvEWbafRY6MGfVdDngsVtC-MiOkhoUBLgJqM5W5qRaBrTg7FjCRGddRZS4RuFVCwJBS3VcRwb_FFp7IV9Q==
       - RTSP_IPADDRESS=192.168.1.4:554
@@ -78,7 +78,7 @@ services:
     network_mode: "host"
     environment:
       - OT=/data/detected_frames    
-      - CAMERA_ID=EXIT
+      - CAMERA_ID=EXIT_CAM
       - SHOW_WINDOW=false
       - RTSP_CREDENTIALS=gAAAAABo51b5zBBGgvEWbafRY6MGfVdDngsVtC-MiOkhoUBLgJqM5W5qRaBrTg7FjCRGddRZS4RuFVCwJBS3VcRwb_FFp7IV9Q==
       - RTSP_IPADDRESS=192.168.1.5:554

@@ -120,12 +120,12 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         SELECT 
             g.guest_id,
             g.name,
-            COALESCE(r.role_name, '-') AS guest_type,
+            g.email,
             COALESCE(b.bed_id, '-') AS bed_no,
             g.status
         {base_query}
         GROUP BY g.guest_id
-        ORDER BY g.name ASC
+        ORDER BY g.guest_id DESC
         LIMIT ? OFFSET ?
         """,
         [*params, limit, offset],

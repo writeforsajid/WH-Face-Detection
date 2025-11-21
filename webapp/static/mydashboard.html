@@ -48,114 +48,7 @@
     <!-- script for dash-table component -->
     <script type="module" src="/static/components/dash-table.js"></script>
 
-    <script>
-      const fakeApiData = [
-        {
-          name: "Ameena",
-          start: "11:00 AM",
-          end: "07:00 PM",
-          last_device_id: "EXIT_CAM",
-          duration: 8.5,
-        },
-        {
-          name: "Suwaliha",
-          start: "09:30 AM",
-          end: "",
-          last_device_id: "CAM1",
-          duration: 1.5,
-        },
-        { name: "Mafia", start: "", end: "", last_device_id: "", duration: 5 },
-        {
-          name: "Halima",
-          start: "10:00 AM",
-          end: "06:30 PM",
-          last_device_id: "EXIT_CAM",
-          duration: 1.5,
-        },
-        {
-          name: "Unzila",
-          start: "09:15 AM",
-          end: "",
-          last_device_id: "CAM2",
-          duration: 1,
-        },
-        {
-          name: "Sabatun",
-          start: "",
-          end: "",
-          last_device_id: "",
-          duration: 1,
-        },
-        {
-          name: "Amirun",
-          start: "08:45 AM",
-          end: "05:45 PM",
-          last_device_id: "EXIT_CAM",
-          duration: 9,
-        },
-        {
-          name: "Hamima",
-          start: "09:00 AM",
-          end: "06:00 PM",
-          last_device_id: "EXIT_CAM",
-          duration: 9,
-        },
-        {
-          name: "Marjina",
-          start: "10:15 AM",
-          end: "",
-          last_device_id: "CAM3",
-          duration: 1,
-        },
-        {
-          name: "Arjina",
-          start: "09:45 AM",
-          end: "05:15 PM",
-          last_device_id: "EXIT_CAM",
-          duration: 7.5,
-        },
-        { name: "Noor", start: "", end: "", last_device_id: "", duration: 1 },
-      ];
 
-      function renderEmployeeTable(data) {
-            const tbody = document.getElementById("employee-tbody");
-            if (!tbody) {
-              console.warn('renderEmployeeTable: #employee-tbody not found in DOM. Skipping render.');
-              return;
-            }
-            tbody.innerHTML = "";
-        data.forEach((emp) => {
-          let statusClass = "",
-            icon = "",
-            statusText = "";
-          if (!emp.start) {
-            statusClass = "absent";
-            icon = '<i class="bi bi-x-circle-fill"></i>';
-            statusText = "Absent";
-          } else if (emp.last_device_id === "EXIT_CAM") {
-            statusClass = "left";
-            icon = '<i class="bi bi-box-arrow-right"></i>';
-            statusText = "Left for the day";
-          } else {
-            statusClass = "on-duty";
-            icon = '<i class="bi bi-person-workspace"></i>';
-            statusText = "On Duty";
-          }
-
-          tbody.innerHTML += `
-        <tr class="${statusClass}">
-          <td>${icon}${emp.name}</td>
-          <td>${emp.start || "--"}</td>
-          <td>${emp.end || "--"}</td>
-          <td>${emp.duration}</td>
-        </tr>`;
-        });
-      }
-
-      $(document).ready(() => {
-        // simulate API delay
-      });
-    </script>
   </head>
 
   <body class="admin-bg">
@@ -228,16 +121,11 @@
           </h2>
 
           <div class="cards-container">
-            <div class="dailyemp-container">
-              <!-- 2 tables of daily employees management starts here -->
-
-              <!-- <span class="card-icon"><i class="fas fa-check-circle"></i></span>-->
-              <!-- <div class="card-title">Vacant</div>  -->
-              <div class="cards-container">
                 <div class="card vacant" style="padding: 3px">
                   <dash-table
                     data-theme="green"
                     data-limit="10"
+                    data-api="/attendance/guest_logs/"
                     data-head='["Device","Entry","Exit"]'
                   ></dash-table>
                 </div>
@@ -245,11 +133,11 @@
                   <dash-table
                     data-theme="green"
                     data-limit="10"
-                    data-head='["Device","Entry","Exit"]'
+                    data-api="/metadata/guest/"
+                    data-head='["name","description","timestamp"]'
                   >
                   </dash-table>
-                </div>
-              </div>
+
 
               <!-- <div class="card occupied" onclick="handleCardClick('occupied-beds')"> -->
               <!-- <span class="card-icon"><i class="fas fa-user-check"></i></span>
@@ -261,101 +149,84 @@
               <!-- </div> -->
             </div>
           </div>
-
-          <!-- 2 tables of daily employees management ends here -->
-
-          <!-- <div class="card total-beds" onclick="handleCardClick('total-beds')">
-                        <span class="card-icon"><i class="fas fa-hotel"></i></span>
-                        <div class="card-title">Overview</div>
-
-                        <div class="stat-item">
-                            <div class="stat-label"><span>Today</span><span>3.45 / 8 hrs</span></div>
-                            <div class="bar-container"><div class="bar today"></div></div>
-                        </div>
-
-                        <div class="stat-item">
-                            <div class="stat-label"><span>This Week</span><span>28 / 40 hrs</span></div>
-                            <div class="bar-container"><div class="bar week"></div></div>
-                        </div>
-
-                        <div class="stat-item">
-                            <div class="stat-label"><span>This Month</span><span>90 / 150 hrs</span></div>
-                            <div class="bar-container"><div class="bar month"></div></div>
-                        </div>
-                    </div> -->
-          <!-- </div> -->
-          <!-- </div> -->
-
+        </div>
           <!-- Section 2: Guests -->
-          <div class="section" id="guests-section">
-            <h2
-              class="section-title"
-              style="cursor: pointer"
-              onclick="window.location.href='AttendanceDetails.html'"
+        <div class="section" id="guests-section">
+          <h2
+            class="section-title"
+            style="cursor: pointer"
+            onclick="window.location.href='AttendanceDetails.html'"
+          >
+            <i class="fas fa-users"></i> Guests Management
+          </h2>
+          <div class="cards-container">
+            <div
+              class="card active"
+              onclick="handleCardClick('active-guests')"
             >
-              <i class="fas fa-users"></i> Guests Management
-            </h2>
-            <div class="cards-container">
-              <div
-                class="card active"
-                onclick="handleCardClick('active-guests')"
-              >
-                <!-- <h2>Gray Theme</h2> -->
-                <dash-table
-                  data-theme="gray"
-                  data-limit="10"
-                  data-api="/metadata/guest/"
-                  data-head='["name","description","timestamp"]'
-                ></dash-table>
-              </div>
-
-              <div
-                class="card active"
-                onclick="handleCardClick('active-guests')"
-              >
-                <!-- <h2>Gray Theme</h2> -->
-                <dash-table
-                  data-theme="gray"
-                  data-limit="10"
-                  data-head='["Device","Entry","Exit"]'
-                ></dash-table>
-              </div>
-              <!-- <span class="card-icon"><i class="fas fa-user-check"></i></span>
-              <div class="card-title">Active</div>
-              <div class="card-value" id="active-guests-count">--</div>
-              <div class="card-subtitle">Currently active guests</div> -->
-              <!-- </div> -->
-
-              <!-- <div
-              class="card inactive"
-              onclick="handleCardClick('inactive-guests')"
-            >
-              <span class="card-icon"><i class="fas fa-user-clock"></i></span>
-              <div class="card-title">Inactive</div>
-              <div class="card-value" id="inactive-guests-count">--</div>
-              <div class="card-subtitle">Temporarily inactive</div>
-            </div> -->
-
-              <!-- <div class="card closed" onclick="handleCardClick('closed-guests')">
-              <span class="card-icon"><i class="fas fa-user-times"></i></span>
-              <div class="card-title">Closed</div>
-              <div class="card-value" id="closed-guests-count">--</div>
-              <div class="card-subtitle">Checked out guests</div>
-            </div> -->
-
-              <!-- <div
-              class="card total-guests"
-              onclick="handleCardClick('total-guests')"
-            >
-              <span class="card-icon"><i class="fas fa-users"></i></span>
-              <div class="card-title">Total</div>
-              <div class="card-value" id="total-guests-count">--</div>
-              <div class="card-subtitle">All registered guests</div>
-            </div> -->
+              <!-- <h2>Gray Theme</h2> -->
+              <dash-table
+                data-theme="gray"
+                data-limit="10"
+                data-api="/metadata/guest/"
+                data-head='["name","description","timestamp"]'
+              ></dash-table>
             </div>
+
+            <div
+              class="card active"
+              onclick="handleCardClick('active-guests')"
+            >
+              <!-- <h2>Gray Theme</h2> -->
+              <dash-table
+                data-theme="gray"
+                data-limit="10"
+                data-api="/attendance/guest_logs/"
+                data-head='["Device","Entry","Exit"]'
+              ></dash-table>
+            </div>
+            <!-- <span class="card-icon"><i class="fas fa-user-check"></i></span>
+            <div class="card-title">Active</div>
+            <div class="card-value" id="active-guests-count">--</div>
+            <div class="card-subtitle">Currently active guests</div> -->
+            <!-- </div> -->
+
+            <!-- <div
+            class="card inactive"
+            onclick="handleCardClick('inactive-guests')"
+          >
+            <span class="card-icon"><i class="fas fa-user-clock"></i></span>
+            <div class="card-title">Inactive</div>
+            <div class="card-value" id="inactive-guests-count">--</div>
+            <div class="card-subtitle">Temporarily inactive</div>
+          </div> -->
+
+            <!-- <div class="card closed" onclick="handleCardClick('closed-guests')">
+            <span class="card-icon"><i class="fas fa-user-times"></i></span>
+            <div class="card-title">Closed</div>
+            <div class="card-value" id="closed-guests-count">--</div>
+            <div class="card-subtitle">Checked out guests</div>
+          </div> -->
+
+            <!-- <div
+            class="card total-guests"
+            onclick="handleCardClick('total-guests')"
+          >
+            <span class="card-icon"><i class="fas fa-users"></i></span>
+            <div class="card-title">Total</div>
+            <div class="card-value" id="total-guests-count">--</div>
+            <div class="card-subtitle">All registered guests</div>
+          </div> -->
           </div>
         </div>
-      </div>
+
+          
+
+
+
+
+
+
     </div>
     <script src="./js/main.js"></script>
 
@@ -387,13 +258,14 @@
     <!-- FAQ SECTION FINISHED HERE -->
 
     <script>
+      const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || '';
       $(document).ready(function () {
         const username =
           JSON.parse(localStorage.getItem("wh_user") || "{}").name || "";
         if (!username) window.location.href = "login.html";
         $("#username").text(username);
 
-        setTimeout(() => renderEmployeeTable(fakeApiData), 500);
+        //setTimeout(() => renderEmployeeTable(fakeApiData), 500);
       });
     </script>
 
@@ -432,114 +304,11 @@
       })();
     </script>
 
-    <!-- Auto-populate Guests Management tables with metadata and device logs -->
-    <script>
-      (async function populateGuestTables() {
-        try {
-          const user = JSON.parse(localStorage.getItem('wh_user') || '{}') || {};
-          let guestId = user.guest_id || user.id || localStorage.getItem('guest_id');
 
-          if (!guestId) {
-            try {
-              const r = await fetch('/guests?page=1&limit=1', { headers: { 'Accept': 'application/json' } });
-              if (r.ok) {
-                const j = await r.json();
-                const items = j.items || j;
-                if (Array.isArray(items) && items.length > 0) {
-                  guestId = items[0].guest_id || items[0].id;
-                }
-              }
-            } catch (e) {
-              console.warn('Failed to fetch guest list for table population', e);
-            }
-          }
-
-          if (!guestId) return;
-
-          // Optionally set till_date to include older metadata (example below)
-          // const tillQuery = '?till_date=2025-10-02';
-          const tillQuery = '';
-
-          const tables = Array.from(document.querySelectorAll('#guests-section dash-table'));
-          tables.forEach((el) => {
-            try {
-              const head = (el.getAttribute('data-head') || '').toLowerCase();
-              const limit = el.getAttribute('data-limit') || '10';
-
-              if (head.includes('name') && head.includes('description')) {
-                // request larger window (365 days) to include older metadata
-                el.setAttribute('data-api', `/metadata/guest/${encodeURIComponent(guestId)}?days=365`);
-              } else if (head.includes('device') || head.includes('entry') || head.includes('exit')) {
-                el.setAttribute('data-api', `/attendance/guest_logs?guest_id=${encodeURIComponent(guestId)}&limit=${encodeURIComponent(limit)}`);
-              } else {
-                el.setAttribute('data-api', `/metadata/guest/${encodeURIComponent(guestId)}?days=365`);
-              }
-
-              if (typeof el.loadData === 'function') {
-                try { el.loadData(); } catch (e) { console.warn('dash-table.loadData error', e); }
-              }
-            } catch (e) {
-              console.warn('Failed to set data-api on dash-table', e);
-            }
-          });
-        } catch (e) {
-          console.warn('populateGuestTables unexpected error', e);
-        }
-      })();
-    </script>
 
     <script>
-      $(document).ready(function () {
-        const labels = fakeApiData.map((d) => d.name);
-        const durations = fakeApiData.map((d) => d.duration);
-        const chartEl = document.getElementById("employeeChart");
-        if (!chartEl) {
-          console.warn('employeeChart canvas not found; skipping chart render.');
-          return;
-        }
-        const ctx = chartEl.getContext("2d");
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Work Duration (hrs)",
-                data: durations,
-                backgroundColor: "rgba(255, 255, 255, 0.7)",
-                borderColor: "rgba(255, 255, 255, 0.9)",
-                borderWidth: 1,
-                borderRadius: 6,
-              },
-            ],
-          },
-          options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false,
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${ctx.parsed.y} hrs`,
-                },
-              },
-            },
-            scales: {
-              x: {
-                ticks: { color: "#fff", font: { weight: "600" } },
-                grid: { display: false },
-              },
-              y: {
-                ticks: { color: "#fff" },
-                grid: { color: "rgba(255,255,255,0.2)" },
-                beginAtZero: true,
-              },
-            },
-          },
-        });
-      });
+
+    
     </script>
   </body>
 </html>

@@ -194,10 +194,9 @@ if __name__ == "__main__":
     limit_frame_count_no_human = int(os.getenv("LIMIT_FRAME_COUNT_NO_HUMANS", 10))
     min_frames_per_person = int(os.getenv("MIN_FRAMES_PER_PERSON", 5))
     max_frames_per_person = int(os.getenv("MAX_FRAMES_PER_PERSON", 20))
-    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
-    print(f"[EVENT] URL {RTSP_URL} — ")
+
     # --- Initialize camera ---
-    cap = cv2.VideoCapture(RTSP_URL, cv2.CAP_FFMPEG)
+    cap = cv2.VideoCapture(RTSP_URL)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, _CAP_PROP_FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _CAP_PROP_FRAME_HEIGHT)
 
@@ -214,7 +213,7 @@ if __name__ == "__main__":
     
     # Allow manual override via env var
     SHOW_WINDOW = os.getenv("SHOW_WINDOW", "false").lower() in ("1", "true", "yes")
-    last_run_time = datetime.now() - timedelta(minutes=5)
+    last_run_time = datetime.now(timezone.utc) - timedelta(minutes=5)
     global last_hourly_run
     stop_requested = False
 
@@ -246,7 +245,7 @@ if __name__ == "__main__":
             thread_face_recognition_process()
         cv2.rectangle(frame, (_FRAME_LEFT,_FRAME_TOP ), ( _FRAME_RIGHT,_FRAME_BOTTOM), (255,0,255), 2)
         _frame = frame[_FRAME_TOP:_FRAME_BOTTOM, _FRAME_LEFT:_FRAME_RIGHT]
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
 
         # Periodic heartbeat
         if (current_time - last_run_time).total_seconds() >= 300:
@@ -278,7 +277,7 @@ if __name__ == "__main__":
                 human_detected = total_humans > 0
 
         # --- EVENT START detection ---
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         # Reset event window if expired
         if now - EVENT_WINDOW_START > EVENT_PERIOD:
             EVENT_WINDOW_START = now
@@ -291,7 +290,7 @@ if __name__ == "__main__":
         if person_in_band and not event_active:
             if event_count < MAX_EVENTS_PER_PERIOD or now - EVENT_WINDOW_START > EVENT_PERIOD:
                 event_active = True
-                event_id = datetime.now().strftime("%y%m%d%H%M%S%f")[:-3]
+                event_id = datetime.now(timezone.utc).strftime("%y%m%d%H%M%S%f")[:-3]
                 event_count += 1
                 previous_boxes = []
                 no_human_frames = 0
@@ -316,11 +315,11 @@ if __name__ == "__main__":
                         best_iou = i
                         matched = pb
 
-                now = datetime.now()
+                now = datetime.now(timezone.utc)
                 if matched and best_iou > 0.6:
                     matched["last_seen"] = now
                     if matched["saved"] < max_frames_per_person:
-                        last_saved_ts = matched.get("last_saved_ts", datetime.min)   #datetime.min)
+                        last_saved_ts = matched.get("last_saved_ts", datetime.min)
                         if (now - last_saved_ts).total_seconds() > 0.5:
                             matched["saved"] += 1
                             matched["last_saved_ts"] = now

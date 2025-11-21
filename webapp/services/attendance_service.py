@@ -113,42 +113,31 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     }
 
 
-def get_guest_device_logs(guest_id: str, limit: int = 10):
+def get_guest_device_logs(guest_id: str):
     """
     Fetch latest device-level entries for a guest.
-    Returns rows with keys: Device, Entry, Exit
-    Uses a single efficient SQL query and minimal post-processing.
+    Returns rows with keys: Device, Entry, Exit.
     """
+
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute(
-        """
-        SELECT
-            device_id AS Device,
-            CASE WHEN device_id = 'LIFT_CAM' THEN timestamp END AS Entry,
-            CASE WHEN device_id = 'EXIT_CAM' THEN timestamp END AS Exit
-        FROM attendance
-        WHERE guest_id = ?
-        ORDER BY timestamp DESC
-        LIMIT ?
-        """,
-        (guest_id, limit)
-    )
+    query = """
+    SELECT
+        device_id AS Device,
+        CASE WHEN device_id = 'LIFT_CAM' THEN timestamp END AS Entry,
+        CASE WHEN device_id = 'EXIT_CAM' THEN timestamp END AS Exit
+    FROM attendance
+    WHERE guest_id = ?
+    ORDER BY timestamp DESC
+    LIMIT 10
+    """
 
-    rows = [dict(r) for r in cur.fetchall()]
+    cur.execute(query, (guest_id,))
+    rows = [dict(r) for r in cur.fetchall()]   # Convert sqlite row → dict
     conn.close()
+    return {
+        "data": rows
+    }
 
-    # Normalize timestamps to readable strings if needed
-    for r in rows:
-        for k in ("Entry", "Exit"):
-            if r.get(k) is None:
-                continue
-            # ensure string format (DB stores text isoformat)
-            if not isinstance(r[k], str):
-                try:
-                    r[k] = r[k].strftime("%Y-%m-%d %I:%M %p")
-                except Exception:
-                    r[k] = str(r[k])
 
-    return rows

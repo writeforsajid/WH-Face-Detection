@@ -45,15 +45,15 @@ def get_attendance_records(
 
 @router.get("/guest_logs")
 def get_guest_logs(
-    guest_id: str = Query(..., description="ID of the guest"),
-    limit: int = Query(10, description="Max rows to return")
+    guest_id: str = Query(..., description="ID of the guest")
 ):
     """
     Fetch recent device-level logs for a guest.
     Returns array of objects with keys: Device, Entry, Exit
     """
     try:
-        result = attendance_service.get_guest_device_logs(guest_id, limit)
+
+        result = attendance_service.get_guest_device_logs(guest_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
