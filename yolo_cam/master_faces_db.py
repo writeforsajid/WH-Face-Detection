@@ -144,7 +144,7 @@ def process_json_file(cursor, json_file_path):
         insert_guest(
             cursor,
             guest_id,
-            data.get("name") or "Unknown",
+            data.get("guest_name") or "Unknown",
             data.get("guest_type") or "Unknown",
             data.get("comment") or "N/A",
             data.get("email") or "N/A",

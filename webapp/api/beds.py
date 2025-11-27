@@ -163,6 +163,126 @@ def list_bed_guest_assignments(
         conn.close()
 
 
+
+
+@router.get("/guest-attendance")
+def list_bed_guest_attendance(
+    authorization: Optional[str] = Header(None),
+    attendance_date: str = Query(None),  # format YYYY-MM-DD
+    search: Optional[str] = None,
+    status: Optional[str] = Query(None, regex="^(active|inactive|closed)$"),
+    sharing_type: Optional[str] = Query(None, regex="^(brass|silver|golden)$"),
+) -> List[Dict]:
+
+    token = _require_token(authorization)
+    _validate_session(token)
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        where_clauses = []
+        params: list = []
+        attendance_params = [attendance_date]
+
+        # Filters
+        if status:
+            where_clauses.append("LOWER(g.status) = ?")
+            params.append(status.lower())
+
+        if search:
+            where_clauses.append("LOWER(g.name) LIKE ?")
+            params.append(f"%{search.lower().strip()}%")
+
+        if sharing_type:
+            where_clauses.append("LOWER(b.sharing_type) = ?")
+            params.append(sharing_type.lower())
+
+        where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+        cur.execute(
+            f"""
+                SELECT
+                    b.id AS id,
+                    b.bed_id AS bed_id,
+                    b.sharing_type AS bed_sharing_type,
+                    gra.assignment_id AS assignment_id,
+                    gra.guest_id AS guest_id,
+                    g.name AS guest_name,
+
+                    -- PRESENT on selected date
+                    CASE 
+                        WHEN att_today.guest_id IS NOT NULL THEN 1
+                        ELSE 0
+                    END AS is_present,
+
+                    -- LEAVE on selected date
+                    CASE 
+                        WHEN leave_today.guest_id IS NOT NULL THEN 1
+                        ELSE 0
+                    END AS is_leave,
+
+                    leave_today.leave_id AS leave_id,
+
+                    -- Latest attendance datetime
+                    last_att.latest_attendance_datetime,
+                    last_att.latest_device_id
+
+                FROM beds b
+                LEFT JOIN guest_beds gra 
+                    ON gra.bed_id = b.bed_id
+                LEFT JOIN guests g 
+                    ON g.guest_id = gra.guest_id
+
+                -- ATTENDANCE check (present today)
+                LEFT JOIN (
+                    SELECT guest_id, MAX(timestamp) AS last_present
+                    FROM attendance
+                    WHERE DATE(timestamp) = DATE(?)
+                    GROUP BY guest_id
+                ) AS att_today 
+                    ON att_today.guest_id = g.guest_id
+
+                -- LEAVE check (approved leave in leave_calendar_cache)
+                LEFT JOIN (
+                    SELECT lcc.guest_id, lcc.leave_id
+                    FROM leave_calendar_cache lcc
+                    JOIN leave_requests lr 
+                            ON lr.leave_id = lcc.leave_id
+                    WHERE lr.status = 'approved'
+                      AND DATE(lcc.leave_date) = DATE(?)
+                ) AS leave_today
+                    ON leave_today.guest_id = g.guest_id
+
+                -- LATEST attendance & device
+                LEFT JOIN (
+                    SELECT a1.guest_id,
+                           a1.timestamp AS latest_attendance_datetime,
+                           a1.device_id AS latest_device_id
+                    FROM attendance a1
+                    INNER JOIN (
+                        SELECT guest_id, MAX(timestamp) AS max_ts
+                        FROM attendance
+                        GROUP BY guest_id
+                    ) a2
+                    ON a1.guest_id = a2.guest_id
+                    AND a1.timestamp = a2.max_ts
+                ) AS last_att
+                    ON last_att.guest_id = g.guest_id
+
+                {where_sql}
+
+                ORDER BY b.bed_id ASC, gra.assign_date DESC, gra.assignment_id DESC
+           """,
+            attendance_params +attendance_params+ params
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+    finally:
+        conn.close()
+
+
+
+
 # Unassign a guest from a bed (delete guest_beds row)
 from fastapi import Body
 
@@ -220,7 +340,7 @@ def assign_guest_to_bed(
             )
         
         # Insert assignment into guest_beds
-        assign_date = datetime.now().strftime("%Y-%m-%d")
+        assign_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cur.execute(
             "INSERT INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
             (guest_id, bed_id, assign_date)

@@ -227,7 +227,6 @@ def delete_guest(guest_id: str):
 
 @router.put("/{guest_id}/toggle")
 def toggle_guest(guest_id: str):
-    print(guest_id)
     result = guest_service.toggle_guest_status(guest_id)
     
     if isinstance(result, dict) and "error" in result:
@@ -237,7 +236,7 @@ def toggle_guest(guest_id: str):
 
 @router.post("/{guest_id}/confirm")
 def confirm_guest(guest_id: str):
-    print(guest_id)
+    #print(guest_id)
     result = guest_service.confirm_guest(guest_id)
     
     if isinstance(result, dict) and "error" in result:

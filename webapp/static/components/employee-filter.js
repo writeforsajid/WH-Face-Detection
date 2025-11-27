@@ -59,7 +59,7 @@ class EmployeeFilter extends HTMLElement {
         </div>
       </div>
     `;
-    console.log("EmployeeFilter component rendered.");
+    
   }
 
   setupDefaults() {
@@ -128,7 +128,7 @@ class EmployeeFilter extends HTMLElement {
       tillDate: this.shadowRoot.querySelector("#btnTillDate")
 
     };
-    console.log(btns.today, "Button ready?");
+    
     // Utility to activate selected button
     const setActive = (id) => {
       this.shadowRoot.querySelectorAll(".quick-buttons button").forEach(btn =>

@@ -50,7 +50,7 @@ def load_known_faces():
 
 def mark_attendance(guest_id, device_id="OUT", method="Face"):
     """Insert attendance record in DB with cooldown."""
-    ts = datetime.now()
+    ts = ddatetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if guest_id in last_seen and ts - last_seen[guest_id] < cooldown:
         print(f"[ATTENDANCE] Skipping {guest_id} (within cooldown)")
         return False
@@ -59,12 +59,12 @@ def mark_attendance(guest_id, device_id="OUT", method="Face"):
         cur = DB.cursor()
         cur.execute(
             "INSERT INTO attendance (guest_id, device_id, method, timestamp) VALUES (?,?,?,?)",
-            (guest_id, device_id, method, ts.isoformat())
+            (guest_id, device_id, method, ts)
         )
         DB.commit()
 
     last_seen[guest_id] = ts
-    print(f"[ATTENDANCE] Marked {guest_id} at {ts.isoformat()}")
+    print(f"[ATTENDANCE] Marked {guest_id} at {ts}")
     return True
 
 

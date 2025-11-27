@@ -1,3 +1,23 @@
+"""
+
+
+(_venv) PS D:\Working\AI\WH Face Detection>python .\webapp\db\dbscript.py
+
+
+Enhanced SQLite DB script for WhiteHouse project
+- Builds on the uploaded dbscript.py (path: /mnt/data/dbscript.py)
+- Adds Payment Collection schema (bed_rent_plan, rent_monthly, rent_transactions, payment_screenshots)
+- Keeps original tables (guests, beds, attendance, devices, roles, guest_roles, guest_auth, guest_sessions, guest_password_resets, guest_beds, guest_metadata, guest_faces)
+- Preserves pattern used in original dbscript.py (hardcoded inserts, crypto usage, env loader)
+- SQLite only. Local screenshot storage (Option A) supported.
+- Seeds larger dummy data set (keeps existing entries and appends generated entries up to ~120 guests)
+
+Run: python dbscript_payment_sqlite.py
+
+Note: this file references the original uploaded file path: /mnt/data/dbscript.py for reference but does not import it. It uses same environment loader and crypto_manager used in original.
+"""
+
+
 import sqlite3
 import face_recognition 
 import json
@@ -5,11 +25,12 @@ import os
 from pathlib import Path
 import random
 from datetime import datetime, timedelta
+import subprocess
 
 from environment_variables import load_environment
 # Connect (creates file WhiteHouse.db if not exists)
 DB_PATH = "./data/WhiteHouse_Fresh.db"
-
+script_dir = os.path.dirname(__file__)
 load_environment("./../../data/.env.webapp")
 from crypto_manager import crypto
 if os.path.exists(DB_PATH):
@@ -25,10 +46,9 @@ CREATE TABLE IF NOT EXISTS guests (
     guest_id    VARCHAR(20) PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
     email       TEXT UNIQUE,
-    password    TEXT,
     phone_number TEXT,
-    comments      VARCHAR(10),
-    status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed','leave'))
+    comments      VARCHAR(100),
+    status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('inactive','active',  'closed'))
 )
 """)
 
@@ -73,9 +93,10 @@ CREATE TABLE beds (
     id      INTEGER       PRIMARY KEY AUTOINCREMENT,
     bed_id    VARCHAR (10)  NOT NULL,
     sharing_type VARCHAR (10) NOT NULL,               
-    description VARCHAR (150) 
+    description VARCHAR (150)
 )
 """)
+
 
 
 
@@ -135,10 +156,148 @@ CREATE TABLE IF NOT EXISTS guest_password_resets (
 )
 """)
 
-# Indices
-cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_email ON guests(email)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_sessions_guest ON guest_sessions(guest_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_pwresets_guest ON guest_password_resets(guest_id)")
+
+
+# ==========================
+# SQLITE PAYMENT SYSTEM SCHEMA
+# ==========================
+
+# monthly dues generated on 1st
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS monthly_dues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id TEXT REFERENCES guests(guest_id),
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL, -- 1..12
+    due_amount REAL NOT NULL,
+    amount_paid REAL DEFAULT 0,
+    status TEXT DEFAULT 'open' CHECK (status IN ('open','partial','paid','adjusted')),
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE (guest_id, year, month)
+);
+""")
+
+# transactions/payments submitted by users
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS payments (
+    payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_by INTEGER REFERENCES users(user_id),
+    guest_id TEXT REFERENCES guests(guest_id),
+    year INTEGER,
+    month INTEGER,
+    amount REAL NOT NULL,
+    mode TEXT NOT NULL CHECK (mode IN ('UPI','CASH','IMPS','DD')),
+    reference TEXT,
+    description TEXT,
+    status TEXT DEFAULT 'submitted' CHECK (status IN (
+        'submitted','forwarded','approved_final','rejected','cancelled'
+    )),
+    current_approver INTEGER REFERENCES users(user_id),
+    created_at TEXT DEFAULT (datetime('now')),
+    approved_at TEXT,
+    approved_by INTEGER REFERENCES users(user_id),
+    final_receipt_url TEXT
+);
+""")
+
+# allocation of payments to dues
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS payment_allocations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
+    monthly_due_id INTEGER REFERENCES monthly_dues(id),
+    allocated_amount REAL NOT NULL
+);
+""")
+
+# attachments (screenshots)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS payment_attachments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    filename TEXT,
+    uploaded_at TEXT DEFAULT (datetime('now'))
+);
+""")
+
+# forwarding chain history
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS payment_forward_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
+    from_user INTEGER REFERENCES users(user_id),
+    to_user INTEGER REFERENCES users(user_id),
+    comment TEXT,
+    forwarded_at TEXT DEFAULT (datetime('now'))
+);
+""")
+
+# approval / rejection actions
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS payment_approval_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
+    acted_by INTEGER REFERENCES users(user_id),
+    action TEXT NOT NULL CHECK (action IN ('approved','rejected')),
+    comment TEXT,
+    acted_at TEXT DEFAULT (datetime('now'))
+);
+""")
+
+# ledger on final approval
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS ledger_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER REFERENCES payments(payment_id),
+    guest_id TEXT REFERENCES guests(guest_id),
+    amount REAL NOT NULL,
+    entry_type TEXT CHECK (entry_type IN ('credit','debit')),
+    created_at TEXT DEFAULT (datetime('now'))
+);
+""")
+
+# security deposit per guest
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS security_deposits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id TEXT REFERENCES guests(guest_id),
+    amount REAL NOT NULL,
+    collected_on TEXT,
+    refunded_amount REAL DEFAULT 0,
+    refunded_on TEXT
+);
+""")
+
+# rent change events
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS rent_change_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id TEXT REFERENCES guests(guest_id),
+    old_rent REAL,
+    new_rent REAL,
+    changed_by INTEGER REFERENCES users(user_id),
+    changed_at TEXT DEFAULT (datetime('now')),
+    reason TEXT
+);
+""")
+
+
+
+
+cursor.execute("""
+CREATE TABLE appconfig (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(20) NOT NULL,
+    description JSON,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+
+
+
+
 
 # 1️⃣1️⃣ Roles tables and seeding
 cursor.execute("""
@@ -148,6 +307,146 @@ CREATE TABLE IF NOT EXISTS roles (
     priority   INTEGER NOT NULL
 )
 """)
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS bed_rent_plan (
+    plan_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    sharing_type  TEXT NOT NULL UNIQUE,
+    monthly_rent  INTEGER NOT NULL,     -- stored in paise
+    currency      TEXT DEFAULT 'INR'
+);
+""")
+
+
+
+
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS guest_roles (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id   VARCHAR(20) NOT NULL UNIQUE,
+    role_id    INTEGER NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (guest_id) REFERENCES guests(guest_id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE RESTRICT
+)
+""")
+
+
+
+
+
+cursor.execute('''CREATE TABLE guest_metadata (
+    meta_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id    VARCHAR(20) NOT NULL,
+    name        VARCHAR(20) NOT NULL,
+    description VARCHAR(150),
+    timestamp   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (guest_id) REFERENCES guests(guest_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+)''')
+
+
+
+
+
+# cursor.execute('''
+# CREATE TABLE IF NOT EXISTS leave_types (
+#     leave_type_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     name TEXT NOT NULL UNIQUE,                -- e.g., Sick Leave, Casual Leave
+#     description TEXT,
+#     is_paid BOOLEAN DEFAULT 1
+# )
+# ''')
+
+# cursor.execute('''
+# CREATE TABLE IF NOT EXISTS leave_requests (
+#     leave_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     guest_id TEXT NOT NULL,
+#     leave_type_id INTEGER NOT NULL,
+#     start_date DATE NOT NULL,
+#     end_date DATE NOT NULL,
+#     reason TEXT,
+#     status TEXT NOT NULL DEFAULT 'pending' 
+#         CHECK(status IN ('pending','approved','rejected','cancelled')),
+#     applied_on TEXT DEFAULT (datetime('now')),
+#     approved_by INTEGER,  -- user_id (admin/warden)
+#     approved_on TEXT,
+#     FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
+#     FOREIGN KEY (leave_type_id) REFERENCES leave_types(leave_type_id)
+# )
+# ''')
+
+# cursor.execute('''
+# CREATE TABLE IF NOT EXISTS leave_calendar_cache (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     guest_id TEXT NOT NULL,
+#     leave_date DATE NOT NULL,
+#     leave_id INTEGER NOT NULL,
+#     FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
+#     FOREIGN KEY (leave_id) REFERENCES leave_requests(leave_id)
+# )
+# ''')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_roles_name ON roles(role_name)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_guest ON guest_roles(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_role ON guest_roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_status ON guests(status)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(name COLLATE NOCASE)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_guest_id ON guest_roles(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_role_id ON guest_roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_roles_role_id ON roles(role_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_guest_id ON guest_beds(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_bed_id ON guest_beds(bed_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_bed_id ON beds(bed_id)")
+
+cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_email ON guests(email)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_sessions_guest ON guest_sessions(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_pwresets_guest ON guest_password_resets(guest_id)")
+
+# ---------------------------
+# Final indexing (performance)
+# ---------------------------
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_phone ON guests(phone_number)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_guest_time ON attendance(guest_id, timestamp)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_beds_guest ON guest_beds(guest_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_sharing ON beds(sharing_type)")
+
+
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_pay_guest ON payments(guest_id);")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_montly_dues_gidyrmm ON  monthly_dues(guest_id, year, month);")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_approver ON payments(current_approver);")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_allocations_pid ON payment_allocations(payment_id);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_guest ON leave_requests(guest_id);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_dates ON leave_requests(start_date, end_date);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);")
+# cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_leave_types_name ON leave_types(name);")
+# cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_leave_cache_guest_date ON leave_calendar_cache(guest_id, leave_date);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_cache_leave_id ON leave_calendar_cache(leave_id);")
+
 
 
 
@@ -164,14 +463,17 @@ cursor.executemany(
 
 
 
-cursor.execute("""
-CREATE TABLE appconfig (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(20) NOT NULL,
-    description JSON,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+# ---------------------------
+# Seed bed_rent_plan (example prices)
+# ---------------------------
+plans = [
+    ("brass", 6000.00),
+    ("silver", 7000.00),
+    ("golden", 8000.00)
+]
+cursor.executemany("INSERT OR IGNORE INTO bed_rent_plan (sharing_type, monthly_rent) VALUES (?, ?)", plans)
+
+
 
 # --- JSON you want to save ---
 description_data = {
@@ -179,7 +481,7 @@ description_data = {
     {'value': 'registered', 'label': 'registered'}, 
     {'value': 'bed assigned', 'label': 'bed assigned'}, 
     {'value': 'paid by', 'label': 'paid by'}, 
-    {'value': 'Grapes', 'label': 'Grapes'}, 
+    {'value': 'police verify#', 'label': 'police verify#'}, 
     {'value': 'Mango', 'label': 'Mango'}, 
     {'value': 'Pineapple', 'label': 'Pineapple'}, 
     {'value': 'Watermelon', 'label': 'Watermelon'}, 
@@ -200,334 +502,96 @@ cursor.execute("""
 
 
 
-# 7️⃣ Insert Dummy Beds
-beds = [
- ("001/1/1", "brass", "Floor 0 Flat 1 Room 1 Bed 1"),
- ("001/1/2", "brass", "Floor 0 Flat 1 Room 1 Bed 2"),
- ("001/1/3", "brass", "Floor 0 Flat 1 Room 1 Bed 3"),
- ("002/1/1", "brass", "Floor 0 Flat 2 Room 1 Bed 1"),
- ("002/1/2", "brass", "Floor 0 Flat 2 Room 1 Bed 2"),
- ("002/1/3", "brass", "Floor 0 Flat 2 Room 1 Bed 3"),
- ("002/1/2", "brass", "Floor 0 Flat 2 Room 2 Bed 1"),
- ("002/2/1", "brass", "Floor 0 Flat 2 Room 2 Bed 1"),
- ("002/2/2", "brass", "Floor 0 Flat 2 Room 2 Bed 2"),
- ("002/2/3", "brass", "Floor 0 Flat 2 Room 2 Bed 3"),
- ("103/1/1", "golden", "Floor 1 Flat 3 Room 1 Bed 1"),
- ("103/1/2", "golden", "Floor 1 Flat 3 Room 1 Bed 2"),
- ("103/2/1", "brass", "Floor 1 Flat 3 Room 2 Bed 1"),
- ("103/2/2", "brass", "Floor 1 Flat 3 Room 2 Bed 2"),
- ("103/2/3", "brass", "Floor 1 Flat 3 Room 2 Bed 3"),
- ("104/1/1", "golden", "Floor 1 Flat 4 Room 1 Bed 1"),
- ("104/1/2", "golden", "Floor 1 Flat 4 Room 1 Bed 2"),
- ("104/2/1", "brass", "Floor 1 Flat 4 Room 2 Bed 1"),
- ("104/2/2", "brass", "Floor 1 Flat 4 Room 2 Bed 2"),
- ("104/2/3", "brass", "Floor 1 Flat 4 Room 2 Bed 3"),
- ("203/1/1", "golden", "Floor 2 Flat 3 Room 1 Bed 1"),
- ("203/1/2", "golden", "Floor 2 Flat 3 Room 1 Bed 2"),
- ("203/2/1", "brass", "Floor 2 Flat 3 Room 2 Bed 1"),
- ("203/2/2", "brass", "Floor 2 Flat 3 Room 2 Bed 2"),
- ("203/2/3", "brass", "Floor 2 Flat 3 Room 2 Bed 3"),
- ("204/1/1", "golden", "Floor 2 Flat 4 Room 1 Bed 1"),
- ("204/1/2", "golden", "Floor 2 Flat 4 Room 1 Bed 2"),
- ("204/2/1", "brass", "Floor 2 Flat 4 Room 2 Bed 1"),
- ("204/2/2", "brass", "Floor 2 Flat 4 Room 2 Bed 2"),
- ("204/2/3", "brass", "Floor 2 Flat 4 Room 2 Bed 3"),
- ("303/1/1", "golden", "Floor 3 Flat 3 Room 1 Bed 1"),
- ("303/1/2", "golden", "Floor 3 Flat 3 Room 1 Bed 2"),
- ("303/2/1", "brass", "Floor 3 Flat 3 Room 2 Bed 1"),
- ("303/2/2", "brass", "Floor 3 Flat 3 Room 2 Bed 2"),
- ("303/2/3", "brass", "Floor 3 Flat 3 Room 2 Bed 3"),
- ("304/1/1", "golden", "Floor 3 Flat 4 Room 1 Bed 1"),
- ("304/1/2", "golden", "Floor 3 Flat 4 Room 1 Bed 2"),
- ("304/2/1", "brass", "Floor 3 Flat 4 Room 2 Bed 1"),
- ("304/2/2", "brass", "Floor 3 Flat 4 Room 2 Bed 2"),
- ("304/2/3", "brass", "Floor 3 Flat 4 Room 2 Bed 3"),
- ("401/1/1", "silver", "Floor 4 Flat 1 Room 1 Bed 1"),
- ("401/1/2", "silver", "Floor 4 Flat 1 Room 1 Bed 2"),
- ("401/1/3", "silver", "Floor 4 Flat 1 Room 1 Bed 3"),
- ("401/2/1", "brass", "Floor 4 Flat 1 Room 2 Bed 1"),
- ("401/2/2", "brass", "Floor 4 Flat 1 Room 2 Bed 2"),
- ("401/2/3", "brass", "Floor 4 Flat 1 Room 2 Bed 3"),
- ("402/1/1", "silver", "Floor 4 Flat 2 Room 1 Bed 1"),
- ("402/1/2", "silver", "Floor 4 Flat 2 Room 1 Bed 2"),
- ("402/1/3", "silver", "Floor 4 Flat 2 Room 1 Bed 3"),
- ("402/2/1", "brass", "Floor 4 Flat 2 Room 2 Bed 1"),
- ("402/2/2", "brass", "Floor 4 Flat 2 Room 2 Bed 2"),
- ("402/2/3", "brass", "Floor 4 Flat 2 Room 2 Bed 3"),
- ("403/1/1", "golden", "Floor 4 Flat 3 Room 1 Bed 1"),
- ("403/1/2", "golden", "Floor 4 Flat 3 Room 1 Bed 2"),
- ("403/2/1", "brass", "Floor 4 Flat 3 Room 2 Bed 1"),
- ("403/2/2", "brass", "Floor 4 Flat 3 Room 2 Bed 2"),
- ("403/2/3", "brass", "Floor 4 Flat 3 Room 2 Bed 3"),
- ("404/1/1", "golden", "Floor 4 Flat 4 Room 1 Bed 1"),
- ("404/1/2", "golden", "Floor 4 Flat 4 Room 1 Bed 2"),
- ("404/2/1", "brass", "Floor 4 Flat 4 Room 2 Bed 1"),
- ("404/2/2", "brass", "Floor 4 Flat 4 Room 2 Bed 2"),
- ("404/2/3", "brass", "Floor 4 Flat 4 Room 2 Bed 3"),
- ("501/1/1", "silver", "Floor 5 Flat 1 Room 1 Bed 1"),
- ("501/1/2", "silver", "Floor 5 Flat 1 Room 1 Bed 2"),
- ("501/1/3", "silver", "Floor 5 Flat 1 Room 1 Bed 3"),
- ("501/2/1", "brass", "Floor 5 Flat 1 Room 2 Bed 1"),
- ("501/2/2", "brass", "Floor 5 Flat 1 Room 2 Bed 2"),
- ("501/2/3", "brass", "Floor 5 Flat 1 Room 2 Bed 3"),
- ("502/1/1", "silver", "Floor 5 Flat 2 Room 1 Bed 1"),
- ("502/1/2", "silver", "Floor 5 Flat 2 Room 1 Bed 2"),
- ("502/1/3", "silver", "Floor 5 Flat 2 Room 1 Bed 3"),
- ("502/2/1", "brass", "Floor 5 Flat 2 Room 2 Bed 1"),
- ("502/2/2", "brass", "Floor 5 Flat 2 Room 2 Bed 2"),
- ("502/2/3", "brass", "Floor 5 Flat 2 Room 2 Bed 3"),
- ("503/1/1", "golden", "Floor 5 Flat 3 Room 1 Bed 1"),
- ("503/1/2", "golden", "Floor 5 Flat 3 Room 1 Bed 2"),
- ("503/2/1", "brass", "Floor 5 Flat 3 Room 2 Bed 1"),
- ("503/2/2", "brass", "Floor 5 Flat 3 Room 2 Bed 2"),
- ("503/2/3", "brass", "Floor 5 Flat 3 Room 2 Bed 3"),
- ("504/1/1", "golden", "Floor 5 Flat 4 Room 1 Bed 1"),
- ("504/1/2", "golden", "Floor 5 Flat 4 Room 1 Bed 2"),
- ("504/2/1", "brass", "Floor 5 Flat 4 Room 2 Bed 1"),
- ("504/2/2", "brass", "Floor 5 Flat 4 Room 2 Bed 2"),
- ("504/2/3", "brass", "Floor 5 Flat 4 Room 2 Bed 3")
-]
 
+
+json_file_path = os.path.join(script_dir, 'dbscript_data', 'guests.json')
+# Load JSON
+with open(json_file_path, "r") as f:
+    guest_data = json.load(f)
+
+# Convert to tuple list
+guests = [(g["guest_id"], g["name"], g["email"], g["phone"]) for g in guest_data]
+
+# Insert into SQLite
+cursor.executemany(
+    """
+    INSERT OR IGNORE INTO guests 
+    (guest_id, name, email,  phone_number, comments, status)
+    VALUES (?, ?, ?,  ?, '', 'active')
+    """,
+    guests
+)
+
+
+
+
+
+json_file_path = os.path.join(script_dir, 'dbscript_data', 'beds.json')
+
+# Load JSON file
+with open(json_file_path, "r") as f:
+    bed_data = json.load(f)
+
+# Convert into list of tuples
+beds = [(item["bed_id"],item["sharing_type"] ,item["description"]) for item in bed_data]
 
 cursor.executemany(
-    "INSERT OR IGNORE INTO beds (bed_id,sharing_type, description) VALUES (?, ?, ?)",
+    "INSERT OR IGNORE INTO beds (bed_id, sharing_type,description) VALUES (?,?, ?)",
     beds
 )
 
-# 5️⃣ Insert Dummy Guests
-guests = [
-("20260105000001","Runa","writeforsajid@gmail.com","8319940394"),
-("20260105000002","Ashmat","ashmat@gmail.com","9336980752"),
-("20260105000003","Mujeeb","mujeeb@gmail.com","9760775533"),
-("20260105000004","Arjeena","arjeena@gmail.com","9997255787"),
-("20250105000001","Rakshita","writeforsajid@gmail.com","8319940394"),
-("20250105000002","Ramsha","arish@gmail.com","9336980752"),
-("20250105000003","Aqsa Amroha.","mock+9760775533@crib.in","9760775533"),
-("20250105000004","Sana Ansari Bareilly.","9997255787@crib.in","9997255787"),
-("20250105000005","Rukhsana","mock+9654088295@crib.in","9654088295"),
-("20250105000006","Taezeen Hamid.","taezeen786+7006671809@gmail.com","7006671809"),
-("20250105000007","Razbi Ara Kanpur","9792364990@crib.in","9792364990"),
-("20250105000008","Sumaiya Khan Aligarh.","8171514921@crib.in","8171514921"),
-("20250105000010","Sania Kausar","saniakausar032+9818867032@gmail.com","9818867032"),
-("20250105000011","Aiysha Xi","mock+9906579310@crib.in","9906579310"),
-("20250105000012","Darakhshan Zahid","darakhsahanji+9149569285@gmail.com","9149569285"),
-("20250105000013","Alina Mustak Ix","mock+7889334398@crib.in","7889334398"),
-("20250105000014","Kanza","7060666770@crib.in","7060666770"),
-("20250105000015","Litpujam Gladia Lady.","7085600638@crib.in","7085600638"),
-("20250105000016","Unzila Shams Uttrakhand","mock+7983660305@crib.in","7983660305"),
-("20250105000017","Anam Mirza.","7302166766@crib.in","7302166766"),
-("20250105000018","Kulsum Deoband","mock+9557009090@crib.in","9557009090"),
-("20250105000019","Fariya Ali.","mock+7289831016@crib.in","7289831016"),
-("20250105000020","Saujanya Sarkar","8777349575@crib.in","8777349575"),
-("20250105000021","Roshni Bihar","8539084388@crib.in","8539084388"),
-("20250105000022","Sara Khan Muradabad.","7906715399@crib.in","7906715399"),
-("20250105000023","Sadiya.","8400285185@crib.in","8400285185"),
-("20250105000024","Alruba Khan.","alrubakhan911gt3+7354338899@gmail.com","7354338899"),
-("20250105000025","Sidra.","sidrasiddiqui952+7078481666@gmail.com","7078481666"),
-("20250105000026","Fatima Durrani.","mock+6306103474@crib.in","6306103474"),
-("20250105000027","Joya Yamuna Nagar.","mock+8295500787@crib.in","8295500787"),
-("20250105000028","Eram Khan.","bhueramkhan+8418040470@gmail.com","8418040470"),
-("20250105000029","Simrah Javed","simrahjaved611+8791891711@gmail.com","8791891711"),
-("20250105000030","Shafiya Jammu.","mock+9103284409@crib.in","9103284409"),
-("20250105000031","Bushra Jaipur.","9319058372@crib.in","9319058372"),
-("20250105000032","Amisha Jha Vaishali","7856884933@crib.in","7856884933"),
-("20250105000033","Saniya Siddiqui.","alinasiddiqui2007+7015665532@gmail.com","7015665532"),
-("20250105000034","Tanuja Negi","8449694272@crib.in","8449694272"),
-("20250105000035","Aysha Syed","9650068375@crib.in","9650068375"),
-("20250105000036","Ambhi Singh.","ambhisingh111+7699559422@gmail.com","7699559422"),
-("20250105000037","Shaista.","shaistaaju927+7352161466@gmail.com","7352161466"),
-("20250105000038","Areeba Agra.","mock+8650690789@crib.in","8650690789"),
-("20250105000039","Taqdeer Hussain.","taqdeer.504gc+7762990568@gmail.com","7762990568"),
-("20250105000040","Aalia Harayana.","8814844786@crib.in","8814844786"),
-("20250105000041","Iqra Fatehpur Tabassum.","mock+9667938102@crib.in","9667938102"),
-("20250105000042","Zoha Shahzad","shahzadzoha60@gmail.com","#VALUE!"),
-("20250105000043","Adeeba Shahzad","8077819424@crib.in","8077819424"),
-("20250105000044","Umaima Fatima.","umaimaf676+7393022866@gmail.com","7393022866"),
-("20250105000045","Sara Fatima.","mock+9170712038@crib.in","9170712038"),
-("20250105000046","Saniya Haque.","mock+9128746730@crib.in","9128746730"),
-("20250105000047","Sherish Naaz Muradabad.","9149257376@crib.in","9149257376"),
-("20250105000048","Urooj Fatima","9719473122@crib.in","9719473122"),
-("20250105000049","Saleena Waseem.","9760834337@crib.in","9760834337"),
-("20250105000050","Sadaf Jamal.","gausiyasadaf2001+9335532134@gmail.com","9335532134"),
-("20250105000051","Sunera","9818451599@crib.in","9818451599"),
-("20250105000052","Faiza Srinagar.","6006414151@crib.in","6006414151"),
-("20250105000053","Neha Khan","nk8474329+6388094396@gmail.com","6388094396"),
-("20250105000055","Areeba Khan.","areebakhan62389+8006588406@gmail.com","8006588406"),
-("20250105000056","Faizia Xi Shahjahanpur","mock+9451643726@crib.in","9451643726"),
-("20250105000057","Sumra Sambul","mock+9631547599@crib.in","9631547599"),
-("20250105000058","Shafia Bihar.","mock+9229214261@crib.in","9229214261"),
-("20250105000060","Muskan Anjum.","mock+9142402767@crib.in","9142402767"),
-("20250105000061","Ghausia.","ghausiaparween032+6290941265@gmail.com","6290941265"),
-("20250105000062","Iqra Naaz Bijnor","mock+8979542119@crib.in","8979542119"),
-("20250105000063","Iqra Khan Farukhabad.","iqrakhan8385+8009776840@gmail.com","8009776840"),
-("20250105000064","Iqra Jaipur","8118859709@crib.in","8118859709"),
-("20250105000066","Mrym.","mrymonshop+9897691116@gmail.com","9897691116"),
-("20250105000067","Nida Farooqui.","nidafarooqui2626+9634941399@gmail.com","9634941399"),
-("20250105000068","Aafnan Ashraf Patna.","mock+6201902265@crib.in","6201902265"),
-("20250105000069","Nasra Afrien","roselucky1107+9369051398@gmail.com","9369051398"),
-("20250105000070","Umam Samreen Hashmi.","mock+6306355591@crib.in","6306355591"),
-("20250105000071","Surabhi Katariya","mock+8826513840@crib.in","8826513840"),
-("20250105000072","Afsana Kosser","afsanakosser01+8492807440@gmail.com","8492807440"),
-("20250105000073","Farheen Hak Jharkhand.","mock+7050563194@crib.in","7050563194"),
-("20250105000074","Mufleha Khatoon,","muflehakhatoon95+8789706612@gmail.com","8789706612"),
-("20250105000075","Alzia Lucknow","mock+6307894578@crib.in","6307894578"),
-("20250105000076","Najiba Perween","najibaperween9+9934219896@gmail.com","9934219896"),
-("20250105000077","Muskan Khatoon Coochbehar","mock+9064234514@crib.in","9064234514"),
-("20250105000078","Aiman.","mock+7985348230@crib.in","7985348230"),
-("20250105000079","Gazala Motihari.","mock+7870701853@crib.in","7870701853"),
-("20250105000080","Isma Nanital","8899292240@crib.in","8899292240"),
-("20250105000081","Aiman Naz Bihar","mock+8210731821@crib.in","8210731821"),
-("20250105000082","Zohara Xith","mock+7858857798@crib.in","7858857798"),
-("20250105000083","Wajiha Fatima.","wajihafatima2003+8102618006@gmail.com","8102618006")
+
+
+# ---------------------------
+# Seed bed_rent_plan (example prices)
+# ---------------------------
+plans = [
+("brass", 6000.00),
+("silver", 7000.00),
+("golden", 8000.00)
 ]
-# Insert sample data
-cursor.executemany(
-    "INSERT OR IGNORE INTO guests (guest_id, name, email, password, phone_number, comments, status) "
-    "VALUES (?, ?, ?, 'Pass@123', ?, '', 'active')",
-    guests
-)
+cursor.executemany("INSERT OR IGNORE INTO bed_rent_plan (sharing_type, monthly_rent) VALUES (?, ?)", plans)
+# 5️⃣ Insert Dummy Guests
+
+
 #cursor.executemany("INSERT OR IGNORE INTO guests VALUES (?,?,?,'Pass@123',?,'','Resident',1)", guests)
 
 
 
-# Fetch all guest IDs
-cursor.execute("SELECT guest_id FROM guests")
-guests = cursor.fetchall()
-# Insert or update each guest entry
-for (guest_id,) in guests:
-    password_hash = crypto.encrypt("Pass@123")  # You can replace with your logic
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute("""
-    INSERT OR REPLACE INTO guest_auth (guest_id, password_hash, is_active, created_at, updated_at)
-    VALUES (?, ?, 1, ?, ?)
-    """, (guest_id, password_hash, now, now))
-
+# ---------------------------
+# Create guest_auth entries for all guests (using crypto.encrypt similar to original)
+# ---------------------------
+all_guest_ids = [row[0] for row in cursor.execute("SELECT guest_id FROM guests").fetchall()]
+now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+for guest_id in all_guest_ids:
+    password_hash = crypto.encrypt("Pass@123")
+    cursor.execute(
+        "INSERT OR REPLACE INTO guest_auth (guest_id, password_hash, is_active, created_at, updated_at) VALUES (?, ?, 1, ?, ?)",
+        (guest_id, password_hash, now, now)
+    )
 
 
 
 
-
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS guest_roles (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id   VARCHAR(20) NOT NULL UNIQUE,
-    role_id    INTEGER NOT NULL,
-    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (guest_id) REFERENCES guests(guest_id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE RESTRICT
-)
-""")
-
-cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_roles_name ON roles(role_name)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_guest ON guest_roles(guest_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_roles_role ON guest_roles(role_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_status ON guests(status)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(name COLLATE NOCASE)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_guest_id ON guest_roles(guest_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gr_role_id ON guest_roles(role_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_roles_role_id ON roles(role_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_guest_id ON guest_beds(guest_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gb_bed_id ON guest_beds(bed_id)")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_bed_id ON beds(bed_id)")
+# Useful indexes
 
 
 
+json_file_path = os.path.join(script_dir, 'dbscript_data', 'guest_roles.json')
+# Load JSON file
+with open(json_file_path, "r") as f:
+    data = json.load(f)
 
-
-guest_roles=[
-("20260105000001",2,"2025-10-02"),
-("20260105000002",2,"2025-10-02"),
-("20260105000003",2,"2025-10-02"),
-("20260105000004",2,"2025-10-02"),
-("20250105000001",1,"2025-10-02"),
-("20250105000002",1,"2025-10-02"),
-("20250105000003",1,"2025-10-02"),
-("20250105000004",1,"2025-10-02"),
-("20250105000005",1,"2025-10-02"),
-("20250105000006",1,"2025-10-02"),
-("20250105000007",1,"2025-10-02"),
-("20250105000008",1,"2025-10-02"),
-("20250105000010",1,"2025-10-02"),
-("20250105000011",1,"2025-10-02"),
-("20250105000012",1,"2025-10-02"),
-("20250105000013",1,"2025-10-02"),
-("20250105000014",1,"2025-10-02"),
-("20250105000015",1,"2025-10-02"),
-("20250105000016",1,"2025-10-02"),
-("20250105000017",1,"2025-10-02"),
-("20250105000018",1,"2025-10-02"),
-("20250105000019",1,"2025-10-02"),
-("20250105000020",1,"2025-10-02"),
-("20250105000021",1,"2025-10-02"),
-("20250105000022",1,"2025-10-02"),
-("20250105000023",1,"2025-10-02"),
-("20250105000024",1,"2025-10-02"),
-("20250105000025",1,"2025-10-02"),
-("20250105000026",1,"2025-10-02"),
-("20250105000027",1,"2025-10-02"),
-("20250105000028",1,"2025-10-02"),
-("20250105000029",1,"2025-10-02"),
-("20250105000030",1,"2025-10-02"),
-("20250105000031",1,"2025-10-02"),
-("20250105000032",1,"2025-10-02"),
-("20250105000033",1,"2025-10-02"),
-("20250105000034",1,"2025-10-02"),
-("20250105000035",1,"2025-10-02"),
-("20250105000036",1,"2025-10-02"),
-("20250105000037",1,"2025-10-02"),
-("20250105000038",1,"2025-10-02"),
-("20250105000039",1,"2025-10-02"),
-("20250105000040",1,"2025-10-02"),
-("20250105000041",1,"2025-10-02"),
-("20250105000042",1,"2025-10-02"),
-("20250105000043",1,"2025-10-02"),
-("20250105000044",1,"2025-10-02"),
-("20250105000045",1,"2025-10-02"),
-("20250105000046",1,"2025-10-02"),
-("20250105000047",1,"2025-10-02"),
-("20250105000048",1,"2025-10-02"),
-("20250105000049",1,"2025-10-02"),
-("20250105000050",1,"2025-10-02"),
-("20250105000051",1,"2025-10-02"),
-("20250105000052",1,"2025-10-02"),
-("20250105000053",1,"2025-10-02"),
-("20250105000055",1,"2025-10-02"),
-("20250105000056",1,"2025-10-02"),
-("20250105000057",1,"2025-10-02"),
-("20250105000058",1,"2025-10-02"),
-("20250105000060",1,"2025-10-02"),
-("20250105000061",1,"2025-10-02"),
-("20250105000062",1,"2025-10-02"),
-("20250105000063",1,"2025-10-02"),
-("20250105000064",1,"2025-10-02"),
-("20250105000066",1,"2025-10-02"),
-("20250105000067",1,"2025-10-02"),
-("20250105000068",1,"2025-10-02"),
-("20250105000069",1,"2025-10-02"),
-("20250105000070",1,"2025-10-02"),
-("20250105000071",1,"2025-10-02"),
-("20250105000072",1,"2025-10-02"),
-("20250105000073",1,"2025-10-02"),
-("20250105000074",1,"2025-10-02"),
-("20250105000075",1,"2025-10-02"),
-("20250105000076",1,"2025-10-02"),
-("20250105000077",1,"2025-10-02"),
-("20250105000078",1,"2025-10-02"),
-("20250105000079",1,"2025-10-02"),
-("20250105000080",1,"2025-10-02"),
-("20250105000081",1,"2025-10-02"),
-("20250105000082",1,"2025-10-02"),
-("20250105000083",1,"2025-10-02")
+guest_roles = [
+    (item["guest_id"], item["role_id"], item["assigned_at"])
+    for item in data["guest_roles"]
 ]
 
 
 cursor.executemany(
-    "INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) VALUES (?,?, ?)",
+    "INSERT OR IGNORE INTO guest_roles (guest_id, role_id, assigned_at) VALUES (?, ?, ?)",
     guest_roles
 )
-
 
 
 
@@ -551,292 +615,36 @@ attendance = [
 cursor.executemany("INSERT INTO attendance (guest_id, method, device_id, timestamp, synced) VALUES (?,?,?,?,?)", attendance)
 
 
+json_file_path = os.path.join(script_dir, 'dbscript_data', 'guest_beds.json')
 
+# Load JSON file
+with open(json_file_path, "r") as f:
+    data = json.load(f)
 
-
-# Insert dummy bed assignments
 guest_beds = [
-("20250105000001","002/2/1","2025-10-02"),
-("20250105000002","001/2/1","2025-10-02"),
-("20250105000003","002/1/1","2025-10-02"),
-("20250105000004","103/1/1","2025-10-02"),
-("20250105000005","103/2/1","2025-10-02"),
-("20250105000006","104/1/1","2025-10-02"),
-("20250105000007","104/2/1","2025-10-02"),
-("20250105000008","203/1/1","2025-10-02"),
-("20250105000010","204/1/1","2025-10-02"),
-("20250105000011","204/1/2","2025-10-02"),
-("20250105000012","204/2/1","2025-10-02"),
-("20250105000013","204/2/2","2025-10-02"),
-("20250105000014","204/2/3","2025-10-02"),
-("20250105000015","303/1/1","2025-10-02"),
-("20250105000016","303/1/2","2025-10-02"),
-("20250105000017","303/2/1","2025-10-02"),
-("20250105000018","303/2/2","2025-10-02"),
-("20250105000019","304/1/1","2025-10-02"),
-("20250105000020","304/1/2","2025-10-02"),
-("20250105000021","304/2/1","2025-10-02"),
-("20250105000022","304/2/2","2025-10-02"),
-("20250105000023","401/1/1","2025-10-02"),
-("20250105000024","401/1/2","2025-10-02"),
-("20250105000025","401/1/3","2025-10-02"),
-("20250105000026","401/2/1","2025-10-02"),
-("20250105000027","401/2/2","2025-10-02"),
-("20250105000028","401/2/3","2025-10-02"),
-("20250105000029","402/1/1","2025-10-02"),
-("20250105000030","402/1/2","2025-10-02"),
-("20250105000031","402/1/3","2025-10-02"),
-("20250105000032","402/2/1","2025-10-02"),
-("20250105000033","402/2/2","2025-10-02"),
-("20250105000034","402/2/3","2025-10-02"),
-("20250105000035","403/1/1","2025-10-02"),
-("20250105000036","403/1/2","2025-10-02"),
-("20250105000037","403/2/1","2025-10-02"),
-("20250105000038","403/2/2","2025-10-02"),
-("20250105000039","404/1/1","2025-10-02"),
-("20250105000040","404/1/2","2025-10-02"),
-("20250105000041","404/2/1","2025-10-02"),
-("20250105000042","404/2/2","2025-10-02"),
-("20250105000043","404/2/3","2025-10-02"),
-("20250105000044","501/1/1","2025-10-02"),
-("20250105000045","501/1/2","2025-10-02"),
-("20250105000046","501/1/3","2025-10-02"),
-("20250105000047","501/2/1","2025-10-02"),
-("20250105000048","501/2/2","2025-10-02"),
-("20250105000049","501/2/3","2025-10-02"),
-("20250105000050","502/1/1","2025-10-02"),
-("20250105000051","502/1/2","2025-10-02"),
-("20250105000052","502/1/3","2025-10-02"),
-("20250105000053","502/2/1","2025-10-02"),
-("20250105000055","502/2/3","2025-10-02"),
-("20250105000056","503/1/1","2025-10-02"),
-("20250105000057","503/1/2","2025-10-02"),
-("20250105000058","503/2/1","2025-10-02"),
-("20250105000060","504/1/1","2025-10-02"),
-("20250105000061","504/1/2","2025-10-02"),
-("20250105000062","504/2/1","2025-10-02"),
-("20250105000063","504/2/2","2025-10-02"),
-("20250105000064","504/2/3","2025-10-02"),
-("20250105000066","303/2/3","2025-10-02"),
-("20250105000067","403/2/3","2025-10-02"),
-("20250105000068","503/2/3","2025-10-02"),
-("20250105000069","002/2/2","2025-10-02"),
-("20250105000070","002/2/3","2025-10-02"),
-("20250105000071","002/1/2","2025-10-02"),
-("20250105000072","002/1/3","2025-10-02"),
-("20250105000073","001/2/2","2025-10-02"),
-("20250105000074","001/2/3","2025-10-02"),
-("20250105000075","103/1/2","2025-10-02"),
-("20250105000076","103/2/2","2025-10-02"),
-("20250105000077","103/2/3","2025-10-02"),
-("20250105000078","104/2/2","2025-10-02"),
-("20250105000079","104/2/3","2025-10-02"),
-("20250105000080","203/2/2","2025-10-02"),
-("20250105000081","203/2/3","2025-10-02"),
-("20250105000082","104/1/2","2025-10-02"),
-("20250105000083","203/1/2","2025-10-02")
+    (item["guest_id"], item["bed_id"], item["assign_date"])
+    for item in data["guest_beds"]
 ]
+
+# Insert into SQLite
 cursor.executemany(
     "INSERT OR IGNORE INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
     guest_beds
 )
 
 
+# Path to your JSON file
 
-cursor.execute('''CREATE TABLE guest_metadata (
-    meta_id     INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id    VARCHAR(20) NOT NULL,
-    name        VARCHAR(20) NOT NULL,
-    description VARCHAR(150),
-    timestamp   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (guest_id) REFERENCES guests(guest_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
-)''')
+json_file_path = os.path.join(script_dir, 'dbscript_data', 'guest_metadata.json')
+# Read JSON data
+with open(json_file_path, 'r') as f:
+    guest_metadata = json.load(f)
 
-guest_metadata = [
-("20250105000001","registered","002/2/1","2025-10-02"),
-("20250105000002","registered","001/2/1","2025-10-02"),
-("20250105000003","registered","002/1/1","2025-10-02"),
-("20250105000004","registered","103/1/1","2025-10-02"),
-("20250105000005","registered","103/2/1","2025-10-02"),
-("20250105000006","registered","104/1/1","2025-10-02"),
-("20250105000007","registered","104/2/1","2025-10-02"),
-("20250105000008","registered","203/1/1","2025-10-02"),
-("20250105000010","registered","204/1/1","2025-10-02"),
-("20250105000011","registered","204/1/2","2025-10-02"),
-("20250105000012","registered","204/2/1","2025-10-02"),
-("20250105000013","registered","204/2/2","2025-10-02"),
-("20250105000014","registered","204/2/3","2025-10-02"),
-("20250105000015","registered","303/1/1","2025-10-02"),
-("20250105000016","registered","303/1/2","2025-10-02"),
-("20250105000017","registered","303/2/1","2025-10-02"),
-("20250105000018","registered","303/2/2","2025-10-02"),
-("20250105000019","registered","304/1/1","2025-10-02"),
-("20250105000020","registered","304/1/2","2025-10-02"),
-("20250105000021","registered","304/2/1","2025-10-02"),
-("20250105000022","registered","304/2/2","2025-10-02"),
-("20250105000023","registered","401/1/1","2025-10-02"),
-("20250105000024","registered","401/1/2","2025-10-02"),
-("20250105000025","registered","401/1/3","2025-10-02"),
-("20250105000026","registered","401/2/1","2025-10-02"),
-("20250105000027","registered","401/2/2","2025-10-02"),
-("20250105000028","registered","401/2/3","2025-10-02"),
-("20250105000029","registered","402/1/1","2025-10-02"),
-("20250105000030","registered","402/1/2","2025-10-02"),
-("20250105000031","registered","402/1/3","2025-10-02"),
-("20250105000032","registered","402/2/1","2025-10-02"),
-("20250105000033","registered","402/2/2","2025-10-02"),
-("20250105000034","registered","402/2/3","2025-10-02"),
-("20250105000035","registered","403/1/1","2025-10-02"),
-("20250105000036","registered","403/1/2","2025-10-02"),
-("20250105000037","registered","403/2/1","2025-10-02"),
-("20250105000038","registered","403/2/2","2025-10-02"),
-("20250105000039","registered","404/1/1","2025-10-02"),
-("20250105000040","registered","404/1/2","2025-10-02"),
-("20250105000041","registered","404/2/1","2025-10-02"),
-("20250105000042","registered","404/2/2","2025-10-02"),
-("20250105000043","registered","404/2/3","2025-10-02"),
-("20250105000044","registered","501/1/1","2025-10-02"),
-("20250105000045","registered","501/1/2","2025-10-02"),
-("20250105000046","registered","501/1/3","2025-10-02"),
-("20250105000047","registered","501/2/1","2025-10-02"),
-("20250105000048","registered","501/2/2","2025-10-02"),
-("20250105000049","registered","501/2/3","2025-10-02"),
-("20250105000050","registered","502/1/1","2025-10-02"),
-("20250105000051","registered","502/1/2","2025-10-02"),
-("20250105000052","registered","502/1/3","2025-10-02"),
-("20250105000053","registered","502/2/1","2025-10-02"),
-("20250105000055","registered","502/2/3","2025-10-02"),
-("20250105000056","registered","503/1/1","2025-10-02"),
-("20250105000057","registered","503/1/2","2025-10-02"),
-("20250105000058","registered","503/2/1","2025-10-02"),
-("20250105000060","registered","504/1/1","2025-10-02"),
-("20250105000061","registered","504/1/2","2025-10-02"),
-("20250105000062","registered","504/2/1","2025-10-02"),
-("20250105000063","registered","504/2/2","2025-10-02"),
-("20250105000064","registered","504/2/3","2025-10-02"),
-("20250105000066","registered","303/2/3","2025-10-02"),
-("20250105000067","registered","403/2/3","2025-10-02"),
-("20250105000068","registered","503/2/3","2025-10-02"),
-("20250105000069","registered","002/2/2","2025-10-02"),
-("20250105000070","registered","002/2/3","2025-10-02"),
-("20250105000071","registered","002/1/2","2025-10-02"),
-("20250105000072","registered","002/1/3","2025-10-02"),
-("20250105000073","registered","001/2/2","2025-10-02"),
-("20250105000074","registered","001/2/3","2025-10-02"),
-("20250105000075","registered","103/1/2","2025-10-02"),
-("20250105000076","registered","103/2/2","2025-10-02"),
-("20250105000077","registered","103/2/3","2025-10-02"),
-("20250105000078","registered","104/2/2","2025-10-02"),
-("20250105000079","registered","104/2/3","2025-10-02"),
-("20250105000080","registered","203/2/2","2025-10-02"),
-("20250105000081","registered","203/2/3","2025-10-02"),
-("20250105000083","registered","203/1/2","2025-10-02"),
-("20250105000082","registered","104/1/2","2025-10-02"),
-("20250105000001","bed assigned","002/2/1","2025-10-02"),
-("20250105000002","bed assigned","001/2/1","2025-10-02"),
-("20250105000003","bed assigned","002/1/1","2025-10-02"),
-("20250105000004","bed assigned","103/1/1","2025-10-02"),
-("20250105000005","bed assigned","103/2/1","2025-10-02"),
-("20250105000006","bed assigned","104/1/1","2025-10-02"),
-("20250105000007","bed assigned","104/2/1","2025-10-02"),
-("20250105000008","bed assigned","203/1/1","2025-10-02"),
-("20250105000010","bed assigned","204/1/1","2025-10-02"),
-("20250105000011","bed assigned","204/1/2","2025-10-02"),
-("20250105000012","bed assigned","204/2/1","2025-10-02"),
-("20250105000013","bed assigned","204/2/2","2025-10-02"),
-("20250105000014","bed assigned","204/2/3","2025-10-02"),
-("20250105000015","bed assigned","303/1/1","2025-10-02"),
-("20250105000016","bed assigned","303/1/2","2025-10-02"),
-("20250105000017","bed assigned","303/2/1","2025-10-02"),
-("20250105000018","bed assigned","303/2/2","2025-10-02"),
-("20250105000019","bed assigned","304/1/1","2025-10-02"),
-("20250105000020","bed assigned","304/1/2","2025-10-02"),
-("20250105000021","bed assigned","304/2/1","2025-10-02"),
-("20250105000022","bed assigned","304/2/2","2025-10-02"),
-("20250105000023","bed assigned","401/1/1","2025-10-02"),
-("20250105000024","bed assigned","401/1/2","2025-10-02"),
-("20250105000025","bed assigned","401/1/3","2025-10-02"),
-("20250105000026","bed assigned","401/2/1","2025-10-02"),
-("20250105000027","bed assigned","401/2/2","2025-10-02"),
-("20250105000028","bed assigned","401/2/3","2025-10-02"),
-("20250105000029","bed assigned","402/1/1","2025-10-02"),
-("20250105000030","bed assigned","402/1/2","2025-10-02"),
-("20250105000031","bed assigned","402/1/3","2025-10-02"),
-("20250105000032","bed assigned","402/2/1","2025-10-02"),
-("20250105000033","bed assigned","402/2/2","2025-10-02"),
-("20250105000034","bed assigned","402/2/3","2025-10-02"),
-("20250105000035","bed assigned","403/1/1","2025-10-02"),
-("20250105000036","bed assigned","403/1/2","2025-10-02"),
-("20250105000037","bed assigned","403/2/1","2025-10-02"),
-("20250105000038","bed assigned","403/2/2","2025-10-02"),
-("20250105000039","bed assigned","404/1/1","2025-10-02"),
-("20250105000040","bed assigned","404/1/2","2025-10-02"),
-("20250105000041","bed assigned","404/2/1","2025-10-02"),
-("20250105000042","bed assigned","404/2/2","2025-10-02"),
-("20250105000043","bed assigned","404/2/3","2025-10-02"),
-("20250105000044","bed assigned","501/1/1","2025-10-02"),
-("20250105000045","bed assigned","501/1/2","2025-10-02"),
-("20250105000046","bed assigned","501/1/3","2025-10-02"),
-("20250105000047","bed assigned","501/2/1","2025-10-02"),
-("20250105000048","bed assigned","501/2/2","2025-10-02"),
-("20250105000049","bed assigned","501/2/3","2025-10-02"),
-("20250105000050","bed assigned","502/1/1","2025-10-02"),
-("20250105000051","bed assigned","502/1/2","2025-10-02"),
-("20250105000052","bed assigned","502/1/3","2025-10-02"),
-("20250105000053","bed assigned","502/2/1","2025-10-02"),
-("20250105000055","bed assigned","502/2/3","2025-10-02"),
-("20250105000056","bed assigned","503/1/1","2025-10-02"),
-("20250105000057","bed assigned","503/1/2","2025-10-02"),
-("20250105000058","bed assigned","503/2/1","2025-10-02"),
-("20250105000060","bed assigned","504/1/1","2025-10-02"),
-("20250105000061","bed assigned","504/1/2","2025-10-02"),
-("20250105000062","bed assigned","504/2/1","2025-10-02"),
-("20250105000063","bed assigned","504/2/2","2025-10-02"),
-("20250105000064","bed assigned","504/2/3","2025-10-02"),
-("20250105000066","bed assigned","303/2/3","2025-10-02"),
-("20250105000067","bed assigned","403/2/3","2025-10-02"),
-("20250105000068","bed assigned","503/2/3","2025-10-02"),
-("20250105000069","bed assigned","002/2/2","2025-10-02"),
-("20250105000070","bed assigned","002/2/3","2025-10-02"),
-("20250105000071","bed assigned","002/1/2","2025-10-02"),
-("20250105000072","bed assigned","002/1/3","2025-10-02"),
-("20250105000073","bed assigned","001/2/2","2025-10-02"),
-("20250105000074","bed assigned","001/2/3","2025-10-02"),
-("20250105000075","bed assigned","103/1/2","2025-10-02"),
-("20250105000076","bed assigned","103/2/2","2025-10-02"),
-("20250105000077","bed assigned","103/2/3","2025-10-02"),
-("20250105000078","bed assigned","104/2/2","2025-10-02"),
-("20250105000079","bed assigned","104/2/3","2025-10-02"),
-("20250105000080","bed assigned","203/2/2","2025-10-02"),
-("20250105000081","bed assigned","203/2/3","2025-10-02"),
-("20250105000082","bed assigned","104/1/2","2025-10-02"),
-("20250105000083","bed assigned","203/1/2","2025-10-02")
-]
-
+# Insert data into table
 cursor.executemany(
-    "INSERT OR IGNORE INTO guest_metadata (guest_id, name, description,timestamp) VALUES (?, ?,?, ?)",
-    guest_metadata
+    "INSERT OR IGNORE INTO guest_metadata (guest_id, name, description, timestamp) VALUES (?, ?, ?, ?)",
+    [(row['guest_id'], row['name'], row['description'], row['timestamp']) for row in guest_metadata]
 )
-
-
-
-
-
-# cursor.execute('''CREATE TABLE auth_sessions (
-#         session_id TEXT PRIMARY KEY,
-#         user_id INTEGER NOT NULL,
-#         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-#         expires_at TIMESTAMP,
-#         user_agent TEXT,
-#         ip_address TEXT,
-#         revoked INTEGER DEFAULT 0,
-#         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-#     )''')
-#cursor.execute('''CREATE TABLE guest_auth (guest_id VARCHAR (20) PRIMARY KEY, email TEXT UNIQUE, password_hash TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
-#cursor.execute('''CREATE TABLE guest_sessions (session_id TEXT PRIMARY KEY, guest_id VARCHAR (20) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP, user_agent TEXT, ip_address TEXT, revoked INTEGER DEFAULT 0, FOREIGN KEY (guest_id) REFERENCES guests (guest_id) ON DELETE CASCADE)''')
-
 
 
 
@@ -890,8 +698,12 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
 
 
 ########################################
-generate_attendance_records(start_date="2025-11-01", end_date="2025-12-27", total_records=10000);
+generate_attendance_records(start_date="2025-09-01", end_date="2025-11-28", total_records=10000);
 #######################################3
+
+
+
+
 
 
 # 8️⃣ Insert Dummy Guest Faces (fake encodings for demo)
@@ -930,11 +742,13 @@ for person_dir in KNOWN_DIR.iterdir():
             (guest_id, encoding_json)
         )
 
-
 # Commit & Close
 conn.commit()
 conn.close()
 
-print("✅ WhiteHouse.db created/updated with guests, attendance, devices, guest_faces, guest_auth, guest_sessions, guest_password_resets, roles, guest_roles tables!")
 
+subprocess.Popen(["python", ".\webapp\db\dbscript_leave.py"])
 
+print(f"✅ Database created at: {DB_PATH}")
+print("Tables: guests, beds, guest_beds, devices, attendance, roles, guest_roles, guest_auth, guest_sessions, guest_password_resets, guest_metadata, guest_faces, bed_rent_plan, rent_monthly, rent_transactions, payment_screenshots")
+print("Dummy data: guests (~" + str(len(all_guest_ids)) + "), rent_monthly and transactions seeded for many guests.")

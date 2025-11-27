@@ -6,6 +6,8 @@ import json
 from typing import List, Dict
 from fastapi import HTTPException
 import re
+import os, shutil, json, zipfile
+from datetime import datetime
 #from passlib.context import CryptContext
 #import ffmpeg
 
@@ -55,7 +57,7 @@ def create_guest(guest: dict):
     cur.execute("""
         INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
         VALUES (?,?, ?)
-    """, (guest_id, id, datetime.now().strftime("%Y-%m-%d")))
+    """, (guest_id, id,datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     
     conn.commit()
     conn.close()
@@ -74,7 +76,8 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
       - search: case-insensitive substring match on name
       - status: one of ('active','inactive','closed')
     """
-    
+
+
     offset = (page - 1) * limit
     conn = get_connection()
     # conn.row_factory = sqlite3.Row
@@ -96,7 +99,6 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         params.append(f"%{search.lower().strip()}%")
 
     where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
-
     # --- ⚡ Optimized query ---
     # Use LEFT JOIN to include guests even if role/bed missing
     # Use COALESCE for readable defaults
@@ -175,10 +177,14 @@ def delete_guest(guest_id: str):
     try:
         # 🧹 Step 1: Delete associated face encodings first (to maintain referential integrity)
         cur.execute("DELETE FROM guest_faces WHERE guest_id = ?", (guest_id,))
-
+        cur.execute("DELETE FROM guest_auth WHERE guest_id = ?", (guest_id,))
+        cur.execute("DELETE FROM guest_beds WHERE guest_id = ?", (guest_id,))
+        cur.execute("DELETE FROM guest_faces WHERE guest_id = ?", (guest_id,))
+        cur.execute("DELETE FROM guest_metadata WHERE guest_id = ?", (guest_id,))
+        cur.execute("DELETE FROM guest_roles WHERE guest_id = ?", (guest_id,))
+        cur.execute("DELETE FROM guest_sessions WHERE guest_id = ?", (guest_id,))
         # 🧹 Step 2: Now delete the guest record
         cur.execute("DELETE FROM guests WHERE guest_id = ?", (guest_id,))
-
         conn.commit()
 
         # 🧾 Step 3: Check if any guest record was deleted
@@ -199,13 +205,11 @@ def delete_guest(guest_id: str):
 def toggle_guest_status(guest_id: str):
     conn = get_connection()
     cur = conn.cursor()
-
     # Cycle through statuses: active -> leave -> inactive -> closed -> active
     cur.execute("""
         UPDATE guests
         SET status = CASE 
-            WHEN status = 'active' THEN 'leave'
-            WHEN status = 'leave' THEN 'inactive'                
+            WHEN status = 'active' THEN 'inactive'
             WHEN status = 'inactive' THEN 'closed'
             ELSE 'active'
         END
@@ -215,6 +219,7 @@ def toggle_guest_status(guest_id: str):
     conn.commit()
     cur.execute("SELECT guest_id, status FROM guests WHERE guest_id=?", (guest_id,))
     result = cur.fetchone()
+
     conn.close()
 
     if not result:
@@ -224,14 +229,48 @@ def toggle_guest_status(guest_id: str):
 
 
 
-def confirm_guest(guest_id: str):
+# def confirm_guest(guest_id: str):
+#     """
+#     Find the guest JSON file in VIDEOS_PATH and set 'confirmed' = True.
+#     Returns True if updated successfully, False if not found or failed.
+#     """
+#     try:
+#         filepath = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
+        
+#         # Check if the file exists
+#         if not os.path.exists(filepath):
+#             print(f"❌ File not found for guest_id: {guest_id}")
+#             return False
+
+#         # Load JSON data
+#         with open(filepath, "r", encoding="utf-8") as f:
+#             data = json.load(f)
+
+#         # Update confirmed status
+#         data["confirmed"] = True
+
+#         # Save back to the same file
+#         with open(filepath, "w", encoding="utf-8") as f:
+#             json.dump(data, f, indent=2, ensure_ascii=False)
+
+#         print(f"✅ Guest {guest_id} confirmed successfully.")
+#         return True
+
+#     except Exception as e:
+#         print(f"⚠️ Error updating guest {guest_id}: {e}")
+#         return False
+
+
+def confirm_guest(guest_id: str) -> bool:
     """
     Find the guest JSON file in VIDEOS_PATH and set 'confirmed' = True.
     Returns True if updated successfully, False if not found or failed.
     """
     try:
-        filepath = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
         
+        filepath = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
+        json_path = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
+        video_path = os.path.join(VIDEOS_PATH, f"{guest_id}.webm")
         # Check if the file exists
         if not os.path.exists(filepath):
             print(f"❌ File not found for guest_id: {guest_id}")
@@ -249,8 +288,21 @@ def confirm_guest(guest_id: str):
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         print(f"✅ Guest {guest_id} confirmed successfully.")
-        return True
+    # --- Create ZIP containing video + JSON ---
+        
+        zip_folder = os.path.join(VIDEOS_PATH, "ZIP")
+        os.makedirs(zip_folder, exist_ok=True)   # Makes folder if not exists
 
+        # Save zip in ZIP folder
+        zip_filename = f"{guest_id}.zip"
+        zip_path = os.path.join(zip_folder, zip_filename)
+
+        # --- Create ZIP file ---
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(video_path, arcname=f"{guest_id}.webm")
+            zipf.write(json_path, arcname=f"{guest_id}.json")
+        return True
+    
     except Exception as e:
         print(f"⚠️ Error updating guest {guest_id}: {e}")
         return False

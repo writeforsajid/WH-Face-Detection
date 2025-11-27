@@ -8,6 +8,7 @@
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<!-- header styles moved to Header.html -->
 	<link rel="stylesheet" href="./css/style.css">
+		<link rel="stylesheet" href="./css/card-actions.css">
 	<link rel="stylesheet" href="./css/profile.css">
 	
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -421,10 +422,136 @@
 	<div class="page-wrapper">
 		<div id="menu-container"></div>
       <div class="page-header">
-        <div class="page-header-content">
-          <div>
-            <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
-          </div>
+        <div class="profile-section">
+			<div class="profile-card role-owner role-employee">
+				        <div class="actions-container">
+
+							<div
+								class="action-card orange"
+								onclick="window.location.href='/static/attendancedetails.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-user-plus"></i>
+								<div class="text">
+								<p>Attendance</p>
+								<h3>1010</h3>
+								</div>
+							</div>
+							<div
+								class="action-card cyan"
+								onclick="window.location.href='/static/logdetails.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-hand-pointer"></i>
+								<div class="text">
+								<p>MY LOG</p>
+								<h3>379</h3>
+								</div>
+							</div>
+							<div
+								class="action-card green"
+								onclick="window.location.href='/static/faq_section.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-thumbs-up"></i>
+								<div class="text">
+								<p>FAQ</p>
+								<h3>178</h3>
+								</div>
+							</div>
+							<div
+								class="action-card pink"
+								onclick="window.location.href='/static/things_to_remember.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-list-check"></i>
+								<div class="text">
+								<p>Remember</p>
+								<h3>22</h3>
+								</div>
+							</div>
+							<div
+								class="action-card orange"
+								onclick="window.location.href='/static/attendancedetails.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-user-plus"></i>
+								<div class="text">
+								<p>Attendance</p>
+								<h3>1010</h3>
+								</div>
+							</div>
+							<div
+								class="action-card cyan"
+								onclick="window.location.href='/static/logdetails.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-hand-pointer"></i>
+								<div class="text">
+								<p>MY LOG</p>
+								<h3>379</h3>
+								</div>
+							</div>
+							<div
+								class="action-card green"
+								onclick="window.location.href='/static/faq_section.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-thumbs-up"></i>
+								<div class="text">
+								<p>FAQ</p>
+								<h3>178</h3>
+								</div>
+							</div>
+							<div
+								class="action-card pink"
+								onclick="window.location.href='/static/things_to_remember.html'"
+								style="cursor: pointer"
+							>
+								<i class="fas fa-list-check"></i>
+								<div class="text">
+								<p>Remember</p>
+								<h3>22</h3>
+								</div>
+							</div>
+
+						</div>
+				
+
+
+				<div class="metadata-section mt-3 p-3 border rounded shadow-sm bg-light role-owner role-employee">
+						<h6 class="fw-semibold mb-3"><i class="bi bi-pencil-square"></i> Add Metadata</h6>
+						<div class="row g-2" style="align-items: flex-end;">
+							
+							
+							<div class="col-md-3 col-sm-6" >
+									<select id="comboBox">
+										<option value="">-- Choose an option --</option>
+										<option value="Apple">Apple</option>
+										<option value="Banana">Banana</option>
+										<option value="Orange">Orange</option>
+									</select>
+									<input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" />
+
+
+								<!-- <input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" /> -->
+							</div>
+							<div class="col-md-4 col-sm-6">
+								<input type="text" id="meta-desc" class="form-control" placeholder="Description (optional)" />
+							</div>
+							<div class="col-md-3 col-sm-6">
+								<input type="date" id="meta-date" class="form-control" />
+							</div>
+							<div class="col-md-2 col-sm-6 text-end">
+								<button id="btn-add-meta" class="btn btn-primary w-100">
+									<i class="bi bi-plus-circle"></i> Add
+								</button>
+							</div>
+						</div>
+					</div>
+			</div>
+
+			
         </div>
       </div>
 
@@ -468,38 +595,6 @@
 				</div>
 			</div>
 		<!-- Guest Metadata Input Section -->
-			<div class="profile-card">	
-				<div class="metadata-section mt-3 p-3 border rounded shadow-sm bg-light role-owner role-employee">
-						<h6 class="fw-semibold mb-3"><i class="bi bi-pencil-square"></i> Add Metadata</h6>
-						<div class="row g-2" style="align-items: flex-end;">
-							
-							
-							<div class="col-md-3 col-sm-6" >
-									<select id="comboBox">
-										<option value="">-- Choose an option --</option>
-										<option value="Apple">Apple</option>
-										<option value="Banana">Banana</option>
-										<option value="Orange">Orange</option>
-									</select>
-									<input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" />
-
-
-								<!-- <input type="text" id="meta-name" class="form-control" placeholder="Name (e.g., Owner)" /> -->
-							</div>
-							<div class="col-md-4 col-sm-6">
-								<input type="text" id="meta-desc" class="form-control" placeholder="Description (optional)" />
-							</div>
-							<div class="col-md-3 col-sm-6">
-								<input type="date" id="meta-date" class="form-control" />
-							</div>
-							<div class="col-md-2 col-sm-6 text-end">
-								<button id="btn-add-meta" class="btn btn-primary w-100">
-									<i class="bi bi-plus-circle"></i> Add
-								</button>
-							</div>
-						</div>
-					</div>
-			</div>
 
 			<div class="profile-card">	
 

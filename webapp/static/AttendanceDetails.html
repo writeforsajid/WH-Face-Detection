@@ -154,7 +154,7 @@
     <div class="page-header">
       <div class="page-header-content">
         <div>
-          <h1><i class="bi bi-people-fill"></i> Guest Profile — Attendance</h1>
+          <h1><i class="bi bi-people-fill"></i> Guest — Attendance</h1>
         </div>
       </div>
     </div>
@@ -196,8 +196,8 @@
           <thead>
               <tr>
                   <th>ID</th>
-                  <th>Method</th>
                   <th>Device</th>
+                  <th>Date</th>
                   <th>In Time</th>
                   <th>Out Time</th>
               </tr>
@@ -347,8 +347,8 @@ function renderAttendanceTable(data) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${row.id}</td>
-            <td>${row.method}</td>
             <td>${row.device_id}</td>
+            <td>${row.date}</td>
             <td>${row.in_time || ""}</td>
             <td>${row.out_time || ""}</td>
         `;

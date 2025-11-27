@@ -67,45 +67,45 @@
         <div class="actions-container">
           <div
             class="action-card orange"
-            onclick="window.location.href='/static/register.html'"
+            onclick="window.location.href='/static/attendancedetails.html'"
             style="cursor: pointer"
           >
             <i class="fas fa-user-plus"></i>
             <div class="text">
-              <p>REGISTER</p>
+              <p>Attendance</p>
               <h3>1010</h3>
             </div>
           </div>
           <div
             class="action-card cyan"
-            onclick="window.location.href='/static/guests.html'"
+            onclick="window.location.href='/static/logdetails.html'"
             style="cursor: pointer"
           >
             <i class="fas fa-hand-pointer"></i>
             <div class="text">
-              <p>BEDS</p>
+              <p>MY LOG</p>
               <h3>379</h3>
             </div>
           </div>
           <div
             class="action-card green"
-            onclick="window.location.href='/static/historydetails.html'"
+            onclick="window.location.href='/static/faq_section.html'"
             style="cursor: pointer"
           >
             <i class="fas fa-thumbs-up"></i>
             <div class="text">
-              <p>ATTENDANCE</p>
+              <p>FAQ</p>
               <h3>178</h3>
             </div>
           </div>
           <div
             class="action-card pink"
-            onclick="window.location.href='/static/report_guest_presence.html'"
+            onclick="window.location.href='/static/things_to_remember.html'"
             style="cursor: pointer"
           >
             <i class="fas fa-list-check"></i>
             <div class="text">
-              <p>EMPLOYEES</p>
+              <p>Remember</p>
               <h3>22</h3>
             </div>
           </div>
@@ -126,7 +126,7 @@
                     data-theme="green"
                     data-limit="10"
                     data-api="/attendance/guest_logs/"
-                    data-head='["Device","Entry","Exit"]'
+                    data-head='["Device","Date","Entry","Exit"]'
                   ></dash-table>
                 </div>
                 <div class="card vacant" style="padding: 3px">
@@ -157,7 +157,7 @@
             style="cursor: pointer"
             onclick="window.location.href='AttendanceDetails.html'"
           >
-            <i class="fas fa-users"></i> Guests Management
+            <i class="fas fa-users"></i> Guests Area
           </h2>
           <div class="cards-container">
             <div
@@ -182,7 +182,7 @@
                 data-theme="gray"
                 data-limit="10"
                 data-api="/attendance/guest_logs/"
-                data-head='["Device","Entry","Exit"]'
+                data-head='["Device","Date","Entry","Exit"]'
               ></dash-table>
             </div>
             <!-- <span class="card-icon"><i class="fas fa-user-check"></i></span>

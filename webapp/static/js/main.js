@@ -6,7 +6,7 @@ $(document).ready(function () {
     
 
     const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
-    console.log(user.name);
+    
 
     if (!user.name) {
       window.location.href = "login.html";

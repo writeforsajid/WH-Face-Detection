@@ -35,7 +35,7 @@ def process_confirmed_videos():
         
         for jf, data in confirmed_files:
             guest_id = data["guest_id"]
-            name = data["name"]
+            name = data["guest_name"]
             video_path = os.path.join(VIDEOS_PATH, f"{guest_id}.webm")
 
             if not os.path.exists(video_path):
@@ -114,14 +114,14 @@ def process_single_video(video_path: str, guest_data: dict, json_filename: str):
                 # Save cropped face image (for debugging/inspection)
                 face_filename = os.path.join(
                     VIDEOS_PATH,
-                    f"{guest_data.get('name','unknown').replace(' ', '_')}_face_{saved_faces+1}.jpg"
+                    f"{guest_data.get('guest_name','unknown').replace(' ', '_')}_face_{saved_faces+1}.jpg"
                 )
                 cv2.imwrite(face_filename, face_crop)
 
                 # Store encoding
                 encodings.append(enc.tolist())
                 saved_faces += 1
-                print(f"[INFO] Saved cropped face {saved_faces} for {guest_data.get('name','Unknown')} at frame {frame_no}")
+                print(f"[INFO] Saved cropped face {saved_faces} for {guest_data.get('guest_name','Unknown')} at frame {frame_no}")
 
         cap.release()
 
@@ -130,7 +130,7 @@ def process_single_video(video_path: str, guest_data: dict, json_filename: str):
             guest_data["face_encodings"] = encodings
             json_path = os.path.join(VIDEOS_PATH, json_filename)
             save_face_encodings_json(guest_data, encodings, json_path,3)
-            print(f"[SUCCESS] Saved {len(encodings)} encodings + face crops for {guest_data.get('name','Unknown')} → {json_path}")
+            print(f"[SUCCESS] Saved {len(encodings)} encodings + face crops for {guest_data.get('guest_name','Unknown')} → {json_path}")
         else:
             print(f"[INFO] No faces found in {video_path}")
 

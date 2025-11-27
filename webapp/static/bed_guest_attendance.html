@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Bed ↔ Guest Assignments</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!-- header styles moved to Header.html -->
+	
+	<style>
+
+		@media (max-width: 768px) {
+			.welcome-header-content {
+				padding: 0 1rem;
+				flex-direction: column;
+				align-items: stretch;
+				gap: 0.75rem;
+			}
+			.welcome-header h1 {
+				font-size: 1.5rem;
+			}
+			.welcome-header .user-info {
+				font-size: 0.875rem;
+			}
+			.logout-btn, .back-btn {
+				padding: 0.5rem 1rem;
+				font-size: 0.875rem;
+			}
+
+			/* Group header buttons nicely on mobile */
+			.header-actions {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				width: 100%;
+			}
+			.header-actions .back-btn,
+			.header-actions .logout-btn {
+				flex: 1 1 48%;
+				min-width: 140px;
+			}
+
+			/* Top toolbar (Home / Guests) wraps cleanly */
+			.toolbar-actions {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+			}
+			.toolbar-actions .btn {
+				flex: 1 1 48%;
+				min-width: 120px;
+			}
+		} 
+		
+		/* Modal Styles */
+		.modal-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.6);
+			backdrop-filter: blur(5px);
+			z-index: 9998;
+			animation: fadeIn 0.3s ease;
+		}
+		
+		.modal-overlay.active {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		
+		.modal-card {
+			background: white;
+			border-radius: 20px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+			max-width: 600px;
+			width: 90%;
+			max-height: 80vh;
+			overflow: hidden;
+			animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			position: relative;
+			z-index: 9999;
+		}
+		
+		@keyframes fadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+		
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(50px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		
+		.modal-header {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+			color: white;
+			padding: 1.5rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		
+		.modal-header h3 {
+			margin: 0;
+			font-size: 1.5rem;
+			font-weight: 700;
+		}
+		
+		.modal-close {
+			background: rgba(255, 255, 255, 0.2);
+			border: none;
+			color: white;
+			font-size: 1.5rem;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all 0.2s ease;
+		}
+		
+		.modal-close:hover {
+			background: rgba(255, 255, 255, 0.3);
+			transform: rotate(90deg);
+		}
+		
+		.modal-body {
+			padding: 1.5rem;
+			max-height: calc(80vh - 120px);
+			overflow-y: auto;
+		}
+		
+		.inactive-guest-item {
+			padding: 1rem;
+			border: 2px solid #e5e7eb;
+			border-radius: 12px;
+			margin-bottom: 1rem;
+			transition: all 0.3s ease;
+			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		
+		.inactive-guest-item:hover {
+			border-color: #818cf8;
+			background: rgba(129, 140, 248, 0.05);
+			transform: translateX(5px);
+		}
+		
+		.guest-info h5 {
+			margin: 0 0 0.5rem 0;
+			color: #1f2937;
+			font-weight: 600;
+		}
+		
+		.guest-info p {
+			margin: 0;
+			color: #6b7280;
+			font-size: 0.875rem;
+		}
+		
+		.assign-inactive-btn {
+			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+			color: white;
+			border: none;
+			padding: 0.5rem 1.25rem;
+			border-radius: 8px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			white-space: nowrap;
+		}
+		
+		.assign-inactive-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+		}
+		
+		.no-inactive-guests {
+			text-align: center;
+			padding: 3rem 1rem;
+			color: #6b7280;
+		}
+		
+		.no-inactive-guests i {
+			font-size: 3rem;
+			margin-bottom: 1rem;
+			opacity: 0.5;
+		}
+
+		/* Snackbar (Undo) */
+		.snackbar {
+			position: fixed;
+			left: 50%;
+			bottom: 24px;
+			transform: translateX(-50%) translateY(20px);
+			background: rgba(31, 41, 55, 0.95);
+			color: #fff;
+			padding: 0.75rem 1rem;
+			border-radius: 12px;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+			display: none;
+			align-items: center;
+			gap: 1rem;
+			z-index: 10000;
+			animation: snackIn 0.2s ease forwards;
+		}
+		.snackbar.show { display: flex; }
+		.snackbar-message { font-weight: 500; }
+		.snackbar button {
+			background: transparent;
+			border: 0;
+			color: #60a5fa;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 0.25rem 0.5rem;
+			border-radius: 6px;
+		}
+		.snackbar button:hover { color: #93c5fd; text-decoration: underline; }
+		@keyframes snackIn { from { opacity:0; transform: translateX(-50%) translateY(20px);} to { opacity:1; transform: translateX(-50%) translateY(0);} }
+	</style> 
+
+
+
+<script>
+	const API_BASE_URL = (function(){
+		const saved = localStorage.getItem('wh_api_base');
+		if (saved) return saved;
+		if (window.location.port === '8000') return window.location.origin;
+		return window.location.origin;
+	})();
+
+	async function ensureLoggedInOrRedirect() {
+		const token = localStorage.getItem('wh_token');
+		if (!token) {
+			window.location.href = 'login.html';
+			return null;
+		}
+		return token;
+	}
+
+	function getUserInfo() {
+		try {
+			const userJson = localStorage.getItem('wh_user');
+			return userJson ? JSON.parse(userJson) : null;
+		} catch (e) {
+			return null;
+		}
+	}
+
+	function renderRows(items) {
+		const tbody = document.getElementById('rows');
+
+		if (!Array.isArray(items) || items.length === 0) {
+			tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No data</td></tr>`;
+			return;
+		}
+
+		const html = items.map(r => {
+			let guest = r.guest_name && r.guest_id
+				? `<a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" 
+						style="color:#2563eb;text-decoration:underline;font-weight:600;">${r.guest_name}-${r.bed_id || '-'}</a>`
+				: (r.guest_name || '<span>Unassigned</span>');
+
+			let latesttime = formatDateTime(r.latest_attendance_datetime);
+			let attendance_status = r.is_leave ? 'Leave' : r.is_present ? 'Present' : '-';
+
+			return `
+				<tr>
+					<td>${guest}</td>
+					<td>${r.bed_sharing_type || '-'}</td>
+					<td>${attendance_status}</td>
+					<td>${latesttime}</td>
+					<td>${r.latest_device_id || '-'}</td>
+				</tr>
+			`;
+		}).join('');
+
+		tbody.innerHTML = html;
+	}
+
+	function formatDateTime(input) {
+		if (!input) return "-";
+		const date = new Date(input);
+		let day = String(date.getDate()).padStart(2, '0');
+		let month = String(date.getMonth() + 1).padStart(2, '0');
+		let year = date.getFullYear();
+		let hours = date.getHours();
+		let minutes = String(date.getMinutes()).padStart(2, '0');
+		let ampm = hours >= 12 ? 'PM' : 'AM';
+		hours = hours % 12 || 12;
+		return `${day}/${month}/${year} ${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+	}
+
+	async function loadData() {
+		const token = await ensureLoggedInOrRedirect();
+		if (!token) return;
+
+		const statusEl = document.getElementById('status');
+		statusEl.textContent = 'Loading...';
+
+		try {
+			const q = (document.getElementById('searchName').value || '').trim();
+			const st = (document.getElementById('filterStatus').value || '').trim();
+			const sharingTypeFilter = (document.getElementById('filterSharingType').value || '').trim();
+
+			// ✔️ DATE INPUT ADDED
+			let today = document.getElementById('attendanceDate').value.trim();
+			if (!today) {
+				today = new Date().toISOString().split("T")[0]; // default today
+			}
+
+			const params = new URLSearchParams();
+			params.append("attendance_date", today);
+
+			if (q) params.set('search', q);
+			if (st) params.set('status', st);
+			if (sharingTypeFilter) params.append("sharing_type", sharingTypeFilter);
+
+			const url = `${API_BASE_URL}/beds/guest-attendance?${params.toString()}`;
+
+			const res = await fetch(url, {
+				headers: { 'Authorization': `Bearer ${token}` }
+			});
+
+			if (!res.ok) {
+				if (res.status === 401) {
+					window.location.href = 'login.html';
+					return;
+				}
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || `Request failed (${res.status})`);
+			}
+
+			const data = await res.json();
+			renderRows(data);
+			statusEl.textContent = '';
+		} catch (e) {
+			console.error(e);
+			statusEl.textContent = e.message || 'Failed to load';
+		}
+	}
+
+	// ---------------------------
+	// PAGE LOAD + BUTTON CLICK
+	// ---------------------------
+	document.addEventListener('DOMContentLoaded', () => {
+		const today = new Date().toISOString().split("T")[0];
+		document.getElementById("attendanceDate").value = today;
+		// Load data when page opens
+		loadData();
+
+		// ✔️ FETCH BUTTON CLICK
+		document.getElementById("fetchDataBtn").addEventListener("click", () => {
+			loadData();
+		});
+
+		document.getElementById('filterStatus').addEventListener('change', loadData);
+		document.getElementById('filterSharingType').addEventListener('change', loadData);
+
+		let typingTimer = null;
+		document.getElementById('searchName').addEventListener('input', () => {
+			clearTimeout(typingTimer);
+			typingTimer = setTimeout(() => loadData(), 300);
+		});
+	});
+</script>
+
+
+</head>
+<body class="admin-bg">
+	<!-- Shared header will be loaded here -->
+
+	<div class="page-wrapper">
+
+
+			<div id="menu-container"></div>
+
+			<div class="page-header">
+				<div class="page-header-content">
+				<div>
+					<h1><i class="bi bi-people-fill"></i> Bed ↔ Today's Attendance</h1>
+				</div>
+				</div>
+			</div>
+
+
+
+			<div class="card shadow-sm">
+				<div class="card-body">
+					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+						<div class="text-muted" id="status"></div>
+						<div class="d-flex align-items-center" style="gap: .5rem;">
+							<div style="margin-bottom: 15px;">
+								<label>Select Date:</label>
+								<input type="date" id="attendanceDate" />
+
+								<button id="fetchDataBtn">Fetch</button>
+							</div>
+							<div class="input-group input-group-sm" style="width: 260px;">
+								<span class="input-group-text"><i class="bi bi-search"></i></span>
+								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
+							</div>
+							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
+								<option value="">All Statuses</option>
+								<option value="active">Active</option>
+								<option value="inactive">Inactive</option>
+								<option value="closed">Closed</option>
+							</select>
+
+							<select id="filterSharingType" class="form-select form-select-sm" style="width: 180px;">
+								<option value="">All Sharing Types</option>
+								<option value="brass">Brass</option>
+								<option value="silver">Silver</option>
+								<option value="golden">Golden</option>
+							</select>
+							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+						</div>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-striped table-hover align-middle">
+							<thead class="table-dark">
+								<tr>
+									<th>Guest</th>
+									<th>Sharing Type</th>
+									<!-- <th>Assignment ID</th> -->
+									<th>Status</th>
+									<th>latest_attendance_datetime</th>
+									<th>On Camera</th>
+								</tr>
+							</thead>
+							<tbody id="rows"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+	</div>
+
+		<!-- Inactive Guests Modal
+		<div class="modal-overlay" id="inactiveGuestsModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+					<button class="modal-close" onclick="closeModal()">×</button>
+				</div>
+				<div class="modal-body" id="inactiveGuestsBody">
+					
+				</div>
+			</div>
+		</div>  -->
+
+	</div>
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

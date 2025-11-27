@@ -17,7 +17,7 @@ def mark_attendance(data: dict):
         conn.close()
         raise ValueError("Invalid method")
     
-    ts = data.get("timestamp") or datetime.now().isoformat()
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     cur.execute("""
         INSERT INTO attendance (guest_id, method, device_id, timestamp)
@@ -67,7 +67,6 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     cur.execute(f"""
         SELECT 
             a.id,
-            a.method,
             a.device_id,
             a.timestamp,
             g.guest_id,
@@ -78,23 +77,22 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     """, [*params, limit, offset])
     records = cur.fetchall()
     data = []
-
     for row in records:
-        timestamp = row["timestamp"]
-        if not isinstance(timestamp, str):
-            timestamp = timestamp.strftime("%Y-%m-%d %I:%M %p")
+        timestamp_str = row["timestamp"]
+        fulltime=datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+        dt = fulltime.strftime("%Y-%m-%d")
 
         if row["device_id"] == "EXIT_CAM":
-            in_time, out_time = None, timestamp
+            in_time, out_time = None, fulltime.strftime("%I:%M %p")
         else:
-            in_time, out_time = timestamp, None
+            in_time, out_time = fulltime.strftime("%I:%M %p"), None
 
         data.append({
             "id": row["id"],
             "guest_id": row["guest_id"],
             "role_name": row["role_name"],
-            "method": row["method"],
             "device_id": row["device_id"],
+            "date": dt,
             "in_time": in_time,
             "out_time": out_time,
         })
@@ -125,14 +123,16 @@ def get_guest_device_logs(guest_id: str):
     query = """
     SELECT
         device_id AS Device,
-        CASE WHEN device_id = 'LIFT_CAM' THEN timestamp END AS Entry,
-        CASE WHEN device_id = 'EXIT_CAM' THEN timestamp END AS Exit
+        strftime('%d-%m-%Y', timestamp) AS Date,
+        CASE WHEN device_id = 'LIFT_CAM' 
+         THEN strftime('%I:%M %p', "timestamp") END AS Entry,
+        CASE WHEN device_id = 'EXIT_CAM' 
+         THEN strftime('%I:%M %p', "timestamp") END AS Exit
     FROM attendance
     WHERE guest_id = ?
     ORDER BY timestamp DESC
     LIMIT 10
     """
-
     cur.execute(query, (guest_id,))
     rows = [dict(r) for r in cur.fetchall()]   # Convert sqlite row → dict
     conn.close()

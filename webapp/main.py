@@ -10,6 +10,7 @@ from api import metadata as metadata_router
 from api import beds as beds_router
 from api import auth as auth_router
 from api import syst as syst_router
+from api import leave as leave_router
 from db import database
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment
@@ -52,6 +53,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(leave_router.router, prefix="/leave", tags=["Leave"])
 app.include_router(syst_router.router, prefix="/system", tags=["System"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Auth"])
 app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
