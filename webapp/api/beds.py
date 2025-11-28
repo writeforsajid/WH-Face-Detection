@@ -126,6 +126,7 @@ def list_bed_guest_assignments(
     try:
         where_clauses = []
         params: list = []
+
         if status:
             where_clauses.append("LOWER(g.status) = ?")
             params.append(str(status).lower())
@@ -183,7 +184,7 @@ def list_bed_guest_attendance(
         where_clauses = []
         params: list = []
         attendance_params = [attendance_date]
-
+        
         # Filters
         if status:
             where_clauses.append("LOWER(g.status) = ?")
@@ -248,7 +249,7 @@ def list_bed_guest_attendance(
                     FROM leave_calendar_cache lcc
                     JOIN leave_requests lr 
                             ON lr.leave_id = lcc.leave_id
-                    WHERE lr.status = 'approved'
+                    WHERE lr.status = 'pending'
                       AND DATE(lcc.leave_date) = DATE(?)
                 ) AS leave_today
                     ON leave_today.guest_id = g.guest_id

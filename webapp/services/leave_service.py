@@ -120,7 +120,7 @@ def get_unapproved_leaves( startDate, endDate,page, pageSize):
 
     where = []
     params = []
-
+    where.append("status = 'pending'")
     # Optional date filters
     if startDate:
         where.append("date(start_date) >= date(?)")

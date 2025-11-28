@@ -348,7 +348,6 @@
 				const err = await res.json().catch(() => ({}));
 				throw new Error(err.detail || `Request failed (${res.status})`);
 			}
-
 			const data = await res.json();
 			renderRows(data);
 			statusEl.textContent = '';
