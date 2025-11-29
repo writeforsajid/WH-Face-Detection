@@ -1,0 +1,117 @@
+{
+  "assigned_beds": [
+    { "guest_id": "20251128170609", "bed_id": "001/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 1 Room 2 Bed 1" },
+    { "guest_id": "20250105000073", "bed_id": "001/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 1 Room 2 Bed 2" },
+    { "guest_id": "20250105000074", "bed_id": "001/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 1 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000003", "bed_id": "002/1/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 1 Bed 1" },
+    { "guest_id": "20250105000071", "bed_id": "002/1/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 1 Bed 2" },
+    { "guest_id": "20250105000072", "bed_id": "002/1/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 1 Bed 3" },
+
+    { "guest_id": "20250105000001", "bed_id": "002/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 2 Bed 1" },
+    { "guest_id": "20250105000069", "bed_id": "002/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 2 Bed 2" },
+    { "guest_id": "20250105000070", "bed_id": "002/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 0 Flat 2 Room 2 Bed 3" },
+
+    { "guest_id": "20251128171314", "bed_id": "103/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 1 Flat 3 Room 1 Bed 1" },
+    { "guest_id": "20251128163927", "bed_id": "103/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 1 Flat 3 Room 1 Bed 2" },
+
+    { "guest_id": "20251128165415", "bed_id": "103/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 3 Room 2 Bed 1" },
+    { "guest_id": "20250105000076", "bed_id": "103/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 3 Room 2 Bed 2" },
+    { "guest_id": "20250105000077", "bed_id": "103/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 3 Room 2 Bed 3" },
+
+    { "guest_id": "20251128164528", "bed_id": "104/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 1 Flat 4 Room 1 Bed 1" },
+    { "guest_id": "20251128165846", "bed_id": "104/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 1 Flat 4 Room 1 Bed 2" },
+
+    { "guest_id": "20251128163627", "bed_id": "104/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 4 Room 2 Bed 1" },
+    { "guest_id": "20250105000078", "bed_id": "104/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 4 Room 2 Bed 2" },
+    { "guest_id": "20250105000079", "bed_id": "104/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 1 Flat 4 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000008", "bed_id": "203/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 2 Flat 3 Room 1 Bed 1" },
+    { "guest_id": "20250105000083", "bed_id": "203/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 2 Flat 3 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000080", "bed_id": "203/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 3 Room 2 Bed 1" },
+    { "guest_id": "", "bed_id": "203/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 3 Room 2 Bed 2" },
+    { "guest_id": "20251128165206", "bed_id": "203/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 3 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000010", "bed_id": "204/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 2 Flat 4 Room 1 Bed 1" },
+    { "guest_id": "20250105000011", "bed_id": "204/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 2 Flat 4 Room 1 Bed 2" },
+
+    { "guest_id": "20251128170142", "bed_id": "204/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 4 Room 2 Bed 1" },
+    { "guest_id": "20250105000013", "bed_id": "204/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 4 Room 2 Bed 2" },
+    { "guest_id": "20250105000014", "bed_id": "204/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 2 Flat 4 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000015", "bed_id": "303/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 3 Flat 3 Room 1 Bed 1" },
+    { "guest_id": "20250105000016", "bed_id": "303/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 3 Flat 3 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000017", "bed_id": "303/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 3 Room 2 Bed 1" },
+    { "guest_id": "20250105000018", "bed_id": "303/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 3 Room 2 Bed 2" },
+    { "guest_id": "20250105000066", "bed_id": "303/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 3 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000019", "bed_id": "304/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 3 Flat 4 Room 1 Bed 1" },
+    { "guest_id": "20250105000020", "bed_id": "304/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 3 Flat 4 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000021", "bed_id": "304/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 4 Room 2 Bed 1" },
+    { "guest_id": "20250105000022", "bed_id": "304/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 4 Room 2 Bed 2" },
+    { "guest_id": "", "bed_id": "304/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 3 Flat 4 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000023", "bed_id": "401/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 1 Room 1 Bed 1" },
+    { "guest_id": "20250105000024", "bed_id": "401/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 1 Room 1 Bed 2" },
+    { "guest_id": "20250105000025", "bed_id": "401/1/3", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 1 Room 1 Bed 3" },
+
+    { "guest_id": "20251128170948", "bed_id": "401/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 1 Room 2 Bed 1" },
+    { "guest_id": "20251128175942", "bed_id": "401/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 1 Room 2 Bed 2" },
+    { "guest_id": "20251128170956", "bed_id": "401/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 1 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000029", "bed_id": "402/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 2 Room 1 Bed 1" },
+    { "guest_id": "20250105000030", "bed_id": "402/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 2 Room 1 Bed 2" },
+    { "guest_id": "20250105000031", "bed_id": "402/1/3", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 4 Flat 2 Room 1 Bed 3" },
+
+    { "guest_id": "20250105000032", "bed_id": "402/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 2 Room 2 Bed 1" },
+    { "guest_id": "20250105000033", "bed_id": "402/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 2 Room 2 Bed 2" },
+    { "guest_id": "20250105000034", "bed_id": "402/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 2 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000035", "bed_id": "403/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 4 Flat 3 Room 1 Bed 1" },
+    { "guest_id": "20250105000036", "bed_id": "403/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 4 Flat 3 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000037", "bed_id": "403/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 3 Room 2 Bed 1" },
+    { "guest_id": "20250105000038", "bed_id": "403/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 3 Room 2 Bed 2" },
+    { "guest_id": "20250105000067", "bed_id": "403/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 3 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000039", "bed_id": "404/1/1", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 4 Flat 4 Room 1 Bed 1" },
+    { "guest_id": "20250105000040", "bed_id": "404/1/2", "assign_date": "2025-10-02", "sharing_type": "golden", "description": "Floor 4 Flat 4 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000041", "bed_id": "404/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 4 Room 2 Bed 1" },
+    { "guest_id": "20250105000042", "bed_id": "404/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 4 Room 2 Bed 2" },
+    { "guest_id": "20250105000043", "bed_id": "404/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 4 Flat 4 Room 2 Bed 3" },
+
+    { "guest_id": "20251128171859", "bed_id": "501/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 1 Room 1 Bed 1" },
+    { "guest_id": "20250105000045", "bed_id": "501/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 1 Room 1 Bed 2" },
+    { "guest_id": "20251128172936", "bed_id": "501/1/3", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 1 Room 1 Bed 3" },
+
+    { "guest_id": "20250105000047", "bed_id": "501/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 1 Room 2 Bed 1" },
+    { "guest_id": "20250105000048", "bed_id": "501/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 1 Room 2 Bed 2" },
+    { "guest_id": "20251128163635", "bed_id": "501/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 1 Room 2 Bed 3" },
+
+    { "guest_id": "20250105000050", "bed_id": "502/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 2 Room 1 Bed 1" },
+    { "guest_id": "20250105000051", "bed_id": "502/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 2 Room 1 Bed 2" },
+    { "guest_id": "20250105000052", "bed_id": "502/1/3", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 2 Room 1 Bed 3" },
+
+    { "guest_id": "20250105000053", "bed_id": "502/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 2 Room 2 Bed 1" },
+    { "guest_id": "", "bed_id": "502/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 2 Room 2 Bed 2" },
+    { "guest_id": "20251128172025", "bed_id": "502/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 2 Room 2 Bed 3" },
+
+    { "guest_id": "20251128170412", "bed_id": "503/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 3 Room 1 Bed 1" },
+    { "guest_id": "20251128172929", "bed_id": "503/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 3 Room 1 Bed 2" },
+
+    { "guest_id": "20251128172905", "bed_id": "503/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 3 Room 2 Bed 1" },
+    { "guest_id": "20251128172218", "bed_id": "503/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 3 Room 2 Bed 2" },
+    { "guest_id": "", "bed_id": "503/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 3 Room 2 Bed 3" },
+
+    { "guest_id": "20251128171704", "bed_id": "504/1/1", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 4 Room 1 Bed 1" },
+    { "guest_id": "20250105000061", "bed_id": "504/1/2", "assign_date": "2025-10-02", "sharing_type": "silver", "description": "Floor 5 Flat 4 Room 1 Bed 2" },
+
+    { "guest_id": "20250105000062", "bed_id": "504/2/1", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 4 Room 2 Bed 1" },
+    { "guest_id": "20250105000063", "bed_id": "504/2/2", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 4 Room 2 Bed 2" },
+    { "guest_id": "20251128171726", "bed_id": "504/2/3", "assign_date": "2025-10-02", "sharing_type": "brass", "description": "Floor 5 Flat 4 Room 2 Bed 3" }
+  ]
+}

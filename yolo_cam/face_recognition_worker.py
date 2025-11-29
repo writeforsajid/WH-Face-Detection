@@ -25,7 +25,7 @@ load_environment("./../data/.env.yolocam")
 OT=os.getenv("OT")
 if OT is None: OT = "./../data/detected_frames"
 CAMERA_ID = os.getenv("CAMERA_ID")
-if CAMERA_ID is None: CAMERA_ID = "LIFT"
+if CAMERA_ID is None: CAMERA_ID = "LIFT_CAM"
 OT = os.path.join(OT, CAMERA_ID)
 os.makedirs(OT, exist_ok=True)
 
@@ -148,72 +148,6 @@ def get_best_images(files, top_n=3):
 
 
 
-# ---------------------------------------------------
-# FACE CROPPING + RECOGNITION
-# ---------------------------------------------------
-def run_face_recognition_Old(photo_id):
-    """Process saved frames -> detect faces -> save cropped -> encode + attendance."""
-    print(f"[THREAD] Starting recognition for Person {photo_id}...")
-
-    
-    files = get_person_files(photo_id)
-    #--------------------!IMP---------selected_files = select_top_images(files) #!IMPORTANT
-    selected_files = get_best_images(files) #!IMPORTANT
-
-
-    if not selected_files:
-        print(f"[THREAD] No files found for Person {photo_id}")
-        return
-
-    # Create subfolder for cropped faces
-    person_folder = os.path.join(OT, str(photo_id))
-    os.makedirs(person_folder, exist_ok=True)
-
-    if 'known_faces_encodings' not in globals() or not known_faces_encodings:
-        load_known_faces()
-    for f in selected_files:
-        image = face_recognition.load_image_file(f["path"])
-        face_locations = face_recognition.face_locations(image)
-        encodings = face_recognition.face_encodings(image, face_locations)
-        primary_name = os.path.splitext(os.path.basename(f["path"]))[0]
-        imgname = os.path.join(person_folder, f"{primary_name}.jpg")
-        cv2.imwrite(imgname, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        print(f"[INFO] Image saved: {imgname}")
-
-        for i, (loc, enc) in enumerate(zip(face_locations, encodings)):
-            top, right, bottom, left = loc
-            face_img = image[top:bottom, left:right]
-
-            # Save cropped face to subfolder
-            crop_name = os.path.join(person_folder, f"{primary_name}_face_{i+1}.jpg")
-            cv2.imwrite(crop_name, cv2.cvtColor(face_img, cv2.COLOR_RGB2BGR))
-            print(f"[INFO] Cropped face saved: {crop_name}")
-            # Compare current encoding with known faces
-            matches = face_recognition.compare_faces(known_faces_encodings, enc, tolerance=_tolerance)
-            face_distances = face_recognition.face_distance(known_faces_encodings, enc)
-            best_match_index = np.argmin(face_distances) if len(face_distances) > 0 else None
-
-            if True in matches and best_match_index is not None:
-                person_name = known_faces_names[best_match_index]
-                print(f"[INFO] Recognized known person: {person_name}")
-            else:
-                person_name = "unknown"
-                print(f"[INFO] Unknown person detected in {crop_name}")
-
-            # ✅ Always mark attendance
-            mark_attendance(person_name)
-
-    print(f"[THREAD] Recognition complete for {photo_id}.")
-
-
-    is_docker = os.path.exists("/.dockerenv")
-    if is_docker:
-        FileManager.delete_files_from_list(files)
-        FileManager.delete_folder_and_all_contents(person_folder)
-        FileManager.delete_old_files(os.path.dirname(person_folder),5)
-
-
-
 
 # ---------------------------------------------------
 # FACE CROPPING + RECOGNITION
@@ -229,7 +163,7 @@ def run_face_recognition(photo_id):
         photo_id = photo_id.split("_")[0]
     # Otherwise, return the original string
     
-    
+
     selected_files = get_person_files(photo_id)
     #--------------------!IMP---------selected_files = select_top_images(files) #!IMPORTANT
     #selected_files = get_best_images(files) #!IMPORTANT
@@ -238,7 +172,10 @@ def run_face_recognition(photo_id):
     if not selected_files:
         print(f"[THREAD] No files found for Person {photo_id}")
         return
-
+    total_humans = selected_files[0]["person_count"]
+    known_found = 0
+    unknown_found = 0
+    
     # Create subfolder for cropped faces
     person_folder = os.path.join(OT, str(photo_id))
     os.makedirs(person_folder, exist_ok=True)
@@ -246,9 +183,20 @@ def run_face_recognition(photo_id):
     if 'known_faces_encodings' not in globals() or not known_faces_encodings:
         load_known_faces()
     for f in selected_files:
+        # Early stopping
+        if known_found >= total_humans:
+            print(f"[STOP] Enough known faces detected for event {photo_id}")
+            break
+
+        if unknown_found >= (total_humans * 2):
+            print(f"[STOP] Too many unknown faces detected for event {photo_id}")
+            break
+
+
         image = face_recognition.load_image_file(f["path"])
         face_locations = face_recognition.face_locations(image)
         encodings = face_recognition.face_encodings(image, face_locations)
+    
         primary_name = os.path.splitext(os.path.basename(f["path"]))[0]
         imgname = os.path.join(person_folder, f"{primary_name}.jpg")
         cv2.imwrite(imgname, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
@@ -269,9 +217,11 @@ def run_face_recognition(photo_id):
 
             if True in matches and best_match_index is not None:
                 person_name = known_faces_names[best_match_index]
+                known_found += 1
                 print(f"[INFO] Recognized known person: {person_name}")
             else:
                 person_name = "unknown"
+                unknown_found += 1
                 print(f"[INFO] Unknown person detected in {crop_name}")
 
             # ✅ Always mark attendance
@@ -341,61 +291,3 @@ def start_face_recognition_thread(photo_id):
 
 
 
-
-# def select_top_images(files):
-#     """Select top 3 images: priority on person_count, latest, random"""
-#     if not files:
-#         return []
-
-#     files.sort(key=lambda f: (f["person_count"], f["time"]), reverse=True)
-#     top_files = files[:5]
-#     random.shuffle(top_files)
-#     return top_files[:3]
-
-
-# def update_attendance(photo_id):
-#     for person_file in selected_files:
-#         # Extract photo_id from filename
-#         # e.g., Person_21_02_1.jpg -> 21
-#         fname = os.path.basename(person_file["path"])
-#         photo_id = int(fname.split("_")[1])
-#         mark_attendance(photo_id)
-
-
-
-# def run_face_recognition(photo_id): 
-#     """Threaded face recognition for a person with DB attendance."""
-#     print(f"[THREAD] Starting recognition for Person {photo_id}...")
-
-#     files = get_person_files(photo_id)
-#     selected_files = select_top_images(files)
-#     if not selected_files:
-#         print(f"[THREAD] No files found for Person {photo_id}")
-#         return
-
-#     for f in selected_files:
-#         image = face_recognition.load_image_file(f["path"])
-#         encodings = face_recognition.face_encodings(image)
-#         for enc in encodings:
-#             # Compare current encoding with known faces
-#             matches = face_recognition.compare_faces(known_faces_encodings, enc, tolerance=0.8)
-#             face_distances = face_recognition.face_distance(known_faces_encodings, enc)
-#             if len(face_distances) > 0:
-#                 best_match_index = np.argmin(face_distances)
-#                 print(f"[INFO] Face distances: {best_match_index}")
-#             else:
-#                 best_match_index = None
-
-#             if True in matches and best_match_index is not None:
-#                 # ✅ Known person found
-#                 person_name = known_faces_names[best_match_index]
-#                 print(f"[INFO] Recognized known person: {person_name}")
-#             else:
-#                 # 🚨 Unknown person
-#                 person_name = "unknown"
-#                 print(f"[INFO] Unknown person detected in {f['path']}")
-
-#             # ✅ Mark attendance (always)
-#             mark_attendance(person_name)
-
-#     print(f"[THREAD] Recognition complete for {photo_id}.")

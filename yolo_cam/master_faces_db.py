@@ -45,25 +45,55 @@ def generate_guest_id():
 # -----------------------
 # 3️⃣ Insert guest into guests table
 # -----------------------
-def insert_guest(cursor, guest_id, name, guest_type, comments,email,phone_number):
-    cursor.execute("""
-        INSERT INTO guests (guest_id, name,  comments, email,phone_number, status)
-        VALUES (?, ?, ?, ?, ?,?)
-    """, (guest_id, name,  comments,email,phone_number, 'inactive'))
+def insert_guest(cursor, guest_id, name, guest_type, comments, email, phone_number):
     
-    password_hash = crypto.encrypt("Pass@123")  
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # -----------------------
+    # 1️⃣ Check if email already exists
+    # -----------------------
+    cursor.execute("SELECT guest_id FROM guests WHERE email = ?", (email,))
+    existing = cursor.fetchone()
+
+    if existing:
+        # Email exists → Return existing guest_id
+        return existing[0]
+
+    # -----------------------
+    # 2️⃣ Insert into guests table
+    # -----------------------
     cursor.execute("""
-    INSERT OR REPLACE INTO guest_auth (guest_id, password_hash, is_active, created_at, updated_at)
-    VALUES (?, ?, 1, ?, ?)
+        INSERT INTO guests (guest_id, name, comments, email, phone_number, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (guest_id, name, comments, email, phone_number, 'inactive'))
+
+    # -----------------------
+    # 3️⃣ Insert authentication record
+    # -----------------------
+    password_hash = crypto.encrypt("Pass@123")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT OR REPLACE INTO guest_auth 
+        (guest_id, password_hash, is_active, created_at, updated_at)
+        VALUES (?, ?, 1, ?, ?)
     """, (guest_id, password_hash, now, now))
 
+    # -----------------------
+    # 4️⃣ Assign role (resident/employee/other)
+    # -----------------------
+    role_id = 1 if guest_type.lower() == "resident" else \
+              2 if guest_type.lower() == "employee" else \
+              3
 
-    id = 1 if guest_type.lower() == "resident" else 2 if guest_type.lower() == "employee" else 3
     cursor.execute("""
-        INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
-        VALUES (?,?, ?)
-    """, (guest_id, id, datetime.now().strftime("%Y-%m-%d")))
+        INSERT OR IGNORE INTO guest_roles (guest_id, role_id, assigned_at)
+        VALUES (?, ?, ?)
+    """, (guest_id, role_id, datetime.now().strftime("%Y-%m-%d")))
+
+    # -----------------------
+    # 5️⃣ Return new guest_id
+    # -----------------------
+    return guest_id
+
 
 
 
@@ -141,7 +171,7 @@ def process_json_file(cursor, json_file_path):
     try:
         guest_id = generate_guest_id()
 
-        insert_guest(
+        guest_id = insert_guest(
             cursor,
             guest_id,
             data.get("guest_name") or "Unknown",

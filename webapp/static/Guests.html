@@ -99,7 +99,7 @@
 
       function loadGuests(page = 1) {
         $.ajax({
-          url: `${API_BASE_URL}/guests?page=${page}&limit=20`,
+          url: `${API_BASE_URL}/guests?page=${page}&limit=100`,
           type: "GET",
           success: function (data) {
             let rows = "";

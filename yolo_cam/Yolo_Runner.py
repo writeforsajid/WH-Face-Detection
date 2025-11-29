@@ -27,7 +27,7 @@ if DEV_MODE:
 OT=os.getenv("OT")
 if OT is None: OT = "./../data/detected_frames"
 CAMERA_ID = os.getenv("CAMERA_ID")
-if CAMERA_ID is None: CAMERA_ID = "LIFT"
+if CAMERA_ID is None: CAMERA_ID = "LIFT_CAM"
 OT = os.path.join(OT, CAMERA_ID)
 os.makedirs(OT, exist_ok=True)
 
