@@ -150,11 +150,14 @@ def list_bed_guest_assignments(
                 gra.assignment_id AS assignment_id,
                 gra.guest_id AS guest_id,
                 g.name AS guest_name,
-                gra.assign_date AS assign_date
+                gra.assign_date AS assign_date,
+                COUNT(gf.face_id) AS face_count 
             FROM beds b
             LEFT JOIN guest_beds gra ON gra.bed_id = b.bed_id
             LEFT JOIN guests g ON g.guest_id = gra.guest_id
+            LEFT JOIN guest_faces gf ON g.guest_id = gf.guest_id
             {{WHERE_SQL}}
+            GROUP BY b.id, gra.assignment_id
             ORDER BY b.bed_id ASC, gra.assign_date DESC, gra.assignment_id DESC
             """.replace("{WHERE_SQL}", where_sql)
         , params)

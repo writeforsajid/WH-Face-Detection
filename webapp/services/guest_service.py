@@ -108,6 +108,7 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         LEFT JOIN roles AS r ON gr.role_id = r.role_id
         LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
         LEFT JOIN beds AS b ON gb.bed_id = b.bed_id
+        LEFT JOIN guest_faces AS gf ON g.guest_id = gf.guest_id   
         {where_sql}
     """
 
@@ -124,7 +125,8 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
             g.name,
             g.email,
             COALESCE(b.bed_id, '-') AS bed_no,
-            g.status
+            g.status,
+            COUNT(gf.face_id) AS face_count
         {base_query}
         GROUP BY g.guest_id
         ORDER BY g.guest_id DESC

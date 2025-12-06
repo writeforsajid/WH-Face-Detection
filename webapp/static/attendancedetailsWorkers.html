@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script type="module" src="/static/components/employee-filter.js"></script>
+  <style>
+  </style>
+
+
+
+
+</head>
+<body class="admin-bg">
+<!-- Page JS -->
+  <script>
+    /* ============================
+       Configuration & small helpers
+       ============================ */
+
+		let currentFilter = {
+		startDate: new Date().toISOString().split("T")[0],
+		endDate: new Date().toISOString().split("T")[0],
+		employeeId: "all"
+		};
+		document.addEventListener("filter-data", async (e) => {
+          const filter = e.detail;
+		  console.log("Filter Data Received:", filter);
+			currentFilter = {
+				status: "success",
+				message: "Data fetched successfully",
+				filter
+			};
+      debugger;
+      currentFilter=filter;
+      fetchAttendance(1);
+		});
+
+    function formatDate(dStr) {
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    function formatDateTime(dStr) {
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function showLoader(show=true) {
+      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function getTokenHeader() {
+      const token = localStorage.getItem('wh_token') || '';
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    /* ============================
+       Profile loading (keeps original fields)
+       ============================ */
+    async function loadGuestProfile() {
+      // This function only populates profile fields and hides loader when done.
+      // You asked to ignore menu/API specifics — we will still call /guests/{guestId}
+      const token = localStorage.getItem('wh_token');
+      if (!token) { window.location.href = 'login.html'; return; }
+
+      const guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+      if (!guestId) {
+        // no guest -> redirect back
+        return;
+      }
+
+      try {
+        showLoader(true);
+        
+
+
+
+        
+        const res = await fetch(`${API_BASE_URL}/guests/${guestId}`, { headers: { ...getTokenHeader() }});
+        if (!res.ok) throw new Error('Failed to load profile');
+        const data = await res.json();
+
+        // preserve formatting you asked: Name, Guest ID, Active, Bed Assignment, Assigned Date
+        const g = data.guest || {};
+        document.getElementById('guest-name').textContent = g.name || 'Unknown';
+        document.getElementById('guest-id').textContent = g.guest_id || '-';
+        document.getElementById('guest-bed').textContent = g.bed_id || g.bed_no || 'Not Assigned';
+        document.getElementById('guest-assigned').textContent = formatDate(g.assign_date);
+
+        const statusEl = document.getElementById('guest-status');
+        const status = String(g.status || '').toLowerCase();
+        statusEl.className = 'meta-badge';
+        if (status === 'active') { statusEl.classList.add('meta-active'); statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i> Active'; }
+        else if (status === 'inactive') { statusEl.classList.add('meta-inactive'); statusEl.innerHTML = '<i class="bi bi-x-circle-fill"></i> Inactive'; }
+        else if (status === 'closed') { statusEl.classList.add('meta-closed'); statusEl.innerHTML = '<i class="bi bi-slash-circle"></i> Closed'; }
+        else { statusEl.classList.add('meta-inactive'); statusEl.textContent = 'Unknown'; }
+
+      } catch (e) {
+        console.error(e);
+        // keep placeholders
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    /* ============================
+       Attendance fetching and rendering
+       ============================ */
+
+    // default dates: current month
+    function setDefaultDates() {
+				if (!currentFilter) {
+					console.warn("Filter not yet set!");
+				}
+
+				const { startDate, endDate } = currentFilter;
+				debugger;
+				if (!startDate || !endDate) {
+				alert('Select both start and end dates');
+				return;
+				}
+    }
+
+ 
+  </script>
+
+
+
+
+
+
+
+
+
+
+      <!-- Page Header (Full Width) -->
+
+
+
+
+  <div class="page-wrapper">
+    <div id="menu-container"></div>
+
+    
+    <div class="page-header">
+      <div class="page-header-content">
+        <div>
+          <h1><i class="bi bi-people-fill"></i> Guest — Attendance</h1>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Attendance -->
+    <section class="attendance-card" id="attendance-section" aria-live="polite">
+      <!-- <div class="filter-row">
+        <div style="min-width:160px">
+          <label for="start-date">Start Date</label>
+          <input id="start-date" type="date" class="form-control form-control-sm" />
+        </div>
+
+        <div style="min-width:160px">
+          <label for="end-date">End Date</label>
+          <input id="end-date" type="date" class="form-control form-control-sm" />
+        </div>
+
+        <div style="align-self:flex-end">
+          <button id="fetch-btn" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Fetch / Filter</button>
+        </div>
+
+        
+      </div> -->
+  <!-- Custom Web Component -->
+    <employee-filter  data-api="/employees/active"> </employee-filter>
+
+    
+
+
+      <!-- Loading overlay -->
+      <div id="loading-overlay" style="display:none;">
+        <div>
+          <div class="loader-spinner"></div>
+          <div style="text-align:center; margin-top:0.75rem; color:#4c3a97; font-weight:600;">Fetching attendance…</div>
+        </div>
+      </div>
+      <table id="attendanceTable" class="table table-striped table-bordered">
+          <thead>
+              <tr>
+                  <th>ID</th>
+                  <th>Name</th>                  
+                  <th>Device</th>
+                  <th>Date</th>
+                  <th>In Time</th>
+                  <th>Out Time</th>
+              </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+
+
+      <div id="pagination" class="mt-3 d-flex justify-content-center"></div>
+
+      <!-- <nav id="attendance-pagination" class="d-flex justify-content-center mt-3" aria-label="Attendance pagination"></nav> -->
+    </section>
+  </div>
+
+  <!-- Loader -->
+  <div id="loading-overlay" style="display:none;">
+    <div style="text-align:center;">
+      <div class="loader-spinner"></div>
+      <div style="margin-top:10px;color:#4c3a97;font-weight:600">Working…</div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ---------------------------
+    // Configuration & helpers
+    // ---------------------------
+    const API_BASE_URL = (function(){
+      const saved = localStorage.getItem('wh_api_base');
+      if (saved) return saved;
+      if (window.location.port === '8000') return window.location.origin;
+      return window.location.origin;
+    })();
+
+    const PAGE_LIMIT = 50;   // fixed server-side page size per your request
+
+    function showLoader(v=true){ document.getElementById('loading-overlay').style.display = v ? 'flex' : 'none'; }
+    function getTokenHeader(){ const token = localStorage.getItem('wh_token') || ''; return token ? { 'Authorization': `Bearer ${token}` } : {}; }
+
+    function formatDate(dStr){
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+    }
+    function formatDateTime(dStr){
+      if (!dStr) return '-';
+      const d = new Date(dStr);
+      return d.toLocaleString('en-GB', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+
+    // ---------------------------
+
+
+
+
+
+    
+  async function fetchAttendance(page = 1) {
+    
+    const token = localStorage.getItem('wh_token');
+    const userrole = (JSON.parse(localStorage.getItem('wh_user') || '{}').role) || '';
+    let guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+    if (!token) {
+      window.location.href = 'login.html';
+      return;
+    }
+    if (userrole === 'employee' || userrole === 'owner')
+    {
+      guestId = 'all';
+    }
+   
+    if (!guestId) {
+      alert('No guest selected');
+      return;
+    }
+    const { startDate, endDate } = currentFilter;
+    if (!startDate || !endDate) {
+    alert('Select both start and end dates');
+    return;
+    }
+
+    showLoader(true);
+
+
+    try {
+      const url = new URL(`${API_BASE_URL}/attendance/records`);
+      url.searchParams.set('guest_id', guestId);
+      url.searchParams.set('role_name', 'employee');
+      url.searchParams.set('start_date', startDate);
+      url.searchParams.set('end_date', endDate);
+      url.searchParams.set('page', page);
+      url.searchParams.set('limit', PAGE_LIMIT);
+
+      const res = await fetch(url.toString(), {
+        headers: { ...getTokenHeader() }
+      });
+
+      if (!res.ok)
+        throw new Error(`Request failed (${res.status})`);
+
+      debugger;
+      const payload = await res.json();
+      const events = payload.events || payload.attendance || [];
+
+      const meta = {
+        total_pages: payload.total_pages || Math.ceil((payload.total_records || events.length) / PAGE_LIMIT),
+        current_page: payload.current_page || page,
+        total_records: payload.total_records || (payload.total || events.length),
+        limit: payload.limit || PAGE_LIMIT
+      };
+
+
+      renderAttendanceTable(payload.data);          // your render function
+
+      setupPagination(meta.total_records, meta.current_page);
+
+
+    } catch (err) {
+      console.error(err);
+
+      document.getElementById('attendance-pagination').innerHTML = '';
+    } finally {
+      showLoader(false);
+    }
+  }
+
+
+function renderAttendanceTable(data) {
+    const tableBody = document.querySelector("#attendanceTable tbody");
+    if (!tableBody) return;
+
+    tableBody.innerHTML = ""; // Clear old data
+
+    if (!data || data.length === 0) {
+        tableBody.innerHTML = `
+            <tr><td colspan="6" class="text-center text-muted">No records found</td></tr>
+        `;
+        return;
+    }
+
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${row.name}</td>
+            <td>${row.device_id}</td>
+            <td>${row.date}</td>
+            <td>${row.in_time || ""}</td>
+            <td>${row.out_time || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function setupPagination(total, currentPage) {
+    const limit = 50;
+    const totalPages = Math.ceil(total / limit);
+    const pagination = document.getElementById("pagination");
+
+    if (!pagination) return;
+
+    pagination.innerHTML = "";
+
+    // Previous button
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "Prev";
+    prevBtn.className = "btn btn-sm btn-outline-primary me-2";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => fetchAttendance(currentPage - 1);
+    pagination.appendChild(prevBtn);
+
+    // Number buttons
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = `btn btn-sm ${i === currentPage ? "btn-primary" : "btn-outline-primary"} me-1`;
+        btn.onclick = () => fetchAttendance(i);
+        pagination.appendChild(btn);
+    }
+
+    // Next button
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "Next";
+    nextBtn.className = "btn btn-sm btn-outline-primary ms-2";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => fetchAttendance(currentPage + 1);
+    pagination.appendChild(nextBtn);
+}
+
+
+
+
+
+
+
+
+
+    
+
+    </script>
+<script>
+  function initAttendancePage() {
+    console.log("Initializing Attendance Page...");
+
+    // 1️⃣ Default date range
+    //setDefaultDates();
+
+    // 2️⃣ Load guest profile info
+    loadGuestProfile();
+
+    // 3️⃣ Bind fetch button
+    $("#fetch-btn").off("click").on("click", function () {
+		
+      console.log("Fetch button clicked");
+      fetchAttendance(1);
+    });
+
+    
+
+    console.log("Attendance page ready ✅");
+  }
+
+  // When header and layout are ready, call init
+  $(window).on("load", function () {
+    if ($("#fetch-btn").length) {
+      initAttendancePage();
+    } else {
+      console.warn("Attendance UI not ready yet!");
+    }
+  });
+</script>
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

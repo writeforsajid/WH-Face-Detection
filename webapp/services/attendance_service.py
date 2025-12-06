@@ -17,7 +17,7 @@ def mark_attendance(data: dict):
         conn.close()
         raise ValueError("Invalid method")
     
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ts = datetime.isoformat()
     
     cur.execute("""
         INSERT INTO attendance (guest_id, method, device_id, timestamp)
@@ -70,6 +70,7 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
             a.device_id,
             a.timestamp,
             g.guest_id,
+            g.name,
             COALESCE(r.role_name, '-') AS role_name
         {base_query}
         ORDER BY a.timestamp DESC
@@ -79,9 +80,8 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     data = []
     for row in records:
         timestamp_str = row["timestamp"]
-        fulltime=datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+        fulltime=datetime.fromisoformat(timestamp_str)
         dt = fulltime.strftime("%Y-%m-%d")
-
         if row["device_id"] == "EXIT_CAM":
             in_time, out_time = None, fulltime.strftime("%I:%M %p")
         else:
@@ -90,6 +90,7 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
         data.append({
             "id": row["id"],
             "guest_id": row["guest_id"],
+            "name": row["name"],
             "role_name": row["role_name"],
             "device_id": row["device_id"],
             "date": dt,
@@ -102,7 +103,6 @@ def fetch_attendance(guest_id,role_name, start_date, end_date, page, limit):
     total = cur.fetchone()["total"]
 
     conn.close()
-
     return {
         "total": total,
         "page": page,

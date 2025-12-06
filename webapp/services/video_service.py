@@ -59,18 +59,35 @@ async def save_uploaded_video(file, guest_name=None, guest_type=None, comment=No
 
     with open(json_path, "w") as json_file:
         json.dump(guest_data, json_file, indent=4)
+    
+    
 
+    os.makedirs(STATIC_TEMP_PATH, exist_ok=True)
+    #--- Clean temp directory ---
+    for filename in os.listdir(STATIC_TEMP_PATH):
+        file_path = os.path.join(STATIC_TEMP_PATH, filename)
 
-
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)  # delete file or symlink
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)  # delete folder
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
     # --- Replace preview.webm ---
-    dst = os.path.join(STATIC_TEMP_PATH, "preview.webm")
+    
+    
+    
+    dst = os.path.join(STATIC_TEMP_PATH, filename)
     try:
         if os.path.exists(dst):
             os.remove(dst)
     except Exception as e:
         print("Error deleting old preview:", e)
 
-    shutil.copy2(filepath, dst)
+            # Create output folder (same name as video file)
+
+    shutil.copy2(filepath, STATIC_TEMP_PATH)
 
     return {
         "status": "success",
@@ -216,7 +233,6 @@ def confirm_guest(guest_id: str) -> bool:
         filepath = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
         json_path = os.path.join(VIDEOS_PATH, f"{guest_id}.json")
         video_path = os.path.join(VIDEOS_PATH, f"{guest_id}.webm")
-        breakpoint();
         # Check if the file exists
         if not os.path.exists(filepath):
             print(f"❌ File not found for guest_id: {guest_id}")

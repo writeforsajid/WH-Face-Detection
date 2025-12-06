@@ -239,7 +239,7 @@ if __name__ == "__main__":
         if not ret or frame is None or frame.size == 0:
             continue
 
-        thread_video_process()
+        thread_video_process() #Initilize master face video processing registration
         #thread_face_recognition_process()
         # Only run face recognition when no active event (no humans present)
         if not event_active:

@@ -154,7 +154,7 @@
     <div class="page-header">
       <div class="page-header-content">
         <div>
-          <h1><i class="bi bi-people-fill"></i> Guest — Attendance</h1>
+          <h1><i class="bi bi-people-fill"></i> Worker — Attendance</h1>
         </div>
       </div>
     </div>
@@ -196,6 +196,7 @@
           <thead>
               <tr>
                   <th>ID</th>
+                  <th>Name</th>                  
                   <th>Device</th>
                   <th>Date</th>
                   <th>In Time</th>
@@ -276,9 +277,7 @@
       alert('No guest selected');
       return;
     }
-    debugger;
     const { startDate, endDate } = currentFilter;
-    debugger;
     if (!startDate || !endDate) {
     alert('Select both start and end dates');
     return;
@@ -347,6 +346,7 @@ function renderAttendanceTable(data) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td>${row.id}</td>
+            <td>${row.name}</td>
             <td>${row.device_id}</td>
             <td>${row.date}</td>
             <td>${row.in_time || ""}</td>

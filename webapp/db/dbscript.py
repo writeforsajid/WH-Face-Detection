@@ -2,7 +2,7 @@
 
 
 (_venv) PS D:\Working\AI\WH Face Detection>python .\webapp\db\dbscript.py
-
+(_venv) PS D:\Working\AI\WH Face Detection\webapp> uvicorn main:app --reload --host 127.0.0.1 --port 8000 --ssl-keyfile="webapp.key" --ssl-certfile="webapp.crt"
 
 Enhanced SQLite DB script for WhiteHouse project
 - Builds on the uploaded dbscript.py (path: /mnt/data/dbscript.py)
@@ -35,6 +35,7 @@ load_environment("./../../data/.env.webapp")
 from crypto_manager import crypto
 if os.path.exists(DB_PATH):
     os.remove(DB_PATH)
+
 
 
 conn = sqlite3.connect(DB_PATH)
@@ -158,129 +159,6 @@ CREATE TABLE IF NOT EXISTS guest_password_resets (
 
 
 
-# ==========================
-# SQLITE PAYMENT SYSTEM SCHEMA
-# ==========================
-
-# monthly dues generated on 1st
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS monthly_dues (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id TEXT REFERENCES guests(guest_id),
-    year INTEGER NOT NULL,
-    month INTEGER NOT NULL, -- 1..12
-    due_amount REAL NOT NULL,
-    amount_paid REAL DEFAULT 0,
-    status TEXT DEFAULT 'open' CHECK (status IN ('open','partial','paid','adjusted')),
-    created_at TEXT DEFAULT (datetime('now')),
-    UNIQUE (guest_id, year, month)
-);
-""")
-
-# transactions/payments submitted by users
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS payments (
-    payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_by INTEGER REFERENCES users(user_id),
-    guest_id TEXT REFERENCES guests(guest_id),
-    year INTEGER,
-    month INTEGER,
-    amount REAL NOT NULL,
-    mode TEXT NOT NULL CHECK (mode IN ('UPI','CASH','IMPS','DD')),
-    reference TEXT,
-    description TEXT,
-    status TEXT DEFAULT 'submitted' CHECK (status IN (
-        'submitted','forwarded','approved_final','rejected','cancelled'
-    )),
-    current_approver INTEGER REFERENCES users(user_id),
-    created_at TEXT DEFAULT (datetime('now')),
-    approved_at TEXT,
-    approved_by INTEGER REFERENCES users(user_id),
-    final_receipt_url TEXT
-);
-""")
-
-# allocation of payments to dues
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS payment_allocations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
-    monthly_due_id INTEGER REFERENCES monthly_dues(id),
-    allocated_amount REAL NOT NULL
-);
-""")
-
-# attachments (screenshots)
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS payment_attachments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
-    url TEXT NOT NULL,
-    filename TEXT,
-    uploaded_at TEXT DEFAULT (datetime('now'))
-);
-""")
-
-# forwarding chain history
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS payment_forward_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
-    from_user INTEGER REFERENCES users(user_id),
-    to_user INTEGER REFERENCES users(user_id),
-    comment TEXT,
-    forwarded_at TEXT DEFAULT (datetime('now'))
-);
-""")
-
-# approval / rejection actions
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS payment_approval_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payment_id INTEGER REFERENCES payments(payment_id) ON DELETE CASCADE,
-    acted_by INTEGER REFERENCES users(user_id),
-    action TEXT NOT NULL CHECK (action IN ('approved','rejected')),
-    comment TEXT,
-    acted_at TEXT DEFAULT (datetime('now'))
-);
-""")
-
-# ledger on final approval
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ledger_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payment_id INTEGER REFERENCES payments(payment_id),
-    guest_id TEXT REFERENCES guests(guest_id),
-    amount REAL NOT NULL,
-    entry_type TEXT CHECK (entry_type IN ('credit','debit')),
-    created_at TEXT DEFAULT (datetime('now'))
-);
-""")
-
-# security deposit per guest
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS security_deposits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id TEXT REFERENCES guests(guest_id),
-    amount REAL NOT NULL,
-    collected_on TEXT,
-    refunded_amount REAL DEFAULT 0,
-    refunded_on TEXT
-);
-""")
-
-# rent change events
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS rent_change_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id TEXT REFERENCES guests(guest_id),
-    old_rent REAL,
-    new_rent REAL,
-    changed_by INTEGER REFERENCES users(user_id),
-    changed_at TEXT DEFAULT (datetime('now')),
-    reason TEXT
-);
-""")
 
 
 
@@ -436,10 +314,12 @@ cursor.execute("CREATE INDEX IF NOT EXISTS idx_guest_beds_guest ON guest_beds(gu
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_beds_sharing ON beds(sharing_type)")
 
 
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_pay_guest ON payments(guest_id);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_montly_dues_gidyrmm ON  monthly_dues(guest_id, year, month);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_approver ON payments(current_approver);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_allocations_pid ON payment_allocations(payment_id);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_pay_guest ON payments(guest_id);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_montly_dues_gidyrmm ON  monthly_dues(guest_id, year, month);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_approver ON payments(current_approver);")
+# cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_allocations_pid ON payment_allocations(payment_id);")
+
+
 # cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_guest ON leave_requests(guest_id);")
 # cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_dates ON leave_requests(start_date, end_date);")
 # cursor.execute("CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);")
@@ -655,7 +535,6 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
     Example: start_date='2025-01-01', end_date='2025-01-30'
     """
 
-
     start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -685,7 +564,7 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
             # Small % appear — randomly assign
             device_id = random.choice(["EXIT_CAM", "LIFT_CAM"])
 
-        records.append((guest_id, "Face", device_id, timestamp.strftime("%Y-%m-%d %H:%M:%S"), 0))
+        records.append((guest_id, "Face", device_id, timestamp.isoformat(), 0))
     #cursor.execute("DELETE FROM attendance;")
     cursor.executemany(
         "INSERT INTO attendance (guest_id, method, device_id, timestamp, synced) VALUES (?,?,?,?,?)",
@@ -698,7 +577,7 @@ def generate_attendance_records(start_date: str, end_date: str, total_records: i
 
 
 ########################################
-generate_attendance_records(start_date="2025-09-01", end_date="2025-11-28", total_records=10000);
+generate_attendance_records(start_date="2025-09-01", end_date="2025-12-01", total_records=10000);
 #######################################3
 
 
@@ -748,6 +627,7 @@ conn.close()
 
 
 subprocess.Popen(["python", ".\webapp\db\dbscript_leave.py"])
+subprocess.Popen(["python", ".\webapp\db\dbscript_rent.py"])
 
 print(f"✅ Database created at: {DB_PATH}")
 print("Tables: guests, beds, guest_beds, devices, attendance, roles, guest_roles, guest_auth, guest_sessions, guest_password_resets, guest_metadata, guest_faces, bed_rent_plan, rent_monthly, rent_transactions, payment_screenshots")

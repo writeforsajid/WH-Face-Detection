@@ -1,0 +1,202 @@
+[
+  {
+    "id": 1,
+    "title": "Room 101",
+    "name": "Ayesha",
+    "bed_number": 1,
+    "amount": 4500,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2000
+  },
+  {
+    "id": 2,
+    "title": "Room 102",
+    "name": "Rina",
+    "bed_number": 2,
+    "amount": 5000,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2500
+  },
+  {
+    "id": 3,
+    "title": "Room 103",
+    "name": "Nisha",
+    "bed_number": 1,
+    "amount": 4800,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2200
+  },
+  {
+    "id": 4,
+    "title": "Room 104",
+    "name": "Reema",
+    "bed_number": 3,
+    "amount": 5300,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2500
+  },
+  {
+    "id": 5,
+    "title": "Room 105",
+    "name": "Shalini",
+    "bed_number": 1,
+    "amount": 4600,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2000
+  },
+  {
+    "id": 6,
+    "title": "Room 201",
+    "name": "Kiran",
+    "bed_number": 2,
+    "amount": 5500,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2200
+  },
+  {
+    "id": 7,
+    "title": "Room 202",
+    "name": "Meera",
+    "bed_number": 1,
+    "amount": 4700,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2000
+  },
+  {
+    "id": 8,
+    "title": "Room 203",
+    "name": "Pooja",
+    "bed_number": 2,
+    "amount": 5200,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2300
+  },
+  {
+    "id": 9,
+    "title": "Room 204",
+    "name": "Sneha",
+    "bed_number": 3,
+    "amount": 5100,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2400
+  },
+  {
+    "id": 10,
+    "title": "Room 205",
+    "name": "Divya",
+    "bed_number": 1,
+    "amount": 4650,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2000
+  },
+  {
+    "id": 11,
+    "title": "Room 301",
+    "name": "Tina",
+    "bed_number": 2,
+    "amount": 6000,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2500
+  },
+  {
+    "id": 12,
+    "title": "Room 302",
+    "name": "Simran",
+    "bed_number": 1,
+    "amount": 5800,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2400
+  },
+  {
+    "id": 13,
+    "title": "Room 303",
+    "name": "Priya",
+    "bed_number": 3,
+    "amount": 6200,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2600
+  },
+  {
+    "id": 14,
+    "title": "Room 304",
+    "name": "Anjali",
+    "bed_number": 1,
+    "amount": 5900,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2400
+  },
+  {
+    "id": 15,
+    "title": "Room 305",
+    "name": "Monika",
+    "bed_number": 2,
+    "amount": 6100,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2500
+  },
+  {
+    "id": 16,
+    "title": "Room 401",
+    "name": "Komal",
+    "bed_number": 1,
+    "amount": 7000,
+    "state": "Start",
+    "sharing_type": "Single",
+    "security_amount": 3000
+  },
+  {
+    "id": 17,
+    "title": "Room 402",
+    "name": "Sonali",
+    "bed_number": 2,
+    "amount": 6800,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2800
+  },
+  {
+    "id": 18,
+    "title": "Room 403",
+    "name": "Payal",
+    "bed_number": 3,
+    "amount": 6500,
+    "state": "Start",
+    "sharing_type": "3 Sharing",
+    "security_amount": 2700
+  },
+  {
+    "id": 19,
+    "title": "Room 404",
+    "name": "Jasmine",
+    "bed_number": 1,
+    "amount": 6900,
+    "state": "Start",
+    "sharing_type": "2 Sharing",
+    "security_amount": 2800
+  },
+  {
+    "id": 20,
+    "title": "Room 405",
+    "name": "Radhika",
+    "bed_number": 2,
+    "amount": 7100,
+    "state": "Start",
+    "sharing_type": "Single",
+    "security_amount": 3000
+  }
+]

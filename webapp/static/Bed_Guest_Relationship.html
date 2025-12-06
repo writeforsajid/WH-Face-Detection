@@ -307,7 +307,7 @@
 				let guest;
 				if (r.guest_name && r.guest_id) {
 					// Make guest name a clickable link to their details page
-					guest = `<a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
+					guest = `<a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}(${r.face_count || 0})</a>`;
 				} else if (r.guest_name) {
 					guest = r.guest_name;
 				} else {

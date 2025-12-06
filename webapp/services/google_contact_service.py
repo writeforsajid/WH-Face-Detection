@@ -67,13 +67,18 @@ def update_contact(service, resource_name, etag, new_name):
 
     print("Contact updated:", new_name)
 
+def is_docker():
+    return os.path.exists("/.dockerenv")
 
 def add_or_edit_contact(guest_id,name):
+    if not  is_docker():
+        return{
+            "status": 'failed - not in docker'
+            }
     conn = get_connection() 
     cur = conn.cursor()
     cur.execute("SELECT phone_number FROM guests WHERE guest_id = ?", (guest_id,))
     row = cur.fetchone()
-   
     if row:
         phone = row[0]          # Extract phone number
        

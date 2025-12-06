@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException,Query
 from services import attendance_service
 from typing import Optional
 from datetime import date
-
+from datetime import datetime
 router = APIRouter()
 
 @router.post("/")
@@ -19,24 +19,23 @@ def mark_attendance(data: dict):
 def get_attendance():
     return attendance_service.get_attendance()
 
-
 @router.get("/records")
 def get_attendance_records(
-    
     guest_id: str = Query(..., description="ID of the guest"),
     role_name:str = Query(...,description="Role name of the guest"),
-    start_date: date = Query(..., description="Start date in YYYY-MM-DD"),
-    end_date: date = Query(..., description="End date in YYYY-MM-DD"),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD"),
     page: int = Query(1, description="Page number"),
     limit: int = Query(50, description="Records per page"),
 ):
     """
     Fetch attendance records between given dates with pagination.
     """
-    
-    try:
-        result = attendance_service.fetch_attendance(guest_id, role_name, start_date, end_date, page, limit)
 
+    try:
+        start_date = datetime.fromisoformat(start_date).date()
+        end_date = datetime.fromisoformat(end_date).date()
+        result = attendance_service.fetch_attendance(guest_id, role_name, start_date, end_date, page, limit)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not result:

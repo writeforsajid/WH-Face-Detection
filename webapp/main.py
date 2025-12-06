@@ -2,88 +2,91 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+import uvicorn
 import json
-
-# Import routers
-from api import  reports,guests,upload_video,attendance,employees
-from api import metadata as metadata_router
-from api import beds as beds_router
-from api import auth as auth_router
-from api import syst as syst_router
-from api import leave as leave_router
-from db import database
-from dotenv import load_dotenv, find_dotenv
-from utilities.environment_variables import load_environment
 import os
-#load_dotenv(dotenv_path="./data/.env.webapp")
 
-#load_environment("../data/.env.webapp");
+
+# Load environment variables
+from utilities.environment_variables import load_environment
 load_environment("./../data/.env.webapp")
-#load_dotenv(find_dotenv())
 
-# API_IPADDRESS=os.getenv("API_IPADDRESS")
-# if API_IPADDRESS is None: API_IPADDRESS = "http://127.0.0.1:8000"
-
-API_LOCALHOST=os.getenv("API_LOCALHOST")
-if API_LOCALHOST is None: API_LOCALHOST = "http://localhost:8000"
-
-
-# Import routers
-
+API_LOCALHOST = os.getenv("API_LOCALHOST", "https://localhost:8000")
 
 app = FastAPI(title="Face Detection Project", version="1.0")
 
+# Force HTTPS to avoid mixed-content errors
+app.add_middleware(HTTPSRedirectMiddleware)
 
-origins = [
-    # API_IPADDRESS,
-    API_LOCALHOST,
-    # "http://localhost:5500",
-    # "http://127.0.0.1:5500",
-    # "http://localhost:5501",
-    # "http://127.0.0.1:5501",
-    "*"  # Allow all origins for development
-]
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],  # For PROD you can restrict this
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
+# =======================
+# STATIC FILES FIX
+# =======================
+
+# Force static directory path to the container location
+STATIC_DIR = "/app/static"
+def is_docker():
+    return os.path.exists("/.dockerenv")
+
+# Set static directory
+if is_docker():
+    STATIC_DIR = "/app/static"
+else:
+    # Local Windows development path
+   
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+# Validate path
+if not os.path.exists(STATIC_DIR):
+    print("❌ Static directory NOT found:", STATIC_DIR)
+else:
+    print("✔ Static directory loaded:", STATIC_DIR)
+
+# Then mount
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+# =======================
+# Routers
+# =======================
+from api import reports, guests, upload_video, attendance, employees
+from api import metadata as metadata_router
+from api import beds as beds_router
+from api import auth as auth_router
+from api import syst as syst_router
+from api import leave as leave_router
+from api import scheduler as scheduler_router
+from db import database
+
 app.include_router(leave_router.router, prefix="/leave", tags=["Leave"])
 app.include_router(syst_router.router, prefix="/system", tags=["System"])
 app.include_router(auth_router.router, prefix="/auth", tags=["Auth"])
 app.include_router(attendance.router, prefix="/attendance", tags=["Attendance"])
 app.include_router(guests.router, prefix="/guests", tags=["Guests"])
 app.include_router(employees.router, prefix="/employees", tags=["Employees"])
-app.include_router(guests.router, prefix="/login", tags=["login"])
 app.include_router(upload_video.router, prefix="/video", tags=["Video Upload"])
-app_dir = os.path.dirname(os.path.abspath(__file__))
-static_dir = os.path.join(app_dir, "static")
-#videos_dir=os.path.join(app_dir,"../data/videos")
-
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-#app.mount("/videos", StaticFiles(directory=videos_dir), name="videos")
-
-
-
-
-app.include_router(reports.router, tags=["Reports"])
-app.include_router(reports.router, prefix="/reports",tags=["Reports"])
-app.include_router(auth_router.router)
+app.include_router(reports.router, prefix="/reports", tags=["Reports"])
 app.include_router(beds_router.router, prefix="/beds", tags=["Beds"])
-app.include_router(metadata_router.router)
+app.include_router(metadata_router.router, tags=["Metadata"])
 
-
-
-# Startup / Shutdown Events
+# =======================
+# Startup / Shutdown
+# =======================
 @app.on_event("startup")
 async def startup():
-    database.init_db()  # Create tables if not exists
-
+    database.init_db()
+    scheduler_router.start_scheduler()
+    
 @app.get("/")
 def root():
     return {"message": "Welcome to Face Detection API"}
@@ -92,46 +95,51 @@ def root():
 def health():
     return {"status": "ok"}
 
-
+# =======================
+# FAQ Endpoint
+# =======================
 @app.get("/faq", response_class=HTMLResponse)
 def faq():
-    """Return the FAQ page with the FAQ JSON embedded into the page.
-
-    This endpoint reads the static `faq_section.html` fragment and the JSON
-    file `static/Json/faq_questions.json` and returns a full HTML page that
-    includes the static CSS/JS and an embedded `window.FAQ_DATA` variable
-    so the client-side script can render without a secondary fetch.
-    """
     try:
-        # static_dir is defined above as the path to webapp/static
-        faq_fragment_path = os.path.join(static_dir, 'faq_section.html')
-        faq_json_path = os.path.join(static_dir, 'Json', 'faq_questions.json')
+        faq_html = os.path.join(STATIC_DIR, "faq_section.html")
+        faq_json = os.path.join(STATIC_DIR, "Json", "faq_questions.json")
 
-        with open(faq_fragment_path, 'r', encoding='utf-8') as f:
+        with open(faq_html, "r", encoding="utf-8") as f:
             fragment = f.read()
 
-        with open(faq_json_path, 'r', encoding='utf-8') as f:
-            faq_json_text = f.read()
+        with open(faq_json, "r", encoding="utf-8") as f:
+            faq_data = f.read()
 
-        # Build a minimal HTML document that links the same static assets
         html = (
-            '<!doctype html>\n'
-            '<html lang="en">\n'
-            '<head>\n'
-            '  <meta charset="utf-8">\n'
-            '  <meta name="viewport" content="width=device-width,initial-scale=1">\n'
-            '  <title>FAQ</title>\n'
-            '  <link rel="stylesheet" href="/static/css/faq_section.css">\n'
-            '</head>\n'
-            '<body>\n'
-            f'{fragment}\n'
-            f'<script>window.FAQ_DATA = {faq_json_text};</script>\n'
-            '<script src="/static/js/faq_section.js"></script>\n'
-            '</body>\n'
-            '</html>'
+            "<!doctype html><html><head>"
+            '<meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>FAQ</title>'
+            '<link rel="stylesheet" href="/static/css/faq_section.css">'
+            "</head><body>"
+            f"{fragment}"
+            f"<script>window.FAQ_DATA = {faq_data};</script>"
+            '<script src="/static/js/faq_section.js"></script>'
+            "</body></html>"
         )
-        return HTMLResponse(content=html, status_code=200)
+
+        return HTMLResponse(content=html)
     except Exception as e:
         return HTMLResponse(content=f"<pre>Failed to render FAQ: {e}</pre>", status_code=500)
 
 
+if __name__ == "__main__":
+    if is_docker():
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=8443,
+            ssl_keyfile="certs/key.pem",
+            ssl_certfile="certs/cert.pem"
+        )
+    else:
+        uvicorn.run(
+            "main:app",
+            host="127.0.0.1",
+            port=8000
+        )

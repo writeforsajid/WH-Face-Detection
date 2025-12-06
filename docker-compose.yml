@@ -2,29 +2,30 @@ services:
   webapp:
     build:
       context: ./webapp
-      dockerfile: Dockerfile        # 👈 explicitly referencing
+      dockerfile: Dockerfile
     container_name: wh_webapp
+
     env_file: ./data/.env.webapp
+
     environment:
       - API_IPADDRESS=https://webapp:8000
+      - API_LOCALHOST=https://192.168.1.10:8000
       - SSL_CERT_PATH=/certs/webapp.crt
       - SSL_KEY_PATH=/certs/webapp.key
       - DB_PATH=/data/whitehouse.db
-      - VIDEOS_PATH=/data/Videos
       - CERTS_PATH=/data/certs
-      - DETECTED_FRAMES_PATH=/data/detected_frames
       - ENV=prod
-      - API_LOCALHOST=https://192.168.1.10:8000
+
     ports:
       - "8000:8000"
+
     volumes:
-      - ./webapp:/app
-      - ./data:/data           # ✅ shared persistent folder
-      - ./data/videos:/videos
-      - ./data/detected_frames:/detected_frames
-      - ./data/google:/google
-      - ./data/certs:/certs:ro   # ✅ mount certificates (read-only)
+      - ./webapp:/app         # Includes static folder
+      - ./data:/data
+      - ./data/certs:/certs:ro
+
     restart: always
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s

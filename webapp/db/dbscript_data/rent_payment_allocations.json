@@ -1,0 +1,764 @@
+[
+    {
+        "id": 5001,
+        "rent_payment_id": 1001,
+        "monthly_rent_due_id": 1,
+        "allocated_amount": 3018
+    },
+    {
+        "id": 5002,
+        "rent_payment_id": 1002,
+        "monthly_rent_due_id": 1,
+        "allocated_amount": 1982
+    },
+    {
+        "id": 5003,
+        "rent_payment_id": 1003,
+        "monthly_rent_due_id": 1,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5004,
+        "rent_payment_id": 1004,
+        "monthly_rent_due_id": 2,
+        "allocated_amount": 4552
+    },
+    {
+        "id": 5005,
+        "rent_payment_id": 1005,
+        "monthly_rent_due_id": 2,
+        "allocated_amount": 948
+    },
+    {
+        "id": 5006,
+        "rent_payment_id": 1006,
+        "monthly_rent_due_id": 2,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5007,
+        "rent_payment_id": 1007,
+        "monthly_rent_due_id": 3,
+        "allocated_amount": 1757
+    },
+    {
+        "id": 5008,
+        "rent_payment_id": 1008,
+        "monthly_rent_due_id": 4,
+        "allocated_amount": 796
+    },
+    {
+        "id": 5009,
+        "rent_payment_id": 1009,
+        "monthly_rent_due_id": 5,
+        "allocated_amount": 4766
+    },
+    {
+        "id": 5010,
+        "rent_payment_id": 1010,
+        "monthly_rent_due_id": 5,
+        "allocated_amount": 734
+    },
+    {
+        "id": 5011,
+        "rent_payment_id": 1011,
+        "monthly_rent_due_id": 6,
+        "allocated_amount": 1254
+    },
+    {
+        "id": 5012,
+        "rent_payment_id": 1012,
+        "monthly_rent_due_id": 6,
+        "allocated_amount": 3952
+    },
+    {
+        "id": 5013,
+        "rent_payment_id": 1013,
+        "monthly_rent_due_id": 6,
+        "allocated_amount": 794
+    },
+    {
+        "id": 5014,
+        "rent_payment_id": 1014,
+        "monthly_rent_due_id": 7,
+        "allocated_amount": 2073
+    },
+    {
+        "id": 5015,
+        "rent_payment_id": 1015,
+        "monthly_rent_due_id": 7,
+        "allocated_amount": 1585
+    },
+    {
+        "id": 5016,
+        "rent_payment_id": 1016,
+        "monthly_rent_due_id": 8,
+        "allocated_amount": 1270
+    },
+    {
+        "id": 5017,
+        "rent_payment_id": 1017,
+        "monthly_rent_due_id": 9,
+        "allocated_amount": 4969
+    },
+    {
+        "id": 5018,
+        "rent_payment_id": 1018,
+        "monthly_rent_due_id": 9,
+        "allocated_amount": 1031
+    },
+    {
+        "id": 5019,
+        "rent_payment_id": 1019,
+        "monthly_rent_due_id": 10,
+        "allocated_amount": 1773
+    },
+    {
+        "id": 5020,
+        "rent_payment_id": 1020,
+        "monthly_rent_due_id": 10,
+        "allocated_amount": 2155
+    },
+    {
+        "id": 5021,
+        "rent_payment_id": 1021,
+        "monthly_rent_due_id": 11,
+        "allocated_amount": 1561
+    },
+    {
+        "id": 5022,
+        "rent_payment_id": 1022,
+        "monthly_rent_due_id": 11,
+        "allocated_amount": 719
+    },
+    {
+        "id": 5023,
+        "rent_payment_id": 1023,
+        "monthly_rent_due_id": 12,
+        "allocated_amount": 2292
+    },
+    {
+        "id": 5024,
+        "rent_payment_id": 1024,
+        "monthly_rent_due_id": 12,
+        "allocated_amount": 1372
+    },
+    {
+        "id": 5025,
+        "rent_payment_id": 1025,
+        "monthly_rent_due_id": 12,
+        "allocated_amount": 1050
+    },
+    {
+        "id": 5026,
+        "rent_payment_id": 1026,
+        "monthly_rent_due_id": 13,
+        "allocated_amount": 994
+    },
+    {
+        "id": 5027,
+        "rent_payment_id": 1027,
+        "monthly_rent_due_id": 13,
+        "allocated_amount": 2303
+    },
+    {
+        "id": 5028,
+        "rent_payment_id": 1028,
+        "monthly_rent_due_id": 14,
+        "allocated_amount": 643
+    },
+    {
+        "id": 5029,
+        "rent_payment_id": 1029,
+        "monthly_rent_due_id": 14,
+        "allocated_amount": 1137
+    },
+    {
+        "id": 5030,
+        "rent_payment_id": 1030,
+        "monthly_rent_due_id": 15,
+        "allocated_amount": 2139
+    },
+    {
+        "id": 5031,
+        "rent_payment_id": 1031,
+        "monthly_rent_due_id": 15,
+        "allocated_amount": 1372
+    },
+    {
+        "id": 5032,
+        "rent_payment_id": 1032,
+        "monthly_rent_due_id": 16,
+        "allocated_amount": 4539
+    },
+    {
+        "id": 5033,
+        "rent_payment_id": 1033,
+        "monthly_rent_due_id": 16,
+        "allocated_amount": 461
+    },
+    {
+        "id": 5034,
+        "rent_payment_id": 1034,
+        "monthly_rent_due_id": 17,
+        "allocated_amount": 2996
+    },
+    {
+        "id": 5035,
+        "rent_payment_id": 1035,
+        "monthly_rent_due_id": 17,
+        "allocated_amount": 1661
+    },
+    {
+        "id": 5036,
+        "rent_payment_id": 1036,
+        "monthly_rent_due_id": 17,
+        "allocated_amount": 1843
+    },
+    {
+        "id": 5037,
+        "rent_payment_id": 1037,
+        "monthly_rent_due_id": 18,
+        "allocated_amount": 2453
+    },
+    {
+        "id": 5038,
+        "rent_payment_id": 1038,
+        "monthly_rent_due_id": 19,
+        "allocated_amount": 5618
+    },
+    {
+        "id": 5039,
+        "rent_payment_id": 1039,
+        "monthly_rent_due_id": 19,
+        "allocated_amount": 382
+    },
+    {
+        "id": 5040,
+        "rent_payment_id": 1040,
+        "monthly_rent_due_id": 19,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5041,
+        "rent_payment_id": 1041,
+        "monthly_rent_due_id": 20,
+        "allocated_amount": 1421
+    },
+    {
+        "id": 5042,
+        "rent_payment_id": 1042,
+        "monthly_rent_due_id": 21,
+        "allocated_amount": 2932
+    },
+    {
+        "id": 5043,
+        "rent_payment_id": 1043,
+        "monthly_rent_due_id": 21,
+        "allocated_amount": 3068
+    },
+    {
+        "id": 5044,
+        "rent_payment_id": 1044,
+        "monthly_rent_due_id": 22,
+        "allocated_amount": 2248
+    },
+    {
+        "id": 5045,
+        "rent_payment_id": 1045,
+        "monthly_rent_due_id": 22,
+        "allocated_amount": 1789
+    },
+    {
+        "id": 5046,
+        "rent_payment_id": 1046,
+        "monthly_rent_due_id": 22,
+        "allocated_amount": 963
+    },
+    {
+        "id": 5047,
+        "rent_payment_id": 1047,
+        "monthly_rent_due_id": 23,
+        "allocated_amount": 3182
+    },
+    {
+        "id": 5048,
+        "rent_payment_id": 1048,
+        "monthly_rent_due_id": 23,
+        "allocated_amount": 3318
+    },
+    {
+        "id": 5049,
+        "rent_payment_id": 1049,
+        "monthly_rent_due_id": 24,
+        "allocated_amount": 1625
+    },
+    {
+        "id": 5050,
+        "rent_payment_id": 1050,
+        "monthly_rent_due_id": 24,
+        "allocated_amount": 1504
+    },
+    {
+        "id": 5051,
+        "rent_payment_id": 1051,
+        "monthly_rent_due_id": 25,
+        "allocated_amount": 1880
+    },
+    {
+        "id": 5052,
+        "rent_payment_id": 1052,
+        "monthly_rent_due_id": 26,
+        "allocated_amount": 2999
+    },
+    {
+        "id": 5053,
+        "rent_payment_id": 1053,
+        "monthly_rent_due_id": 27,
+        "allocated_amount": 2983
+    },
+    {
+        "id": 5054,
+        "rent_payment_id": 1054,
+        "monthly_rent_due_id": 27,
+        "allocated_amount": 1454
+    },
+    {
+        "id": 5055,
+        "rent_payment_id": 1055,
+        "monthly_rent_due_id": 27,
+        "allocated_amount": 2063
+    },
+    {
+        "id": 5056,
+        "rent_payment_id": 1056,
+        "monthly_rent_due_id": 28,
+        "allocated_amount": 2009
+    },
+    {
+        "id": 5057,
+        "rent_payment_id": 1057,
+        "monthly_rent_due_id": 29,
+        "allocated_amount": 1910
+    },
+    {
+        "id": 5058,
+        "rent_payment_id": 1058,
+        "monthly_rent_due_id": 30,
+        "allocated_amount": 2213
+    },
+    {
+        "id": 5059,
+        "rent_payment_id": 1059,
+        "monthly_rent_due_id": 30,
+        "allocated_amount": 2787
+    },
+    {
+        "id": 5060,
+        "rent_payment_id": 1060,
+        "monthly_rent_due_id": 30,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5061,
+        "rent_payment_id": 1061,
+        "monthly_rent_due_id": 31,
+        "allocated_amount": 3489
+    },
+    {
+        "id": 5062,
+        "rent_payment_id": 1062,
+        "monthly_rent_due_id": 31,
+        "allocated_amount": 3011
+    },
+    {
+        "id": 5063,
+        "rent_payment_id": 1063,
+        "monthly_rent_due_id": 31,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5064,
+        "rent_payment_id": 1064,
+        "monthly_rent_due_id": 32,
+        "allocated_amount": 2711
+    },
+    {
+        "id": 5065,
+        "rent_payment_id": 1065,
+        "monthly_rent_due_id": 32,
+        "allocated_amount": 1606
+    },
+    {
+        "id": 5066,
+        "rent_payment_id": 1066,
+        "monthly_rent_due_id": 33,
+        "allocated_amount": 1177
+    },
+    {
+        "id": 5067,
+        "rent_payment_id": 1067,
+        "monthly_rent_due_id": 33,
+        "allocated_amount": 4323
+    },
+    {
+        "id": 5068,
+        "rent_payment_id": 1068,
+        "monthly_rent_due_id": 34,
+        "allocated_amount": 3954
+    },
+    {
+        "id": 5069,
+        "rent_payment_id": 1069,
+        "monthly_rent_due_id": 34,
+        "allocated_amount": 2046
+    },
+    {
+        "id": 5070,
+        "rent_payment_id": 1070,
+        "monthly_rent_due_id": 35,
+        "allocated_amount": 4936
+    },
+    {
+        "id": 5071,
+        "rent_payment_id": 1071,
+        "monthly_rent_due_id": 35,
+        "allocated_amount": 64
+    },
+    {
+        "id": 5072,
+        "rent_payment_id": 1072,
+        "monthly_rent_due_id": 36,
+        "allocated_amount": 3355
+    },
+    {
+        "id": 5073,
+        "rent_payment_id": 1073,
+        "monthly_rent_due_id": 36,
+        "allocated_amount": 1938
+    },
+    {
+        "id": 5074,
+        "rent_payment_id": 1074,
+        "monthly_rent_due_id": 36,
+        "allocated_amount": 1207
+    },
+    {
+        "id": 5075,
+        "rent_payment_id": 1075,
+        "monthly_rent_due_id": 37,
+        "allocated_amount": 1868
+    },
+    {
+        "id": 5076,
+        "rent_payment_id": 1076,
+        "monthly_rent_due_id": 37,
+        "allocated_amount": 3306
+    },
+    {
+        "id": 5077,
+        "rent_payment_id": 1077,
+        "monthly_rent_due_id": 38,
+        "allocated_amount": 1404
+    },
+    {
+        "id": 5078,
+        "rent_payment_id": 1078,
+        "monthly_rent_due_id": 38,
+        "allocated_amount": 5096
+    },
+    {
+        "id": 5079,
+        "rent_payment_id": 1079,
+        "monthly_rent_due_id": 39,
+        "allocated_amount": 1145
+    },
+    {
+        "id": 5080,
+        "rent_payment_id": 1080,
+        "monthly_rent_due_id": 39,
+        "allocated_amount": 4355
+    },
+    {
+        "id": 5081,
+        "rent_payment_id": 1081,
+        "monthly_rent_due_id": 39,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5082,
+        "rent_payment_id": 1082,
+        "monthly_rent_due_id": 40,
+        "allocated_amount": 2146
+    },
+    {
+        "id": 5083,
+        "rent_payment_id": 1083,
+        "monthly_rent_due_id": 40,
+        "allocated_amount": 4354
+    },
+    {
+        "id": 5084,
+        "rent_payment_id": 1084,
+        "monthly_rent_due_id": 41,
+        "allocated_amount": 2666
+    },
+    {
+        "id": 5085,
+        "rent_payment_id": 1085,
+        "monthly_rent_due_id": 41,
+        "allocated_amount": 1599
+    },
+    {
+        "id": 5086,
+        "rent_payment_id": 1086,
+        "monthly_rent_due_id": 41,
+        "allocated_amount": 735
+    },
+    {
+        "id": 5087,
+        "rent_payment_id": 1087,
+        "monthly_rent_due_id": 42,
+        "allocated_amount": 5301
+    },
+    {
+        "id": 5088,
+        "rent_payment_id": 1088,
+        "monthly_rent_due_id": 42,
+        "allocated_amount": 699
+    },
+    {
+        "id": 5089,
+        "rent_payment_id": 1089,
+        "monthly_rent_due_id": 42,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5090,
+        "rent_payment_id": 1090,
+        "monthly_rent_due_id": 43,
+        "allocated_amount": 1875
+    },
+    {
+        "id": 5091,
+        "rent_payment_id": 1091,
+        "monthly_rent_due_id": 43,
+        "allocated_amount": 3625
+    },
+    {
+        "id": 5092,
+        "rent_payment_id": 1092,
+        "monthly_rent_due_id": 44,
+        "allocated_amount": 4167
+    },
+    {
+        "id": 5093,
+        "rent_payment_id": 1093,
+        "monthly_rent_due_id": 44,
+        "allocated_amount": 1333
+    },
+    {
+        "id": 5094,
+        "rent_payment_id": 1094,
+        "monthly_rent_due_id": 44,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5095,
+        "rent_payment_id": 1095,
+        "monthly_rent_due_id": 45,
+        "allocated_amount": 2832
+    },
+    {
+        "id": 5096,
+        "rent_payment_id": 1096,
+        "monthly_rent_due_id": 46,
+        "allocated_amount": 3888
+    },
+    {
+        "id": 5097,
+        "rent_payment_id": 1097,
+        "monthly_rent_due_id": 47,
+        "allocated_amount": 2083
+    },
+    {
+        "id": 5098,
+        "rent_payment_id": 1098,
+        "monthly_rent_due_id": 47,
+        "allocated_amount": 3070
+    },
+    {
+        "id": 5099,
+        "rent_payment_id": 1099,
+        "monthly_rent_due_id": 47,
+        "allocated_amount": 847
+    },
+    {
+        "id": 5100,
+        "rent_payment_id": 1100,
+        "monthly_rent_due_id": 48,
+        "allocated_amount": 2373
+    },
+    {
+        "id": 5101,
+        "rent_payment_id": 1101,
+        "monthly_rent_due_id": 48,
+        "allocated_amount": 2592
+    },
+    {
+        "id": 5102,
+        "rent_payment_id": 1102,
+        "monthly_rent_due_id": 48,
+        "allocated_amount": 35
+    },
+    {
+        "id": 5103,
+        "rent_payment_id": 1103,
+        "monthly_rent_due_id": 49,
+        "allocated_amount": 4540
+    },
+    {
+        "id": 5104,
+        "rent_payment_id": 1104,
+        "monthly_rent_due_id": 49,
+        "allocated_amount": 460
+    },
+    {
+        "id": 5105,
+        "rent_payment_id": 1105,
+        "monthly_rent_due_id": 50,
+        "allocated_amount": 1117
+    },
+    {
+        "id": 5106,
+        "rent_payment_id": 1106,
+        "monthly_rent_due_id": 50,
+        "allocated_amount": 1700
+    },
+    {
+        "id": 5107,
+        "rent_payment_id": 1107,
+        "monthly_rent_due_id": 51,
+        "allocated_amount": 5023
+    },
+    {
+        "id": 5108,
+        "rent_payment_id": 1108,
+        "monthly_rent_due_id": 51,
+        "allocated_amount": 477
+    },
+    {
+        "id": 5109,
+        "rent_payment_id": 1109,
+        "monthly_rent_due_id": 52,
+        "allocated_amount": 2240
+    },
+    {
+        "id": 5110,
+        "rent_payment_id": 1110,
+        "monthly_rent_due_id": 52,
+        "allocated_amount": 3760
+    },
+    {
+        "id": 5111,
+        "rent_payment_id": 1111,
+        "monthly_rent_due_id": 52,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5112,
+        "rent_payment_id": 1112,
+        "monthly_rent_due_id": 53,
+        "allocated_amount": 2968
+    },
+    {
+        "id": 5113,
+        "rent_payment_id": 1113,
+        "monthly_rent_due_id": 53,
+        "allocated_amount": 1851
+    },
+    {
+        "id": 5114,
+        "rent_payment_id": 1114,
+        "monthly_rent_due_id": 53,
+        "allocated_amount": 1181
+    },
+    {
+        "id": 5115,
+        "rent_payment_id": 1115,
+        "monthly_rent_due_id": 54,
+        "allocated_amount": 920
+    },
+    {
+        "id": 5116,
+        "rent_payment_id": 1116,
+        "monthly_rent_due_id": 54,
+        "allocated_amount": 1216
+    },
+    {
+        "id": 5117,
+        "rent_payment_id": 1117,
+        "monthly_rent_due_id": 55,
+        "allocated_amount": 3330
+    },
+    {
+        "id": 5118,
+        "rent_payment_id": 1118,
+        "monthly_rent_due_id": 55,
+        "allocated_amount": 2170
+    },
+    {
+        "id": 5119,
+        "rent_payment_id": 1119,
+        "monthly_rent_due_id": 56,
+        "allocated_amount": 2817
+    },
+    {
+        "id": 5120,
+        "rent_payment_id": 1120,
+        "monthly_rent_due_id": 56,
+        "allocated_amount": 3183
+    },
+    {
+        "id": 5121,
+        "rent_payment_id": 1121,
+        "monthly_rent_due_id": 57,
+        "allocated_amount": 2007
+    },
+    {
+        "id": 5122,
+        "rent_payment_id": 1122,
+        "monthly_rent_due_id": 58,
+        "allocated_amount": 4560
+    },
+    {
+        "id": 5123,
+        "rent_payment_id": 1123,
+        "monthly_rent_due_id": 58,
+        "allocated_amount": 440
+    },
+    {
+        "id": 5124,
+        "rent_payment_id": 1124,
+        "monthly_rent_due_id": 58,
+        "allocated_amount": 0
+    },
+    {
+        "id": 5125,
+        "rent_payment_id": 1125,
+        "monthly_rent_due_id": 59,
+        "allocated_amount": 1050
+    },
+    {
+        "id": 5126,
+        "rent_payment_id": 1126,
+        "monthly_rent_due_id": 60,
+        "allocated_amount": 1154
+    },
+    {
+        "id": 5127,
+        "rent_payment_id": 1127,
+        "monthly_rent_due_id": 60,
+        "allocated_amount": 1288
+    }
+]

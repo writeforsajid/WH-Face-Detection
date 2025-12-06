@@ -16,6 +16,11 @@
   <style>
     body { background: #f8f9fa; }
     .form-label span { color: #dc3545; }
+    .disabled-field {
+        background: #e9ecef !important;
+        cursor: not-allowed !important;
+        opacity: 0.7;
+      }
   </style>
 
   </head>
@@ -57,16 +62,19 @@
           <div class="col-md-6 col-12">
             <label class="form-label">Guest Type</label>
             <select id="guest_type" name="guest_type" class="form-control">
-              <option value="2">Resident</option>
+              <option value="0">Resident</option>
               <option value="1">Employee</option>
-              <option value="0">Owner</option>
+              <option value="2">Owner</option>
             </select>
           </div>
 
           <div class="col-md-6 col-12">
             <label class="form-label">Bed No <span>*</span></label>
-            <input type="text" id="comment" name="comment" class="form-control" >
-            <!--<div class="invalid-feedback">Please select a bed number.</div> -->
+            <input type="text" id="comment" name="comment" class="form-control">
+  <!-- <div class="invalid-feedback">Please select a bed number.</div> -->
+
+
+            <div class="invalid-feedback">Please select a bed number.</div> 
           </div>
         </div>
 
@@ -128,48 +136,103 @@ let guest_id = null;
 // ------------------ Validate Form ------------------
 async function validateForm() {
   let valid = true;
+
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phonePattern = /^[6-9]\d{9}$/; // Indian mobile format example
+  const phonePattern = /^[6-9]\d{9}$/; 
 
-  $("#guest_name, #email, #phone, #comment").removeClass("is-invalid");
+  const guestType = $("#guest_type").val(); // ⭐ Guest Type
+  const isResident = (guestType === "0");
+  // Remove old error classes
+  $("#guest_name, #email, #phone, #comment, #comment").removeClass("is-invalid");
 
+  // --- Guest Name ---
   if (!$("#guest_name").val().trim()) {
-    $("#guest_name").addClass("is-invalid"); valid = false;
-  }
-  console.log(valid);
-  if (!$("#email").val().trim() || !emailPattern.test($("#email").val().trim())) {
-    $("#email").addClass("is-invalid"); valid = false;
-  }
-  console.log(valid);
-  if (!$("#phone").val().trim() || !phonePattern.test($("#phone").val().trim())) {
-    $("#phone").addClass("is-invalid"); valid = false;
-  }
-  console.log(valid);
-  if (!$("#comment").val().trim()) {
-    $("#comment").addClass("is-invalid"); valid = false;
-  }
-
-   // --- CHECK EMAIL FROM DATABASE USING API ---
-  const email = $("#email").val().trim();
-  try {
-    const response = await fetch(`/guests/validateemail?guest_email=${email}`);
-    const result = await response.json();
-
-    if (result.exists) {
-      $("#email").addClass("is-invalid");
-      $("#email-error").text("Email already exists!");
-      valid = false;
-    }
-  } catch (err) {
-    console.error("API Error:", err);
-    alert("Something went wrong while checking email.");
+    $("#guest_name").addClass("is-invalid");
     valid = false;
   }
 
-  console.log(valid);
+  // --- Phone ---
+  if (!$("#phone").val().trim() || !phonePattern.test($("#phone").val().trim())) {
+    $("#phone").addClass("is-invalid");
+    valid = false;
+  }
+
+
+  if (!isResident) {
+    $("#email, #comment").removeClass("is-invalid");
+    
+    }
+  
+  // ---------------------------
+  // EMAIL + BED VALIDATION LOGIC
+  // ---------------------------
+  const email = $("#email").val().trim();
+  const bed = $("#comment").val().trim();
+
+  if (isResident) {
+    // ⭐ Mandatory for Resident
+    if (!email || !emailPattern.test(email)) {
+      $("#email").addClass("is-invalid");
+      valid = false;
+    }
+
+    if (!bed) {
+      $("#comment").addClass("is-invalid");
+      valid = false;
+    }
+
+    // --- API CHECK ONLY FOR RESIDENT ---
+    if (valid && email) {
+      try {
+        const response = await fetch(`/guests/validateemail?guest_email=${email}`);
+        const result = await response.json();
+
+        if (result.exists) {
+          $("#email").addClass("is-invalid");
+          //$("#email-error").text("Email already exists!");
+          valid = false;
+        }
+      } catch (err) {
+        console.error("API Error:", err);
+        alert("Something went wrong while checking email.");
+        valid = false;
+      }
+    }
+
+  } else {
+    // ⭐ Not mandatory for Employee/Owner (skip checks)
+
+    console.log("Guest type is not Resident → Skipping email & bed validation");
+  }
 
   return valid;
 }
+
+function toggleFields() {
+    const guestType = $("#guest_type").val();
+    const isResident = (guestType === "0"); // 0 = Resident
+    if (isResident) {
+        // ENABLE
+        $("#email").prop("disabled", false).removeClass("disabled-field");
+        $("#comment").prop("disabled", false).removeClass("disabled-field");
+
+    } else {
+        // DISABLE
+        $("#email").prop("disabled", true).addClass("disabled-field");
+        $("#comment").prop("disabled", true).addClass("disabled-field");
+
+        // Remove old validation errors
+        $("#email, #comment").removeClass("is-invalid");
+    }
+}
+
+// Run on change
+$("#guest_type").on("change", toggleFields);
+
+// Run on page load
+$(document).ready(() => {
+    toggleFields();
+});
 
 // ------------------ Start Camera ------------------
 // ------------------ Start Camera ------------------
@@ -278,11 +341,11 @@ function uploadVideo() {
         const videoElement = document.getElementById('videoPreview');
         if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; }
         videoElement.srcObject = null;
-        videoElement.src = `./temp/preview.webm`;
+        videoElement.src = `./temp/`+res.guest_id+`.webm`;
         videoElement.controls = true;
         videoElement.autoplay = true;
         videoElement.muted = false;
-        guest_id = res.guest_id;
+        guest_id = res.guest_id;        
         $("#videoStatus").html("✅ Video uploaded! Showing preview below.");
         $("#btnRetake").removeClass("d-none");
       } else {
@@ -300,11 +363,12 @@ $("#btnRetake").click(() => {
 });
 
 // ------------------ Submit Form ------------------
-$("#guestForm").submit(function (e) {
+$("#guestForm").submit(async function (e) {
   e.preventDefault();
-  if (!validateForm()) return;
+
+  const ok = await validateForm();
+  if (!ok) return;
   if (!guest_id) { alert("Please record video before saving!"); return; }
-  debugger;
   const guest = {
     name: $("#guest_name").val().trim(),
     guest_type: $("#guest_type option:selected").text(),

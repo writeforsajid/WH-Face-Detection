@@ -93,3 +93,41 @@ table {color:#000}
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+
+
+/* ---------------------------
+   Responsive Enhancements
+----------------------------*/
+
+/* Page wrapper responsive padding */
+.page-wrapper {
+    padding-left: clamp(0.5rem, 3vw, 2rem);
+    padding-right: clamp(0.5rem, 3vw, 2rem);
+}
+
+/* Make page header adapt better on mobile */
+.page-header-content h1 {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+}
+
+/* Table responsive fix */
+table th, table td {
+    white-space: nowrap;
+}
+
+/* For small screens force table scrolling */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Buttons should not overflow in small screens */
+@media (max-width: 576px) {
+    .btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    td:nth-child(6) {
+        min-width: 180px;
+    }
+}

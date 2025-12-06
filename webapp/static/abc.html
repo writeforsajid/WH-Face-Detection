@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Workflow — Start → Review1 → Review2 → Final (Fixed & Merged)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- jQuery + jQuery UI -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>
+  <link href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" rel="stylesheet"/>
+
+  <style>
+    :root { --gap:12px; --box-bg:#fbfbff; --card-bg:#fff; --accent:#1971c2; }
+    body { font-family: Inter, Arial, sans-serif; margin:16px; color:#222; }
+    h1 { font-size:18px; margin:0 0 8px 0; }
+
+    /* Tabs */
+    #tabs { margin-top:12px; }
+
+    /* Stage layout */
+    .stage-row { display:flex; gap:var(--gap); align-items:flex-start; flex-wrap:wrap; margin-top:10px; }
+    .main-list, .rep-list {
+      background:var(--box-bg);
+      border:1px solid #e3e6ee;
+      border-radius:8px;
+      padding:12px;
+      box-sizing:border-box;
+    }
+    .main-list { flex:1 1 62%; min-width:260px; }
+    .rep-list  { flex:0 0 34%; min-width:220px; }
+    .items-container {
+      max-height: 350px;       /* Scroll container fix */
+      overflow-y: auto;
+      padding-right:6px;
+      position: relative;
+    }
+
+    /* Item card */
+    .item-card {
+      background:#fff;
+      border:1px solid #dde3ee;
+      border-radius:6px;
+      padding:10px;
+      margin-bottom:8px;
+      cursor:move;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);
+      position:relative;
+    }
+
+    .meta-badge {
+      position:absolute;
+      top:6px;
+      right:6px;
+      background:var(--accent);
+      color:white;
+      font-size:11px;
+      padding:2px 6px;
+      border-radius:12px;
+      display:none;
+    }
+    .visible { display:inline-block !important; }
+
+    .ui-state-highlight {
+      background:#e6f4ff !important;
+      border-color:#8ec7ff !important;
+    }
+
+    /* Save area */
+    .save-row { display:flex; justify-content:space-between; margin-top:8px; }
+    .save-btn {
+      background:var(--accent);
+      border:none;
+      color:white;
+      padding:8px 14px;
+      border-radius:6px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+<h1>Guest Workflow — Start → Review 1 → Review 2 → Final</h1>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tab-start">Start</a></li>
+    <li><a href="#tab-review1">Review 1</a></li>
+    <li><a href="#tab-review2">Review 2</a></li>
+    <li><a href="#tab-final">Final</a></li>
+  </ul>
+
+  <!-- START -->
+  <div id="tab-start">
+      <div class="stage-row">
+          <div class="main-list">
+              <h4>Start</h4>
+              <div class="items-container" id="items-start"></div>
+          </div>
+
+          <div class="rep-list">
+              <h4>Send to Review 1</h4>
+              <div class="items-container" id="rep-start"></div>
+              <div class="save-row">
+                <span></span>
+                <button class="save-btn" data-stage="start">Save → Review 1</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- REVIEW 1 -->
+  <div id="tab-review1">
+    <div class="stage-row">
+      <div class="main-list">
+        <h4>Review 1</h4>
+        <div class="items-container" id="items-review1"></div>
+      </div>
+
+      <div class="rep-list">
+        <h4>Send to Review 2</h4>
+        <div class="items-container" id="rep-review1"></div>
+        <div class="save-row">
+          <span></span>
+          <button class="save-btn" data-stage="review1">Save → Review 2</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW 2 -->
+  <div id="tab-review2">
+    <div class="stage-row">
+      <div class="main-list">
+        <h4>Review 2</h4>
+        <div class="items-container" id="items-review2"></div>
+      </div>
+
+      <div class="rep-list">
+        <h4>Send to Final</h4>
+        <div class="items-container" id="rep-review2"></div>
+        <div class="save-row">
+          <span></span>
+          <button class="save-btn" data-stage="review2">Save → Final</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div id="tab-final">
+    <div class="stage-row">
+      <div class="main-list">
+        <h4>Final</h4>
+        <div class="items-container" id="items-final"></div>
+      </div>
+
+      <div class="rep-list">
+        <h4>Export</h4>
+        <button class="save-btn" id="export-final">Export Final</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- POPUP -->
+<div id="itemDialog" title="Item Details" style="display:none;">
+  <form id="dialogForm">
+    <input type="hidden" id="dlg_id">
+    <label>Description</label>
+    <textarea id="dlg_desc" rows="4" style="width:100%"></textarea>
+
+    <label>UPI</label>
+    <input id="dlg_upi" type="text" style="width:100%" />
+
+    <label>Upload File</label>
+    <input id="dlg_file" type="file" />
+  </form>
+</div>
+
+<script>
+/* State */
+const STAGES = ["start","review1","review2","final"];
+let ITEMS = [];
+let META = {};
+
+const LS_ITEMS = "wf_items_v3";
+const LS_META  = "wf_meta_v3";
+
+/* ---------------------------
+   Load Default Items (Dummy)
+----------------------------*/
+// const DEFAULT_ITEMS = [
+// {
+//     "id": 1,
+//     "title": "Room 101",
+//     "name": "Ayesha",
+//     "bed_number": 1,
+//     "amount": 4500,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2000
+//   },
+//   {
+//     "id": 2,
+//     "title": "Room 102",
+//     "name": "Rina",
+//     "bed_number": 2,
+//     "amount": 5000,
+//     "state": "Start",
+//     "sharing_type": "3 Sharing",
+//     "security_amount": 2500
+//   },
+//   {
+//     "id": 3,
+//     "title": "Room 103",
+//     "name": "Nisha",
+//     "bed_number": 1,
+//     "amount": 4800,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2200
+//   },
+//   {
+//     "id": 4,
+//     "title": "Room 104",
+//     "name": "Reema",
+//     "bed_number": 3,
+//     "amount": 5300,
+//     "state": "Start",
+//     "sharing_type": "3 Sharing",
+//     "security_amount": 2500
+//   },
+//   {
+//     "id": 5,
+//     "title": "Room 105",
+//     "name": "Shalini",
+//     "bed_number": 1,
+//     "amount": 4600,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2000
+//   },
+//   {
+//     "id": 6,
+//     "title": "Room 201",
+//     "name": "Kiran",
+//     "bed_number": 2,
+//     "amount": 5500,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2200
+//   },
+//   {
+//     "id": 7,
+//     "title": "Room 202",
+//     "name": "Meera",
+//     "bed_number": 1,
+//     "amount": 4700,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2000
+//   },
+//   {
+//     "id": 8,
+//     "title": "Room 203",
+//     "name": "Pooja",
+//     "bed_number": 2,
+//     "amount": 5200,
+//     "state": "Start",
+//     "sharing_type": "3 Sharing",
+//     "security_amount": 2300
+//   },
+//   {
+//     "id": 9,
+//     "title": "Room 204",
+//     "name": "Sneha",
+//     "bed_number": 3,
+//     "amount": 5100,
+//     "state": "Start",
+//     "sharing_type": "3 Sharing",
+//     "security_amount": 2400
+//   },
+//   {
+//     "id": 10,
+//     "title": "Room 205",
+//     "name": "Divya",
+//     "bed_number": 1,
+//     "amount": 4650,
+//     "state": "Start",
+//     "sharing_type": "2 Sharing",
+//     "security_amount": 2000
+//   }
+// ];
+const DEFAULT_ITEMS = [
+{ id:1, title:"Guest 1", name:"Amit", amount:1200, bed_number:"A1", state:"start" },
+  { id:2, title:"Guest 2", name:"Riya", amount:900, bed_number:"B3", state:"start" },
+  { id:3, title:"Guest 3", name:"Arjun", amount:1500, bed_number:"C2", state:"start" },
+  { id:4, title:"Guest 4", name:"Priya", amount:700,  bed_number:"A4", state:"start" },
+  { id:5, title:"Guest 5", name:"Rahul", amount:1100, bed_number:"C7", state:"start" }
+];
+
+/* ---------------------------
+   Initialization
+----------------------------*/
+$(function(){
+  $("#tabs").tabs();
+
+  loadAll();
+  renderAll();
+});
+
+/* ---------------------------
+   Load Items / Meta
+----------------------------*/
+function loadAll(){
+    
+  const saved = localStorage.getItem(LS_ITEMS);
+  const savedMeta = localStorage.getItem(LS_META);
+
+  ITEMS = saved ? JSON.parse(saved) : DEFAULT_ITEMS;
+  META = savedMeta ? JSON.parse(savedMeta) : {};
+}
+
+/* ---------------------------
+   Rendering
+----------------------------*/
+function renderAll(){
+  $(".items-container").empty();
+
+  ITEMS.forEach(it=>{
+    const card = makeCard(it);
+    it.state = String(it.state || "start").toLowerCase();
+    $(`#items-${it.state}`).append(card);
+    // debugger;
+});
+
+  attachDnD();   // Reattach drag/drop
+}
+
+/* ---------------------------
+   Make Card
+----------------------------*/
+function makeCard(it){
+  const meta = META[it.id] || {};
+  const hasMeta = meta.desc || meta.upi || meta.fileName;
+
+  const $c = $(`
+    <div class="item-card" data-id="${it.id}">
+      <div class="meta-badge ${hasMeta ? 'visible':''}">●</div>
+      <h6>${it.title} (#${it.id})</h6>
+      <div>Name: ${it.name}</div>
+      <div>Bed: ${it.bed_number}</div>
+      <div>Amount: ₹${it.amount}</div>
+    </div>
+  `);
+  //debugger;
+
+  $c.on("click", function(){
+    openDialog(it.id);
+  });
+
+  return $c;
+}
+
+/* ---------------------------
+   Drag & Drop Fix (scroll friendly)
+----------------------------*/
+function attachDnD(){
+
+  /* 1. Make cards draggable */
+  $(".item-card").draggable({
+    helper:"clone",
+    revert:"invalid",
+    scroll:true,            // important!
+    appendTo:"body",
+    zIndex:9999
+  });
+
+  /* 2. Make rep boxes droppable */
+  $("#rep-start").droppable({
+    accept:"#items-start .item-card",
+    drop:(e,ui)=> moveToRep(ui.draggable, "#rep-start")
+  });
+
+  $("#rep-review1").droppable({
+    accept:"#items-review1 .item-card",
+    drop:(e,ui)=> moveToRep(ui.draggable, "#rep-review1")
+  });
+
+  $("#rep-review2").droppable({
+    accept:"#items-review2 .item-card",
+    drop:(e,ui)=> moveToRep(ui.draggable, "#rep-review2")
+  });
+
+  /* 3. Allow return from rep → main */
+  $("#items-start, #items-review1, #items-review2, #items-final")
+    .droppable({
+      accept:"#rep-start .item-card, #rep-review1 .item-card, #rep-review2 .item-card",
+      drop:(e,ui)=>{
+        $(e.target).append(ui.draggable);
+      }
+    });
+
+}
+
+/* Move to rep box */
+function moveToRep($card, target){
+  $(target).append($card);
+}
+
+/* ---------------------------
+   Save button = Move to next stage
+----------------------------*/
+$(".save-btn").on("click", function(){
+  const stage = $(this).data("stage");
+  const next = STAGES[STAGES.indexOf(stage)+1];
+  const repBox = $(`#rep-${stage}`);
+
+  repBox.find(".item-card").each(function(){
+    const id = $(this).data("id");
+    const item = ITEMS.find(x=>x.id==id);
+    item.state = next;
+    $(`#items-${next}`).append($(this));
+  });
+
+  repBox.empty();
+
+  localStorage.setItem(LS_ITEMS, JSON.stringify(ITEMS));
+});
+
+/* ---------------------------
+   Dialog for meta editing
+----------------------------*/
+function openDialog(id){
+  const m = META[id] || { desc:"", upi:"", fileName:"" };
+
+  $("#dlg_id").val(id);
+  $("#dlg_desc").val(m.desc || "");
+  $("#dlg_upi").val(m.upi || "");
+
+  $("#itemDialog").dialog({
+    modal:true,
+    width:400,
+    buttons:{
+      "Save":function(){
+        const desc = $("#dlg_desc").val();
+        const upi = $("#dlg_upi").val();
+        const file = $("#dlg_file")[0].files[0];
+
+        META[id] = {
+          desc,
+          upi,
+          fileName: file ? file.name : (m.fileName || "")
+        };
+
+        localStorage.setItem(LS_META, JSON.stringify(META));
+
+        // Update badge
+        if(desc || upi || file){
+          $(`.item-card[data-id='${id}']`).find(".meta-badge").addClass("visible");
+        }
+
+        $(this).dialog("close");
+      },
+      "Cancel":function(){ $(this).dialog("close"); }
+    }
+  });
+}
+
+/* ---------------------------
+   Export final
+----------------------------*/
+$("#export-final").on("click", function(){
+  const finalItems = ITEMS.filter(x=>x.state==="final");
+  console.log(finalItems);
+  alert("Exported to console. Replace with API.");
+});
+</script>
+
+</body>
+</html>
