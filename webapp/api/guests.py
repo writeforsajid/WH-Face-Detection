@@ -46,7 +46,11 @@ def _validate_session(token: str) -> str:
 
 
 @router.get("/stats")
-def guests_stats(authorization: Optional[str] = Header(None)) -> Dict[str, int]:
+def guests_stats(
+    authorization: Optional[str] = Header(None),
+    guest_id: str = Query(..., description="ID of the guest",), 
+    ) -> Dict[str, int]:
+    
     """Return guest counts by status and total."""
     token = _require_token(authorization)
     _validate_session(token)
@@ -54,16 +58,29 @@ def guests_stats(authorization: Optional[str] = Header(None)) -> Dict[str, int]:
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT COUNT(*) FROM guests")
-        total = int(cur.fetchone()[0] or 0)
+        cur.execute(f""" 
+            SELECT COUNT(*)
+            FROM attendance
+            WHERE guest_id = ?
+            AND date(replace(timestamp, 'T', ' ')) = date('now', 'localtime');        
+        """, (guest_id,))
+        
+        
+        attendance = int(cur.fetchone()[0] or 0)
 
-        counts = {"active": 0, "inactive": 0, "closed": 0}
-        cur.execute("SELECT status, COUNT(*) FROM guests GROUP BY status")
-        for s, c in cur.fetchall():
-            if s:
-                counts[str(s).lower()] = int(c or 0)
+        cur.execute(f""" 
+        SELECT 
+            (SUM(due_amount) - SUM(amount_paid)) AS balance
+        FROM dues
+        WHERE guest_id = ?;   
+        """, (guest_id,))
+        
+        
+        totaldue = int(cur.fetchone()[0] or 0)
 
-        return {"total": total, **counts}
+
+
+        return {"attendance": attendance, "totaldue": totaldue,}
     finally:
         conn.close()
 
@@ -105,6 +122,22 @@ def get_active_guests():
  
     try:
         result = guest_service.get_active_guests()
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="Attendance data not found")
+    return result
+  
+
+@router.get("/activeReviewers")
+def get_active_reviewers():
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+ 
+    try:
+        result = guest_service.get_active_reviewers()
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script type="module" src="/static/components/employee-filter.js"></script>
+  <script type="module" src="/static/components/smart-table.js"></script>
+
+	<!-- <script type="module" src="/static/components/employee-filter.js"></script> -->
+	
+	<style>
+    body {
+        font-family: Arial;
+        padding: 20px;
+        /* max-width: 450px; */
+        margin: auto;
+    }
+    label {
+        display: block;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 20px;
+        padding: 12px;
+        width: 100%;
+        background: #0275d8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #025aa5;
+    }
+    .error {
+        color: red;
+        margin-top: 5px;
+    }
+</style>
+
+</head>
+<body class="admin-bg">
+  <!-- Loading overlay removed for FAQ page -->
+	<!-- Main Content -->
+	<div class="page-wrapper">
+		<div id="menu-container"></div>
+    <div class="page-header">
+      <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Rental Month Records</h1>
+          </div>
+
+    </div>
+    <div class="card">
+      <div class="card-body" style='padding: 10px 2%;'>
+
+
+
+      <employee-filter  data-api="/guests/active"> </employee-filter>
+    
+
+      <smart-table
+        id="leaveTable"
+        data-api="/rentalmonth/records"
+        data-title="Rents status"
+        data-id-key="id" 
+        data-auto-load="false"
+        data-columns='[
+          {"key":"id","label":"ID"},
+          {"key":"guest_name","label":"Guest Name"},
+          {"key":"due_type_name","label":"Due Type"},          
+          {"key":"year","label":"Year"},
+          {"key":"month","label":"Month"},
+          {"key":"due_amount","label":"Due_Amount"},
+          {"key":"amount_paid","label":"Amount_Paid"},
+          {"key":"status","label":"Status"},
+          {"key":"created_at","label":"Created At"}
+        ]'
+        data-actions='["approve","reject","delete"]'
+      >
+      </smart-table>
+
+      </div>
+    
+    
+    </div>
+  
+  </div>
+
+    <!-- APPROVAL CONFIRMATION MODAL -->
+  <div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="color: #000;">
+
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="bi bi-check-circle"></i> Confirm Approval</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>Are you sure you want to approve the selected record(s)?</p>
+          <div id="approveList" class="p-2 bg-light border rounded" style="max-height:150px; overflow:auto;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="confirmApproveBtn" type="button" class="btn btn-success">
+            Yes, Approve
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+
+
+  <script>
+    
+  let currentFilter = {
+  start_date: new Date().toISOString().split("T")[0],
+  end_date: new Date().toISOString().split("T")[0],
+  guest_id: "all"
+  };
+  document.addEventListener("filter-data", async (e) => {
+    const filter = e.detail;  
+    const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+    const guestId = user.guest_id || '';
+    const role = user.role || '';
+    console.log("Received DATA:", filter);
+    //let filter = document.getElementById("logFilter");
+    let table = document.getElementById("leaveTable");
+
+
+
+    table.setParams({
+      guest_id:  "all",
+      start_date: filter.startDate,
+      end_date: filter.endDate,
+
+    });
+    table.load();  
+
+    currentFilter = {
+    status: "success",
+    message: "Data fetched successfully",
+    filter
+  };
+});
+    
+  </script>
+
+<script>
+customElements.whenDefined("smart-table").then(() => {
+    const table = document.getElementById("leaveTable");
+
+    // APPLY FORMATTERS
+    table.setFormatters({
+        start_date: (v) => v ? new Date(v).toLocaleDateString("en-GB") : "",
+        end_date: (v) => v ? new Date(v).toLocaleDateString("en-GB") : "",
+        status: (v) => (v || "").toString().toUpperCase()
+    });
+
+    // DEFAULT FILTER INIT
+    table.setParams({
+        guest_id:  "all",
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: new Date().toISOString().split("T")[0]
+    });
+    // listen to bulk actions — event name = action
+    table.addEventListener("approve", e => {
+        const rows = e.detail.rows;
+        console.log("Approve bulk:", rows);
+
+        // Put selected rows in modal list
+        const list = rows.map(r => `<div>✔ ID: ${r.id} — Month: ${r.month}/${r.year}</div>`).join("");
+        document.getElementById("approveList").innerHTML = list;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById("approveModal"));
+        modal.show();
+
+        // Handle confirm button
+        document.getElementById("confirmApproveBtn").onclick = async () => {
+            console.log("User confirmed approval:", rows);
+
+            // Example API call
+            try {
+                const res = await fetch("/rentalmonth/approve", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ rows })
+                });
+
+                alert("Approved successfully!");
+                modal.hide();
+                table.load();
+            } catch (err) {
+                alert("Error approving records.");
+            }
+        };
+    });
+
+
+    table.addEventListener("delete", e => {
+      const rows = e.detail.rows;
+      console.log("Delete bulk:", rows);
+    });
+    // INITIAL LOAD
+    table.load();
+});
+</script>
+
+
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guest Rental</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+         <link rel="stylesheet" href="./css/style.css">
+	<link rel="stylesheet" href="/static/css/components/employee-filter.css">
+
+      
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script type="module" src="/static/components/employee-filter.js"></script>
+  <script type="module" src="/static/components/gen-table.js" ></script>
+<style>
+
+/* Headings */
+.h-center { text-align: center; margin-bottom: 20px; }
+
+/* Flex utilities */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-between { justify-content: space-between; }
+.flex-center { justify-content: center; }
+.items-start { align-items: start; }
+
+/* Spacing */
+.mb-20 { margin-bottom: 20px; }
+.mt-25 { margin-top: 25px; }
+.gap-20 { gap: 20px; }
+.p-6 { padding: 6px; }
+.p-8 { padding: 8px; }
+.px-16 { padding: 8px 16px; }
+
+/* Width */
+.w-100 { width: 100%; }
+.minw-320 { min-width: 320px; }
+.maxw-48 { max-width: 48%; }
+
+/* Backgrounds & Borders */
+.bg-white { background: white; }
+.bg-light { background: #f1f1f1; }
+.bg-light2 { background: #eaeaea; }
+.border { border: 1px solid #ccc; }
+.round-6 { border-radius: 6px; }
+
+/* Table/UI Colors */
+.text-blue { color: #0056b3; }
+.text-red { color: red; font-weight: bold; }
+
+/* Shadow */
+.shadow { box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+/* Table */
+.table { border-collapse: collapse; color:#0056b3; }
+.thead-sticky { background: #eaeaea; position: sticky; top: 0; z-index: 2; }
+.td { padding: 6px 8px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+
+/* Scroll */
+.scroll-220 { height: 220px; overflow-y: auto; }
+
+/* Hover */
+.btn-hover:hover { background: #0056b3; }
+
+/* Input */
+.input-date { padding: 6px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .flex-col-m { flex-direction: column; }
+    .w-90-m { width: 90%; }
+    .maxw-100-m { max-width: 100%; }
+}
+
+    
+</style>
+<style>
+  .mode-btn.active {
+    background: #007bff;
+    color: white !important;
+    font-weight: bold;
+  }
+  .page-header{padding: 1rem;}
+  .filter-field { margin-top: 10px; }
+  .filter-field label { font-weight: bold; margin-bottom: 3px; display: block; }
+  #paymentForm input, #paymentForm textarea {
+    width: 100%; padding: 6px; border:1px solid #ccc; border-radius:4px;
+  }
+  .fetch-btn { padding: 8px 12px; width: 100%; background: #28a745; color:white; border:none; border-radius:4px; cursor:pointer; }
+</style>
+<style>
+.hidden { display: none !important; }
+</style>
+</head>
+<body class="admin-bg">
+<div class="page-wrapper">
+    <div id="menu-container"></div>
+
+        <div class="page-header">
+        <div class="page-header-content">
+            <div>
+                <h1><i class="bi bi-people-fill"></i> Guest rental Payment</h1>
+            </div>
+        </div>
+
+        </div>
+        <div class="page-subheader">
+        <form id="paymentForm" enctype="multipart/form-data">
+
+            <div class="rent-filter-content">
+
+            <!-- Quick Payment Mode Buttons -->
+            <div class="quick-buttons">
+                <button type="button" id="btnUpi" class="mode-btn" data-mode="UPI">UPI</button>
+                <button type="button" id="btnCash"class="mode-btn" data-mode="Cash">Cash</button>
+                <button type="button" id="btnCard"class="mode-btn" data-mode="Card">Card</button>
+                <button type="button" id="btnIMPS" class="mode-btn" data-mode="IMPS">IMPS</button>
+                <button type="button" id="btnDD" class="mode-btn" data-mode="DD">DD</button>
+                <button type="button"  id="btnNEFT" class="mode-btn" data-mode="NEFT">NEFT</button>
+            </div>
+
+            <!-- Hidden field to store selected mode -->
+            <input type="hidden" id="paymentMode" name="paymentMode">
+            <div class="filter-field">
+                <input type="text" id="txnAmount" name="txtAmount" placeholder="Enter amount" required>
+            </div>
+            <div class="filter-field">
+                <input type="date" id="currentDate" name="currentDate" required>
+            </div>
+
+            <div class="filter-field">
+                <input type="text" id="txnId" name="txnId" placeholder="Enter Transaction ID" required>
+            </div>
+
+            <div class="filter-field">
+                <textarea id="description" name="description" placeholder="Payment made by Account Name(optional)" rows="2"></textarea>
+            </div>
+
+            <div class="filter-field">
+                <input type="file" id="attachment" name="attachment" accept="image/*,application/pdf" >
+            </div>
+
+            <div class="filter-field">
+                <button type="submit" id="fetchBtn" class="fetch-btn">Submit Payment</button>
+            </div>
+
+            </div>
+
+        </form>
+        </div>
+
+
+        <div >
+
+                <gen-table
+                id="table1"
+                data-api="/rentalmonth/search/"
+                data-title="Rent history"
+                data-head='["created_at", "submitted", "due",
+            "status", "source","paidby"]'>
+                </gen-table>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- <div class="filters">
+    <div>
+        <label>From Date:</label>
+        <input type="date" id="fromDate" disabled />
+    </div>
+    <div>
+        <label>Till Date:</label>
+        <input type="date" id="tillDate" />
+    </div>
+    <button id="runReport">Run Report</button>
+</div> -->
+
+
+
+</div>
+<script>
+function updateFromDate(_tillDate) {
+    //const tillDate = document.getElementById("tillDate").value;
+    debugger;
+    if (!_tillDate) return;
+    const till = new Date(_tillDate);
+    const from = new Date(till);
+    from.setDate(till.getDate() - 2); // 48 hours before
+    //document.getElementById("fromDate").value = from.toISOString().split("T")[0];
+}
+
+    //document.getElementById("tillDate").addEventListener("change", updateFromDate);
+
+    document.addEventListener("filter-data", async (e) => {
+      const filter = e.detail;
+      console.log("Filter Data Received:", filter);
+
+      // Simulate fetching records using filter
+      const fakeResponse = {
+        status: "success",
+        message: "Data fetched successfully",
+        filter
+      };
+
+      // Render JSON in container
+      document.getElementById("result-container").textContent =
+        JSON.stringify(fakeResponse, null, 2);
+    });
+
+
+    document.addEventListener("filter-data", async (e) => {
+          const filter = e.detail;
+      console.log("Filter Data Received:", filter);
+
+      // Simulate fetching records using filter
+      const fakeResponse = {
+        status: "success",
+        message: "Data fetched successfully",
+        filter
+      };
+      
+     debugger; 
+    const tillDate = filter.endDate;//document.getElementById("tillDate").value;
+    if (!tillDate) {
+        alert("Please select Till Date");
+        return;
+    }
+
+    //updateFromDate(tillDate);
+    const url = `/reports/guest_presence?till_date=${tillDate}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const allData = data.data || [];
+
+        // Split and sort data
+        const notPresentAll = allData.filter(g => g.current_status === 'not present');
+        const presentAll = allData.filter(g => g.current_status === 'present');
+
+        const notPresentTop = notPresentAll.slice(0, 7);
+        const presentTop = presentAll.slice(0, 7);
+
+        const others = allData.filter(g => 
+            !notPresentTop.includes(g) && 
+            !presentTop.includes(g)
+        );
+
+        const formatRow = (g) => `
+            <tr>
+                <td>${g.name} - ${g.bed_id || '-'}</td>
+                <td class="${g.current_status === 'not present' ? 'red' : ''}">
+                    ${g.missing_hrs ?? '-'}
+                </td>
+            </tr>`;
+
+        document.getElementById("notPresentBody").innerHTML = notPresentTop.map(formatRow).join('') || "<tr><td colspan='2'>No data</td></tr>";
+        document.getElementById("presentBody").innerHTML = presentTop.map(formatRow).join('') || "<tr><td colspan='2'>No data</td></tr>";
+        document.getElementById("othersBody").innerHTML = others.map(formatRow).join('') || "<tr><td colspan='2'>No data</td></tr>";
+
+    } catch (err) {
+        console.error(err);
+        alert("Error fetching report.");
+    }
+});
+
+// Default till date = today
+// const today = new Date().toISOString().split("T")[0];
+// document.getElementById("tillDate").value = today;
+//updateFromDate();
+</script>
+<script src="./js/main.js"></script>
+<script>
+    $(document).ready(function(){
+        
+        const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+        $("#currentDate").val(new Date().toISOString().split("T")[0]);
+ 
+        getBalance();
+
+    });
+
+
+ async function getBalance() {
+        const apiBase = localStorage.getItem('wh_api_base') || window.location.origin;
+        const token = localStorage.getItem('wh_token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }    
+        const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || '';
+        const params = new URLSearchParams();
+        params.append("guest_id", guestid);
+        const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+        $("#currentDate").val(new Date().toISOString().split("T")[0]);
+        const url = `${apiBase}/guests/stats?${params.toString()}`;            
+        const mainResponse = await fetch(url, { headers });
+        _mainResponse  = await mainResponse.json();
+        document.getElementById("txnAmount").value = _mainResponse.totaldue || "0";
+            // Access individual sharing types
+ }
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // 1️⃣ Set today's date in #currentDate
+    let today = new Date().toISOString().split("T")[0];
+    document.getElementById("currentDate").value = today;
+
+    // 2️⃣ Highlight / select UPI button on load
+    let upiBtn = document.getElementById("btnUpi");
+    if (upiBtn) {
+        upiBtn.classList.add("active");   // add visual style
+    }
+});
+// ---------------- SELECT PAYMENT MODE ----------------
+$(".mode-btn").click(function () {
+
+    $(".mode-btn").removeClass("active");
+    $(this).addClass("active");
+
+    const selectedMode = $(this).data("mode");
+    $("#paymentMode").val(selectedMode);
+
+    console.log("Selected payment mode:", selectedMode);
+});
+
+
+function validatePaymentForm() {
+    let errors = [];
+
+    const paymentMode = document.getElementById("paymentMode").value;
+    const amount = document.getElementById("txnAmount");
+    const date = document.getElementById("currentDate");
+    const txnId = document.getElementById("txnId");
+    const desc = document.getElementById("description");
+
+    // Reset invalid highlights
+    [amount, date, txnId, desc].forEach(el => el.classList.remove("is-invalid"));
+
+    // Validate Payment Mode
+    if (!paymentMode) {
+        errors.push("• Please select a payment mode");
+    }
+
+    // Validate Amount
+    const amtValue = amount.value.trim();
+    if (amtValue === "" || isNaN(amtValue) || Number(amtValue) <= 0) {
+        amount.classList.add("is-invalid");
+        errors.push("• Amount must be a valid positive number");
+    }
+
+    // Validate Date
+    if (!date.value) {
+        date.classList.add("is-invalid");
+        errors.push("• Date cannot be empty");
+    }
+
+    // Validate Transaction ID
+    if (txnId.value.trim().length < 4) {
+        txnId.classList.add("is-invalid");
+        errors.push("• Transaction ID must be at least 4 characters");
+    }
+
+    // Validate Description
+    if (desc.value.trim() === "") {
+        desc.classList.add("is-invalid");
+        errors.push("• Description cannot be empty");
+    }
+
+    // If errors → show alert & return false
+    if (errors.length > 0) {
+        alert("Please fix the following:\n\n" + errors.join("\n"));
+        return false;
+    }
+
+    return true; // All good!
+}
+
+// ---------------- FORM API Submit ----------------
+document.getElementById("paymentForm").addEventListener("submit", function (e) {
+    if (!validatePaymentForm()) {
+        e.preventDefault();
+    }
+    const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || ''; 
+    const paymentMode = document.getElementById("paymentMode").value;
+    const amount = document.getElementById("txnAmount").value.trim();;
+    const currentDate = document.getElementById("currentDate").value.trim();;
+    const txnId = document.getElementById("txnId").value.trim();;
+    const desc = document.getElementById("description").value.trim();;
+    const file = document.getElementById("attachment").files[0];
+    let formData = new FormData();
+    formData.append("guest_id", guestid);
+    formData.append("txtAmount", amount);
+    formData.append("paymentMode", paymentMode);
+    formData.append("currentDate", currentDate);
+    formData.append("txnId", txnId);
+    formData.append("description", desc);
+
+    if (file) {
+        formData.append("attachment", file);
+    }
+
+    // Debug print
+    console.log("Submitting Payment...");
+    for (var pair of formData.entries()) {
+        console.log(pair[0] + ": ", pair[1]);
+    }
+    // ---- SEND TO API (uncomment when backend ready) ----
+    
+    fetch("/rentalmonth/pay", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Server:", data);
+        alert("Payment submitted!");
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("Error submitting payment");
+    });
+    
+    
+ });   
+
+ 
+</script>
+
+</body>
+</html>

@@ -73,7 +73,7 @@
             <i class="fas fa-user-plus"></i>
             <div class="text">
               <p>Attendance</p>
-              <h3>1010</h3>
+              <h3 id="data-attendance">1010</h3>
             </div>
           </div>
           <div
@@ -94,8 +94,8 @@
           >
             <i class="fas fa-thumbs-up"></i>
             <div class="text">
-              <p>FAQ</p>
-              <h3>178</h3>
+              <p>RENT DUE</p>
+              <h3 id="data-due">0</h3>
             </div>
           </div>
           <div
@@ -157,7 +157,7 @@
             style="cursor: pointer"
             onclick="window.location.href='AttendanceDetails.html'"
           >
-            <i class="fas fa-users"></i> Guests Area
+            <i class="fas fa-users"></i> Rent Area
           </h2>
           <div class="cards-container">
             <div
@@ -168,8 +168,8 @@
               <dash-table
                 data-theme="gray"
                 data-limit="10"
-                data-api="/metadata/guest/"
-                data-head='["name","description","timestamp"]'
+                data-api="/rentalmonth/dash-rent/"
+                data-head='["created_at","submitted","due","status","source"]'
               ></dash-table>
             </div>
 
@@ -264,10 +264,91 @@
           JSON.parse(localStorage.getItem("wh_user") || "{}").name || "";
         if (!username) window.location.href = "login.html";
         $("#username").text(username);
-
+        fetchDashboardData()
         //setTimeout(() => renderEmployeeTable(fakeApiData), 500);
       });
+    
+    
+            // Fetch and update dashboard data
+    async function fetchDashboardData() {
+        const apiBase = localStorage.getItem('wh_api_base') || window.location.origin;
+        const token = localStorage.getItem('wh_token');
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        try {
+            
+            // Beds data
+        const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || '';
+        const params = new URLSearchParams();
+        params.append("guest_id", guestid);
+
+
+			  const url = `${apiBase}/guests/stats?${params.toString()}`;            
+            const mainResponse = await fetch(url, { headers });
+            
+            _mainResponse  = await mainResponse.json();
+              
+              // Access individual sharing types
+            const attendance = _mainResponse.attendance || "0";
+            const totaldue = _mainResponse.totaldue || "0";
+            document.getElementById('data-attendance').textContent = attendance || 90;
+            document.getElementById('data-due').textContent =totaldue || 0;
+
+            // if (bedsResponse.ok) {
+            //     //bedsData = await bedsResponse.json();
+                
+            //     document.getElementById('data-attendance').textContent = attendance || 90;
+            //     document.getElementById('data-data').textContent =totaldue || 0;
+            //     document.getElementById('total-beds-count').textContent = bedsData.total || 0;
+            // }
+
+            // Guests data
+
+            // if (bedsResponse.ok) {
+            //     document.getElementById('active-guests-count').textContent = bedsData.brass_total-bedsData.brass+"/"+bedsData.brass_total || 0;
+            //     document.getElementById('inactive-guests-count').textContent =bedsData.silver_total-bedsData.silver+"/"+bedsData.silver_total || 0;
+            //     document.getElementById('closed-guests-count').textContent = bedsData.golden_total-bedsData.golden+"/"+bedsData.golden_total || 0;
+            //     document.getElementById('total-guests-count').textContent =  0;
+            // }
+
+            // // Attendance data
+            // const attendanceResponse = await fetch(`${apiBase}/attendance/stats`, { headers });
+            // if (attendanceResponse.ok) {
+            //     const attendanceData = await attendanceResponse.json();
+            //     document.getElementById('attendance-1-count').textContent = attendanceData.today || 0;
+            //     document.getElementById('attendance-2-count').textContent = attendanceData.week || 0;
+            //     document.getElementById('attendance-3-count').textContent = attendanceData.month || 0;
+            //     document.getElementById('attendance-4-count').textContent = attendanceData.pending || 0;
+            // }
+
+            // // Reports data
+            // const reportsResponse = await fetch(`${apiBase}/reports/stats`, { headers });
+            // if (reportsResponse.ok) {
+            //     const reportsData = await reportsResponse.json();
+            //     document.getElementById('daily-reports-count').textContent = reportsData.daily || 0;
+            //     document.getElementById('monthly-reports-count').textContent = reportsData.monthly || 0;
+            //     document.getElementById('analytics-count').textContent = reportsData.analytics || 0;
+            // }
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            // Set default values on error
+            setDefaultValues();
+        }
+    }
+
+    
+    
     </script>
+
+
 
     <script>
       // Set dash-table guest id dynamically from localStorage so it's not hardcoded.

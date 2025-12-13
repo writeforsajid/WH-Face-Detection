@@ -7,8 +7,16 @@ body { font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Ne
 
 .page-header { background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%); color:white; padding:1rem 0; box-shadow:0 8px 32px rgba(129,140,248,0.25);  position:relative; overflow:hidden; border-radius:14px;margin: 25px 0;}
 .page-header::before { content:""; position:absolute; top:0; left:0; right:0; bottom:0; background:url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)"/></svg>'); animation:float 20s linear infinite; }
- .page-header-content { margin:0 auto; padding:0 1rem; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
+.page-header-content { margin:0 auto; padding:0 1rem; display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
 .page-header-content h1 {color:#fff}
+
+
+
+.page-subheader { background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%); color:white; padding:1rem; box-shadow:0 8px 32px rgba(129,140,248,0.25);  position:relative; overflow:hidden; border-radius:14px;margin: 25px 0;}
+.page-subheader::before { position:relative;}
+
+
+
 .dashboard-link {
   text-decoration: none;
   color: inherit; /* keeps same color as parent */
@@ -65,7 +73,7 @@ h1 { font-size: clamp(1.5rem, 4vw, 2.5rem); color: #222; }
 button { font-family:inherit; }
 .header .muted { color:var(--muted); font-size:0.95rem; }
 .dropdown-btn:focus, .logout-btn:focus, .hamburger:focus { outline:3px solid rgba(102,126,234,0.18); outline-offset:2px; }
-button::after, input[type="button"]::after, input[type="submit"]::after, .btn::after, .nav-link::after, .dropdown-btn::after, .logout-btn::after { content:"\25BE"; display:inline-block; margin-left:0.35rem; font-size:20px; vertical-align:middle; opacity:0.95; transform:translateY(0.08em); pointer-events:none; color:currentColor; }
+input[type="button"]::after, input[type="submit"]::after, .nav-link::after, .dropdown-btn::after, .logout-btn::after { content:"\25BE"; display:inline-block; margin-left:0.35rem; font-size:20px; vertical-align:middle; opacity:0.95; transform:translateY(0.08em); pointer-events:none; color:currentColor; }
 .no-dropdown::after { content:none !important; }
 
 header #nav-menu.show { display: flex !important; }
@@ -131,3 +139,5 @@ table th, table td {
         min-width: 180px;
     }
 }
+
+

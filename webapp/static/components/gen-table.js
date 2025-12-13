@@ -4,14 +4,14 @@ class GenTable extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.extraParams = {};
     this.page = 1;
-    this.pageSize = 10;
+    this.pageSize = 50;
     this.total = 0;
   }
 
   connectedCallback() {
     this.loadScripts();   // <-- load libraries
     this.render();
-    //this.loadData();
+    this.loadData();
     this.addEvents();
   }
   setParams(params) {
@@ -25,7 +25,6 @@ class GenTable extends HTMLElement {
         // include filter params
         const guestid = JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id || '';
         const userrole = (JSON.parse(localStorage.getItem('wh_user') || '{}').role) || '';
-        debugger;
         if (userrole === 'resident')
         {
           url.searchParams.set('guest_id', guestid);
@@ -156,10 +155,10 @@ select { padding:4px; }
     //     }
     // }
     try {
+
       const url = this.buildUrl();
       const res = await fetch(url);
       const json = await res.json();
-      debugger;
       const columns = this.headList;
 
       this.total = json.total || 0;

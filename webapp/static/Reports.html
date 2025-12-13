@@ -508,13 +508,11 @@ textarea {
 
 
 $(document).ready(function() {
-    debugger;
    
     
     // --- Send Email logic ---
     $("#sendEmail").click(function() {
       console.log("Fetching data...");
-      debugger;
       currentFilter.startDate = document.querySelector("employee-filter").shadowRoot.getElementById("startDate").value;
       currentFilter.endDate =  document.querySelector("employee-filter").shadowRoot.getElementById("endDate").value;
       currentFilter.employeeId =  document.querySelector("employee-filter").shadowRoot.getElementById("employeeSelect").value;
@@ -524,9 +522,7 @@ $(document).ready(function() {
       // const fromDate = $("#fromDate").val();
       // const toDate = $("#toDate").val();
       const email = $("#email").val().trim();
-      debugger;
       const { startDate, endDate } = currentFilter;
-      debugger;
       if (!startDate || !endDate) {
         showAlert("Please select a date range", "error");
         return;

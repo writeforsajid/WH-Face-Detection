@@ -1,0 +1,62 @@
+[
+  {
+    "guest_id": "20251128171314",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 12,
+    "due_amount": 8000.0,
+    "amount_paid": 0.0,
+    "status": "open",
+    "created_at": "2025-12-01T00:00:00"
+  },
+  {
+    "guest_id": "20251128165415",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 12,
+    "due_amount": 8000.0,
+    "amount_paid": 4000.0,
+    "status": "partial",
+    "created_at": "2025-12-01T00:00:00"
+  },
+  {
+    "guest_id": "20251128164528",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 12,
+    "due_amount": 8000.0,
+    "amount_paid": 8000.0,
+    "status": "paid",
+    "created_at": "2025-12-01T00:00:00"
+  },
+  {
+    "guest_id": "20251128163627",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 12,
+    "due_amount": 8000.0,
+    "amount_paid": 0.0,
+    "status": "open",
+    "created_at": "2025-12-01T00:00:00"
+  },
+  {
+    "guest_id": "20250105000008",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 12,
+    "due_amount": 8000.0,
+    "amount_paid": 0.0,
+    "status": "open",
+    "created_at": "2025-12-01T00:00:00"
+  },
+  {
+    "guest_id": "20251128165415",
+    "due_type_id": 1,
+    "year": 2025,
+    "month": 11,
+    "due_amount": 8000.0,
+    "amount_paid": 8000.0,
+    "status": "paid",
+    "created_at": "2025-11-01T00:00:00"
+  }
+]

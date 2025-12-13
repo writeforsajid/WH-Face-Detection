@@ -5,7 +5,7 @@ class SmartTable extends HTMLElement {
 
     // internal state
     this.page = 1;
-    this.pageSize = 10;
+    this.pageSize = 50;
     this.total = 0;
     this.data = [];
     this.extraParams = {};
@@ -194,6 +194,7 @@ class SmartTable extends HTMLElement {
       if (this.page < totalPages) {
         this.page++;
         this.clearSelection();
+
         this.load();
       }
     });
@@ -243,6 +244,7 @@ class SmartTable extends HTMLElement {
 
   async load() {
     // public method to trigger (auto-called on connected)
+    
     if (!this.api) {
       console.warn("smart-table: data-api is not set");
       this.renderBody([], []);

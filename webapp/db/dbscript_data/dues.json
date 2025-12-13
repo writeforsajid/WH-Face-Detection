@@ -2,7 +2,8 @@
     {
         "id": 1,
         "guest_id": "20251128171314",
-        "year": 2024,
+
+        "due_type_id": 1,"year": 2024,
         "month": 1,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -12,7 +13,7 @@
     {
         "id": 2,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 2,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -22,7 +23,8 @@
     {
         "id": 3,
         "guest_id": "20251128171314",
-        "year": 2024,
+
+        "due_type_id": 1,"year": 2024,
         "month": 3,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -32,7 +34,7 @@
     {
         "id": 4,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 4,
         "due_amount": 5000,
         "amount_paid": 0,
@@ -42,7 +44,7 @@
     {
         "id": 5,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 5,
         "due_amount": 5500,
         "amount_paid": 1008,
@@ -52,7 +54,7 @@
     {
         "id": 6,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 6,
         "due_amount": 6000,
         "amount_paid": 4700,
@@ -62,7 +64,7 @@
     {
         "id": 7,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 7,
         "due_amount": 6500,
         "amount_paid": 5118,
@@ -72,7 +74,7 @@
     {
         "id": 8,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 8,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -82,7 +84,7 @@
     {
         "id": 9,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 9,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -92,7 +94,7 @@
     {
         "id": 10,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 10,
         "due_amount": 5000,
         "amount_paid": 1758,
@@ -102,7 +104,7 @@
     {
         "id": 11,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 11,
         "due_amount": 6500,
         "amount_paid": 0,
@@ -112,7 +114,7 @@
     {
         "id": 12,
         "guest_id": "20251128171314",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 12,
         "due_amount": 6000,
         "amount_paid": 2894,
@@ -122,7 +124,7 @@
     {
         "id": 13,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 1,
         "due_amount": 6000,
         "amount_paid": 0,
@@ -132,7 +134,7 @@
     {
         "id": 14,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 2,
         "due_amount": 6000,
         "amount_paid": 0,
@@ -142,7 +144,7 @@
     {
         "id": 15,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 3,
         "due_amount": 6000,
         "amount_paid": 3244,
@@ -152,7 +154,7 @@
     {
         "id": 16,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 4,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -162,7 +164,7 @@
     {
         "id": 17,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 5,
         "due_amount": 6500,
         "amount_paid": 3970,
@@ -172,7 +174,7 @@
     {
         "id": 18,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 6,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -182,7 +184,7 @@
     {
         "id": 19,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 7,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -192,7 +194,7 @@
     {
         "id": 20,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 8,
         "due_amount": 6500,
         "amount_paid": 0,
@@ -202,7 +204,7 @@
     {
         "id": 21,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 9,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -212,7 +214,7 @@
     {
         "id": 22,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 10,
         "due_amount": 5000,
         "amount_paid": 3982,
@@ -222,7 +224,7 @@
     {
         "id": 23,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 11,
         "due_amount": 6500,
         "amount_paid": 6500,
@@ -232,7 +234,7 @@
     {
         "id": 24,
         "guest_id": "20251128165415",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 12,
         "due_amount": 6000,
         "amount_paid": 0,
@@ -242,7 +244,7 @@
     {
         "id": 25,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 1,
         "due_amount": 5500,
         "amount_paid": 0,
@@ -252,7 +254,7 @@
     {
         "id": 26,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 2,
         "due_amount": 6500,
         "amount_paid": 6500,
@@ -262,7 +264,7 @@
     {
         "id": 27,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 3,
         "due_amount": 6500,
         "amount_paid": 5147,
@@ -272,7 +274,7 @@
     {
         "id": 28,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 4,
         "due_amount": 5500,
         "amount_paid": 0,
@@ -282,7 +284,7 @@
     {
         "id": 29,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 5,
         "due_amount": 5500,
         "amount_paid": 0,
@@ -292,7 +294,7 @@
     {
         "id": 30,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 6,
         "due_amount": 5000,
         "amount_paid": 3346,
@@ -302,7 +304,7 @@
     {
         "id": 31,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 7,
         "due_amount": 6500,
         "amount_paid": 6500,
@@ -312,7 +314,7 @@
     {
         "id": 32,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 8,
         "due_amount": 6500,
         "amount_paid": 0,
@@ -322,7 +324,7 @@
     {
         "id": 33,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 9,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -332,7 +334,7 @@
     {
         "id": 34,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 10,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -342,7 +344,7 @@
     {
         "id": 35,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 11,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -352,7 +354,7 @@
     {
         "id": 36,
         "guest_id": "20251128164528",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 12,
         "due_amount": 6500,
         "amount_paid": 3072,
@@ -362,7 +364,7 @@
     {
         "id": 37,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 1,
         "due_amount": 6000,
         "amount_paid": 3594,
@@ -372,7 +374,7 @@
     {
         "id": 38,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 2,
         "due_amount": 6500,
         "amount_paid": 6500,
@@ -382,7 +384,7 @@
     {
         "id": 39,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 3,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -392,7 +394,7 @@
     {
         "id": 40,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 4,
         "due_amount": 6500,
         "amount_paid": 1501,
@@ -402,7 +404,7 @@
     {
         "id": 41,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 5,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -412,7 +414,7 @@
     {
         "id": 42,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 6,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -422,7 +424,7 @@
     {
         "id": 43,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 7,
         "due_amount": 5500,
         "amount_paid": 3759,
@@ -432,7 +434,7 @@
     {
         "id": 44,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 8,
         "due_amount": 5500,
         "amount_paid": 1712,
@@ -442,7 +444,7 @@
     {
         "id": 45,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 9,
         "due_amount": 6500,
         "amount_paid": 0,
@@ -452,7 +454,7 @@
     {
         "id": 46,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 10,
         "due_amount": 6500,
         "amount_paid": 6500,
@@ -462,7 +464,7 @@
     {
         "id": 47,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 11,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -472,7 +474,7 @@
     {
         "id": 48,
         "guest_id": "20251128163627",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 12,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -482,7 +484,7 @@
     {
         "id": 49,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 1,
         "due_amount": 5000,
         "amount_paid": 5000,
@@ -492,7 +494,7 @@
     {
         "id": 50,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 2,
         "due_amount": 5000,
         "amount_paid": 0,
@@ -502,7 +504,7 @@
     {
         "id": 51,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 3,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -512,7 +514,7 @@
     {
         "id": 52,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 4,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -522,7 +524,7 @@
     {
         "id": 53,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 5,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -532,7 +534,7 @@
     {
         "id": 54,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 6,
         "due_amount": 6500,
         "amount_paid": 0,
@@ -542,7 +544,7 @@
     {
         "id": 55,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 7,
         "due_amount": 5500,
         "amount_paid": 5500,
@@ -552,7 +554,7 @@
     {
         "id": 56,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 8,
         "due_amount": 6000,
         "amount_paid": 6000,
@@ -562,7 +564,7 @@
     {
         "id": 57,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 9,
         "due_amount": 5500,
         "amount_paid": 0,
@@ -572,7 +574,7 @@
     {
         "id": 58,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 10,
         "due_amount": 5000,
         "amount_paid": 3782,
@@ -582,7 +584,7 @@
     {
         "id": 59,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 11,
         "due_amount": 5000,
         "amount_paid": 1295,
@@ -592,7 +594,7 @@
     {
         "id": 60,
         "guest_id": "20250105000008",
-        "year": 2024,
+        "due_type_id": 1,"year": 2024,
         "month": 12,
         "due_amount": 5000,
         "amount_paid": 0,

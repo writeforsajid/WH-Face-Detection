@@ -13,7 +13,7 @@ def _parse_date(date_str: Optional[str]) -> datetime:
 		return datetime.utcnow()
 
 
-def get_guest_metadata_month(guest_id: str, till_date: Optional[str] = None, days: int = 30) -> Dict:
+def get_guest_metadata_month(guest_id: str, till_date: Optional[str] = None, days: int = 365) -> Dict:
 	"""
 	Fetch guest metadata records for the window [till_date - days, till_date].
 
@@ -39,7 +39,7 @@ def get_guest_metadata_month(guest_id: str, till_date: Optional[str] = None, day
 	rows = cur.fetchall()
 	# rows are sqlite3.Row because get_connection sets row_factory
 	# Only include name, description, timestamp as requested
-	data = [ {"name": r["name"], "description": r["description"], "timestamp": r["timestamp"]} for r in rows ]
+	data = [ {"name": r["name"], "description": r["description"], "timestamp": datetime.fromisoformat(r["timestamp"]).date().isoformat()} for r in rows ]
 
 	conn.close()
 

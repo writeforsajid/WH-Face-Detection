@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Bed ↔ Guest Assignments</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>	
+	<!-- header styles moved to Header.html -->
+	
+		<style>
+			@media (max-width: 768px){.welcome-header-content{padding:0 1rem;flex-direction:column;align-items:stretch;gap:.75rem}.welcome-header h1{font-size:1.5rem}.welcome-header .user-info{font-size:.875rem}.logout-btn,.back-btn{padding:.5rem 1rem;font-size:.875rem}.header-actions{display:flex;gap:.5rem;flex-wrap:wrap;width:100%}.header-actions .back-btn,.header-actions .logout-btn{flex:1 1 48%;min-width:140px}.toolbar-actions{display:flex;gap:.5rem;flex-wrap:wrap}.toolbar-actions .btn{flex:1 1 48%;min-width:120px}}
+		
+		.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:999;}
+		.modal-overlay.active{display:flex;justify-content:center;align-items:center;}
+		.modal-card{background:white;border-radius:14px;width:90%;max-width:420px;overflow:hidden;}
+		.modal-header{background:#1f2937;color:white;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
+		.modal-header h3{margin:0;font-size:1.25rem;}
+		.modal-close{background:transparent;color:white;border:0;font-size:1.5rem;cursor:pointer;}
+		.modal-body{padding:1rem;}
+		
+		.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:9998;animation:fadeIn .3s ease}
+		.modal-overlay.active{display:flex;justify-content:center;align-items:center}
+		.modal-card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:600px;width:90%;max-height:80vh;overflow:hidden;animation:slideUp .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:9999}
+		@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+		@keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+		.modal-header{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+		.modal-header h3{margin:0;font-size:1.5rem;font-weight:700}
+		.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s ease}
+		.modal-close:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
+		.modal-body{padding:1.5rem;max-height:calc(80vh - 120px);overflow-y:auto}
+		.inactive-guest-item{padding:1rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:1rem;transition:.3s ease;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+		.inactive-guest-item:hover{border-color:#818cf8;background:rgba(129,140,248,.05);transform:translateX(5px)}
+		.guest-info h5{margin:0 0 .5rem 0;color:#1f2937;font-weight:600}
+		.guest-info p{margin:0;color:#6b7280;font-size:.875rem}
+		.assign-inactive-btn{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;border:none;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;cursor:pointer;transition:.3s ease;white-space:nowrap}
+		.assign-inactive-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(129,140,248,.4)}
+		.no-inactive-guests{text-align:center;padding:3rem 1rem;color:#6b7280}
+		.no-inactive-guests i{font-size:3rem;margin-bottom:1rem;opacity:.5}
+		.snackbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:rgba(31,41,55,.95);color:#fff;padding:.75rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;align-items:center;gap:1rem;z-index:10000;animation:snackIn .2s ease forwards}
+		.snackbar.show{display:flex}
+		.snackbar-message{font-weight:500}
+		.snackbar button{background:transparent;border:0;color:#60a5fa;font-weight:700;cursor:pointer;padding:.25rem .5rem;border-radius:6px}
+		.snackbar button:hover{color:#93c5fd;text-decoration:underline}
+		@keyframes snackIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+
+
+		</style>
+	<script>
+				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return window.location.origin;
+				})();
+
+		async function ensureLoggedInOrRedirect() {
+			const token = localStorage.getItem('wh_token');
+			if (!token) {
+				window.location.href = 'login.html';
+				return null;
+			}
+			return token;
+		}
+		function loadGuestList() {
+			$.ajax({
+				url: `${API_BASE_URL}/guests/activeReviewers`,   // <-- change API endpoint here
+				method: "GET",
+				success: function (response) {
+					// response should be: [{ id: "...", name: "..." }, ...]
+					
+					let options = `<option value="">Select Guest</option>`;
+
+					response.forEach(item => {
+						options += `<option value="${item.id}">${item.name} (${item.id})</option>`;
+					});
+
+					$("#forwardSelect").html(options);
+				},
+				error: function () {
+					$("#forwardSelect").html(`<option value="">Failed to load</option>`);
+				}
+			});
+		}
+
+		function getUserInfo() {
+			try {
+				const userJson = localStorage.getItem('wh_user');
+				return userJson ? JSON.parse(userJson) : null;
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function displayWelcome() {
+			// const user = getUserInfo();
+			// const welcomeEl = document.getElementById('welcome-message');
+			// const userInfoEl = document.getElementById('user-info');
+			
+			// if (user && user.name) {
+			// 	welcomeEl.textContent = `Welcome back, ${user.name}!`;
+			// 	const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+			// 	userInfoEl.textContent = `${role} • ${user.email || ''}`;
+			// } else {
+			// 	welcomeEl.textContent = 'Welcome to Bed Management';
+			// 	userInfoEl.textContent = 'View and manage bed assignments';
+			// }
+		}
+
+		// function handleLogout() {
+		// 	localStorage.removeItem('wh_token');
+		// 	localStorage.removeItem('wh_user');
+		// 	localStorage.removeItem('wh_api_base');
+		// 	window.location.href = 'index2.html';
+		// }
+
+		function handleBack() {
+			try {
+				// Prefer going back if we have a referrer/history
+				if (document.referrer && window.history.length > 1) {
+					window.history.back();
+					return;
+				}
+			} catch (e) { /* no-op */ }
+			// Fallback to home
+			window.location.href = 'index2.html';
+		}
+
+		function renderRows(items) {
+			const tbody = document.getElementById('rows');
+			if (!Array.isArray(items) || items.length === 0) {
+				tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No data</td></tr>`;
+				return;
+			}
+			const html = items.map((r) => {
+				let guest;
+				if (r.guest_name && r.guest_id) {
+					// Make guest name a clickable link to their details page
+					guest = `<a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
+				} else if (r.guest_name) {
+					guest = r.guest_name;
+				} else {
+					guest = '<span class="badge badge-unassigned">Unassigned</span>';
+				}
+				const assignDate = r.payment_date || '-';
+
+				return `
+					   <tr>
+						   <td>${guest}(${r.bed_id || '-'})</td>
+							<td>${r.year || '-'}-${r.month || '-'}</td>
+							<td>${r.amount || '-'}</td>
+							<td>${r.payment_date}</td>
+							<td>${r.mode || '-'}</td>
+							<td>${r.reference || '-'}</td>
+							<td>${r.status || '-'}</td>
+							<td>${r.forwarded_user || '-'}</td>
+							<td>
+								<button class="btn btn-dark btn-sm action-btn" data-info='${JSON.stringify({payment_id: r.rent_payment_id,
+										guest_id: r.guest_id,
+										guest_name: r.guest_name,
+										bed_id: r.bed_id,
+										year: r.year,
+										month: r.month,
+										amount: r.amount,
+										payment_date: r.payment_date,
+										mode: r.mode,
+										reference: r.reference,
+										status: r.status,
+										forwarded_user: r.forwarded_user
+									})}'
+								>
+									Action
+								</button>
+							</td>
+					   </tr>
+				   `;
+			}).join('');
+			tbody.innerHTML = html;
+		}
+
+		   async function loadData() {
+			   const token = await ensureLoggedInOrRedirect();
+			   if (!token) return; // redirected
+			   const statusEl = document.getElementById('status');
+			   statusEl.textContent = 'Loading...';
+			   try {
+				   const q = (document.getElementById('searchName')?.value || '').trim();
+				   const st = (document.getElementById('filterStatus')?.value || '').trim();
+				   const sharingTypeFilter = (document.getElementById('filterSharingType').value|| '').trim();
+				   const params = new URLSearchParams();
+				   if (q) params.set('search', q);
+				   if (st) params.set('status', st);
+				   if (sharingTypeFilter) params.append("sharing_type", sharingTypeFilter);
+				   const url = `${API_BASE_URL}/rentalmonth/get_unprocessed_payments${params.toString() ? ('?' + params.toString()) : ''}`;
+				   const res = await fetch(url, {
+					   headers: { 'Authorization': `Bearer ${token}` }
+				   });
+				   if (!res.ok) {
+					   if (res.status === 401) {
+						   // session invalid/expired: take user to login
+						   window.location.href = 'login.html';
+						   return;
+					   }
+					   const err = await res.json().catch(() => ({}));
+					   throw new Error(err.detail || `Request failed (${res.status})`);
+				   }
+				   const data = await res.json();
+				   renderRows(data);
+				   statusEl.textContent = '';
+				   // Attach event listeners to assign/unassign buttons
+				   setTimeout(() => {
+					   // Handle "Assigned" button clicks (unassign functionality)
+					   document.querySelectorAll('.assign-btn').forEach(btn => {
+						   btn.addEventListener('click', async function() {
+							   const guestId = this.getAttribute('data-guest-id');
+							   const guestName = this.getAttribute('data-guest-name') || 'Guest';
+							   if (!guestId) return;
+							   const row = this.closest('tr');
+							   const cells = row ? row.querySelectorAll('td') : null;
+							   this.disabled = true;
+							   this.textContent = 'Unassigning...';
+							   try {
+								   const token = localStorage.getItem('wh_token');
+								   // Call API to unassign guest
+								   const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
+									   method: 'POST',
+									   headers: {
+										   'Authorization': `Bearer ${token}`,
+										   'Content-Type': 'application/json'
+									   },
+									   body: JSON.stringify({ guest_id: guestId })
+								   });
+								   if (!res.ok) {
+									   const err = await res.json().catch(() => ({}));
+									   throw new Error(err.detail || `Unassign failed (${res.status})`);
+								   }
+								   // Optimistically update the row: Guest -> Unassigned, Date -> '-', Button -> Unassigned disabled
+								   if (cells && cells.length >= 5) {
+									   // cells: [0]=Bed, [1]=Desc, [2]=Guest, [3]=Date, [4]=Action
+									   cells[2].innerHTML = '<span class="badge badge-unassigned">Unassigned</span>';
+									   cells[3].textContent = '-';
+								   }
+								   this.classList.remove('btn-success');
+								   this.classList.add('btn-secondary');
+								   this.classList.remove('assign-btn');
+								   this.classList.add('unassign-btn');
+								   this.textContent = 'Unassigned';
+								   this.disabled = false;
+								   // Add click handler for the newly created unassign button
+								   const bedId = this.getAttribute('data-bed-id');
+								   this.onclick = () => showInactiveGuestsModal(bedId);
+								   // Show undo snackbar
+								   showUndoUnassign({ bedId, guestId, guestName });
+							   } catch (e) {
+								   alert(e.message || 'Failed to unassign');
+								   this.disabled = false;
+								   this.textContent = 'Assigned';
+							   }
+						   });
+					   });
+					   
+					   // Handle "Unassigned" button clicks (show inactive guests modal)
+					   document.querySelectorAll('.unassign-btn').forEach(btn => {
+						   btn.addEventListener('click', function() {
+							   const bedId = this.getAttribute('data-bed-id');
+							   showInactiveGuestsModal(bedId);
+						   });
+					   });
+				   }, 100);
+			   } catch (e) {
+				   console.error(e);
+				   statusEl.textContent = e.message || 'Failed to load';
+			   }
+		   }
+
+		document.addEventListener('DOMContentLoaded', () => {
+			displayWelcome();
+			loadData();
+			// If page refreshed, restore pending undo if still valid
+			restoreUndoFromStorage();
+			loadGuestList();
+
+			
+
+			// wire filters
+			const statusSel = document.getElementById('filterStatus');
+			if (statusSel) statusSel.addEventListener('change', () => loadData());
+			// wire filters
+			const sharingTypeSel = document.getElementById('filterSharingType');
+			if (sharingTypeSel) sharingTypeSel.addEventListener('change', () => loadData());
+
+			const searchEl = document.getElementById('searchName');
+			if (searchEl) {
+				let _t = null;
+				searchEl.addEventListener('input', () => {
+					if (_t) clearTimeout(_t);
+					_t = setTimeout(() => loadData(), 300);
+				});
+			}
+		});
+		
+		// Snackbar helpers
+		let _snackTimer = null;
+		function ensureSnackbar() {
+			let el = document.getElementById('snackbar');
+			if (!el) {
+				el = document.createElement('div');
+				el.id = 'snackbar';
+				el.className = 'snackbar';
+				document.body.appendChild(el);
+			}
+			return el;
+		}
+
+		function showSnackbar(message, actionLabel, onAction, timeoutMs = 6000) {
+			const bar = ensureSnackbar();
+			bar.innerHTML = `<span class="snackbar-message">${message}</span>` +
+				(actionLabel ? ` <button type="button" id="snackbar-action">${actionLabel}</button>` : '');
+			bar.classList.add('show');
+			if (_snackTimer) { clearTimeout(_snackTimer); _snackTimer = null; }
+			if (actionLabel && typeof onAction === 'function') {
+				const btn = document.getElementById('snackbar-action');
+				if (btn) {
+					btn.onclick = async () => {
+						try { await onAction(); } finally { hideSnackbar(); }
+					};
+				}
+			}
+			_snackTimer = setTimeout(hideSnackbar, timeoutMs);
+		}
+
+		function hideSnackbar() {
+			const bar = ensureSnackbar();
+			bar.classList.remove('show');
+		}
+
+		function showUndoUnassign({ bedId, guestId, guestName }) {
+			// Persist pending undo so a page refresh doesn't lose it
+			const payload = { bedId, guestId, guestName, createdAt: Date.now(), timeoutMs: 8000 };
+			localStorage.setItem('wh_pending_undo_unassign', JSON.stringify(payload));
+			showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+				const token = localStorage.getItem('wh_token');
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ id: bedId, guest_id: guestId })
+				});
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Undo failed (${res.status})`);
+				}
+				localStorage.removeItem('wh_pending_undo_unassign');
+				await loadData();
+			});
+		}
+
+		function restoreUndoFromStorage() {
+			try {
+				const raw = localStorage.getItem('wh_pending_undo_unassign');
+				if (!raw) return;
+				const data = JSON.parse(raw);
+				const { bedId, guestId, guestName, createdAt, timeoutMs = 8000 } = data || {};
+				if (!bedId || !guestId) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				const age = Date.now() - (createdAt || 0);
+				if (age > timeoutMs) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				// Show remaining time
+				const remaining = Math.max(2000, timeoutMs - age);
+				showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+					const token = localStorage.getItem('wh_token');
+					const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+						method: 'POST',
+						headers: {
+							'Authorization': `Bearer ${token}`,
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ id: bedId, guest_id: guestId })
+					});
+					if (!res.ok) {
+						const err = await res.json().catch(() => ({}));
+						throw new Error(err.detail || `Undo failed (${res.status})`);
+					}
+					localStorage.removeItem('wh_pending_undo_unassign');
+					await loadData();
+				}, remaining);
+			} catch { /* ignore */ }
+		}
+
+		// Modal functions
+		async function showInactiveGuestsModal(bedId) {
+			const modal = document.getElementById('inactiveGuestsModal');
+			const modalBody = document.getElementById('inactiveGuestsBody');
+			
+			// Show loading state
+			modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading inactive guests...</p></div>';
+			modal.classList.add('active');
+			
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Fetch guests with inactive status - use max limit of 100
+				const res = await fetch(`${API_BASE_URL}/guests?page=1&limit=100&status=inactive`, {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!res.ok) {
+					if (res.status === 401) {
+						window.location.href = 'login.html';
+						return;
+					}
+					throw new Error(`Failed to fetch guests (${res.status})`);
+				}
+				
+				const data = await res.json();
+				const inactiveGuests = (data && Array.isArray(data.items)) ? data.items : [];
+				
+				if (inactiveGuests.length === 0) {
+					modalBody.innerHTML = `
+						<div class="no-inactive-guests">
+							<i class="bi bi-person-x"></i>
+							<h5>No Inactive Guests</h5>
+							<p>There are currently no guests with inactive status available for assignment.</p>
+						</div>
+					`;
+				} else {
+					const html = inactiveGuests.map(guest => `
+						<div class="inactive-guest-item" data-guest-id="${guest.guest_id}">
+							<div class="guest-info">
+								<h5>${guest.name}</h5>
+								<p>
+									<strong>ID:</strong> ${guest.guest_id} | 
+									<strong>Type:</strong> ${guest.guest_type || 'N/A'} | 
+									<strong>Status:</strong> <span style="color: #f59e0b; font-weight: 600;">Inactive</span>
+								</p>
+							</div>
+							<button class="assign-inactive-btn" onclick="assignGuestToBed('${bedId}', '${guest.guest_id}', '${guest.name.replace(/'/g, "\\'")}')">
+								Assign to Bed
+							</button>
+						</div>
+					`).join('');
+					modalBody.innerHTML = html;
+				}
+			} catch (e) {
+				console.error(e);
+				modalBody.innerHTML = `
+					<div class="no-inactive-guests">
+						<i class="bi bi-exclamation-triangle text-danger"></i>
+						<h5>Error Loading Guests</h5>
+						<p>${e.message || 'Failed to load inactive guests'}</p>
+					</div>
+				`;
+			}
+		}
+		
+		function closeModal() {
+			const modal = document.getElementById('inactiveGuestsModal');
+			modal.classList.remove('active');
+		}
+		
+		async function assignGuestToBed(bedId, guestId, guestName) {
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Call API to assign guest to bed
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						id: bedId,
+						guest_id: guestId
+					})
+				});
+				
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Assignment failed (${res.status})`);
+				}
+				
+				// Close modal and reload data
+				closeModal();
+				alert(`Successfully assigned ${guestName} to bed!`);
+				await loadData();
+				
+			} catch (e) {
+				console.error(e);
+				alert(e.message || 'Failed to assign guest to bed');
+			}
+		}
+		
+		// Close modal when clicking outside
+		document.addEventListener('click', (e) => {
+			const modal = document.getElementById('inactiveGuestsModal');
+			if (e.target === modal) {
+				closeModal();
+			}
+		});
+	</script>
+
+</head>
+<body class="admin-bg">
+	<!-- Shared header will be loaded here -->
+
+	<div class="page-wrapper">
+
+
+			<div id="menu-container"></div>
+
+			<div class="page-header">
+				<div class="page-header-content">
+				<div>
+					<h1><i class="bi bi-people-fill"></i> Payments ↔ status</h1>
+				</div>
+				</div>
+			</div>
+
+
+
+			<div class="card shadow-sm">
+				<div class="card-body">
+					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+						<div class="text-muted" id="status"></div>
+						<div class="d-flex align-items-center" style="gap: .5rem;">
+							<div class="input-group input-group-sm" style="width: 260px;">
+								<span class="input-group-text"><i class="bi bi-search"></i></span>
+								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
+							</div>
+							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
+								<option value="">All Statuses</option>
+								<option value="active">Active</option>
+								<option value="inactive">Inactive</option>
+								<option value="closed">Closed</option>
+							</select>
+
+							<select id="filterSharingType" class="form-select form-select-sm" style="width: 180px;">
+								<option value="">All Sharing Types</option>
+								<option value="brass">Brass</option>
+								<option value="silver">Silver</option>
+								<option value="golden">Golden</option>
+							</select>
+							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+						</div>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-striped table-hover align-middle">
+							<thead class="table-dark">
+
+
+								<tr>
+									<th>Guest/Bed</th>
+									<th>Year</th>
+									<th>Amount</th>									
+									<th>Date</th>
+									<th>Mode</th>
+									<th>Reference</th>
+									<th>Status</th>
+									<!-- <th>Assignment ID</th> -->
+									<th>Forwarded</th>
+
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="rows"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+	</div>
+
+		<!-- Inactive Guests Modal -->
+		<div class="modal-overlay" id="inactiveGuestsModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+					<button class="modal-close" onclick="closeModal()">×</button>
+				</div>
+				<div class="modal-body" id="inactiveGuestsBody">
+					<!-- Content will be dynamically loaded here -->
+				</div>
+			</div>
+		</div>
+
+		<!-- ACTION MODAL -->
+		<div class="modal-overlay" id="actionModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3 id="actionPaymentLabel" >Payment Actions</h3>
+					<button class="modal-close" onclick="closeActionModal()">×</button>
+				</div>
+
+				<div class="modal-body">
+					<!-- <p id="actionPaymentLabel" style="font-weight:600;margin-bottom:1rem;"></p> -->
+					<!-- Confirmation Bar -->
+					<div id="confirmBar" class="alert alert-warning d-none"
+						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+								z-index:1055; min-width:300px;">
+						<span id="confirmText">Are you sure?</span>
+
+						<div class="float-end">
+							<button id="confirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+							<button id="confirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+						</div>
+					</div>
+					<div id="tabs">
+						<ul>
+							<li><a href="#tabs-1">Forward</a></li>
+							<li><a href="#tabs-2">Actions</a></li>
+
+						</ul>
+						<!-- jQuery UI will load the tab content here -->
+						<div id="tabs-1">
+
+							<div id="tab1-info"></div>
+							<!-- Dynamic Combo Box -->
+							<div class="mt-3">
+								<label for="forwardSelect"><strong>Forward To:</strong></label>
+
+								<div class="d-flex gap-2">
+									<select id="forwardSelect" class="form-control">
+										<option value="">Loading...</option>
+									</select>
+
+									<button class="btn btn-sm btn-outline-secondary confirm-action"
+											data-action="forward">
+										Forward
+									</button>
+								</div>
+							</div>
+						</div>
+						<div id="tabs-2">
+							<div id="tab2-info"></div>
+							<div class="mt-3">	
+								<label for="actionbuttons"><strong>Actions:</strong></label>
+								<div class="d-flex gap-2">
+									
+									<button class="btn btn-sm btn-success confirm-action"
+											data-action="approve">
+										Approve payment
+									</button>
+
+									<button class="btn btn-sm btn-danger confirm-action"
+											data-action="cancel">
+										Cancel payment
+									</button>
+
+									<button class="btn btn-sm btn-warning confirm-action"
+											data-action="reject">
+										Reject payment
+									</button>
+
+								</div>
+								</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+	</div>
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+	<script>	
+		let currentPayment = null;
+
+		// open modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("action-btn")) {
+					let info = JSON.parse(e.target.dataset.info);
+
+					currentPayment = info.payment_id;
+					document.getElementById("actionPaymentLabel").textContent =
+						info.guest_name +info.bed_id + " - " + currentPayment;
+					document.getElementById("actionModal").classList.add("active");
+					let html = `
+						<table class="table table-bordered table-sm mt-2">
+							<tr>
+								<td><strong>Year/Month</strong><br/>${info.year || '-'}/${info.month || '-'}</td>
+								<td><strong>Amount</strong><br/>${info.amount || '-'}</td>
+								<td><strong>Mode</strong><br/>${info.mode || '-'}</td>
+							</tr>
+							<tr>
+								<td><strong>Reference</strong><br/>${info.reference || '-'}</td>
+								<td><strong>Status</strong><br/>${info.status || '-'}</td>
+								<td><strong>Forwarded User</strong><br/>${info.forwarded_user || '-'}</td>
+							</tr>
+						</table>
+					`;
+
+					// Put same content in both tabs
+					$("#tab1-info").html(html);
+					$("#tab2-info").html(html);
+
+			}
+		});
+
+		// close modal
+		function closeActionModal() {
+			document.getElementById("actionModal").classList.remove("active");
+		}
+
+		// action handler
+		function doAction(type) {
+			console.log("Action:", type, "for payment:", currentPayment);
+
+			// You can plug API later
+			alert(`Action: ${type}\nPayment ID: ${currentPayment}`);
+
+			closeActionModal();
+		}
+
+		$(function () {
+
+			// Initialize tabs with AJAX loading
+			$("#tabs").tabs({
+				beforeLoad: function (event, ui) {
+					ui.jqXHR.fail(function (e) {
+						ui.panel.html(`
+							<div style="padding:1rem;color:#b91c1c;">
+								<strong>Error ${e.status}</strong><br>
+								${e.statusText}<br><br>
+								Unable to load the content. Please try again.
+							</div>
+						`);
+					});
+				}
+			});
+
+		});
+
+		let pendingAction = null;
+		let pendingBtn = null;
+
+		$(document).on("click", ".confirm-action", function () {
+
+			pendingAction = $(this).data("action");
+			pendingBtn = this;
+
+			const messages = {
+				forward: "Forward this payment?",
+				approve: "Approve this payment?",
+				reject: "Reject this payment?",
+				hold: "Put this payment on hold?"
+			};
+
+			$("#confirmText").text(messages[pendingAction] || "Are you sure?");
+			$("#confirmBar").removeClass("d-none");
+		});
+
+		$("#confirmNo").on("click", function () {
+			$("#confirmBar").addClass("d-none");
+			pendingAction = null;
+			pendingBtn = null;
+		});
+
+		$("#confirmYes").on("click", function () {
+			$("#confirmBar").addClass("d-none");
+
+			if (!pendingAction || !pendingBtn) return;
+
+			handleAction(pendingAction, pendingBtn);
+
+			pendingAction = null;
+			pendingBtn = null;
+		});
+		function handleAction(action, btn) {
+			console.log("Confirmed Action:", action);
+			// API calls go here
+		}
+		</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

@@ -574,3 +574,21 @@ def get_active_guests():
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
+
+def get_active_reviewers():
+    conn = get_connection()
+    cur = conn.cursor()
+    query = """
+        SELECT 
+            g.guest_id as id,
+            g.name
+        FROM guests AS g
+        LEFT JOIN guest_roles AS gr ON g.guest_id = gr.guest_id
+        LEFT JOIN roles AS r ON gr.role_id = r.role_id
+        WHERE r.role_name = 'owner' AND g.status = 'active'
+        ORDER BY id DESC
+    """
+    cur.execute(query)
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows

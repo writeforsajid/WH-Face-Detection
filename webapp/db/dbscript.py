@@ -53,6 +53,18 @@ CREATE TABLE IF NOT EXISTS guests (
 )
 """)
 
+# 2 Guest Faces Table (NEW)
+cursor.execute("""
+CREATE TABLE users (
+    user_id      VARCHAR(20) PRIMARY KEY,
+    username     VARCHAR(100) UNIQUE NOT NULL,
+    name         VARCHAR(200),
+    role         VARCHAR(20) NOT NULL CHECK (role IN ('resident','employee','owner')),
+    email        TEXT UNIQUE,
+    phone_number TEXT,
+    is_active    BOOLEAN DEFAULT TRUE
+)
+""")
 
 # 4️⃣ Guest Faces Table (NEW)
 cursor.execute("""

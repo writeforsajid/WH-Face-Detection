@@ -1,0 +1,4 @@
+[
+  {"guest_id": "20251128171314", "old_rent": 8000, "new_rent": 8500, "changed_by": "20240105000001", "changed_at": "2025-11-01T00:00:00", "reason": "Annual hike"},
+  {"guest_id": "20250105000008", "old_rent": 8500, "new_rent": 8800, "changed_by": "20240105000002", "changed_at": "2025-11-15T00:00:00", "reason": "Bed change"}
+]

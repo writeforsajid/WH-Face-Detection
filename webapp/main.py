@@ -65,6 +65,7 @@ from api import beds as beds_router
 from api import auth as auth_router
 from api import syst as syst_router
 from api import leave as leave_router
+from api import rentalmonth as rentalmonth_router
 from api import scheduler as scheduler_router
 from db import database
 
@@ -77,6 +78,7 @@ app.include_router(employees.router, prefix="/employees", tags=["Employees"])
 app.include_router(upload_video.router, prefix="/video", tags=["Video Upload"])
 app.include_router(reports.router, prefix="/reports", tags=["Reports"])
 app.include_router(beds_router.router, prefix="/beds", tags=["Beds"])
+app.include_router(rentalmonth_router.router, prefix="/rentalmonth", tags=["RentalMonths"])
 app.include_router(metadata_router.router, tags=["Metadata"])
 
 # =======================

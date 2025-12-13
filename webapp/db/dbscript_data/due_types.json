@@ -1,0 +1,38 @@
+[
+  {
+    "code": "RENT",
+    "name": "Monthly Rent"
+  },
+  {
+    "code": "ADVANCE",
+    "name": "Advance Payment"
+  },
+  {
+    "code": "SECURITY",
+    "name": "Security Deposit"
+  },
+  {
+    "code": "MAINT",
+    "name": "Maintenance"
+  },
+  {
+    "code": "ELEC",
+    "name": "Electricity"
+  },
+  {
+    "code": "FOOD",
+    "name": "Food"
+  },
+  {
+    "code": "REG",
+    "name": "Registration"
+  },
+  {
+    "code": "FINE",
+    "name": "Fine"
+  },
+  {
+    "code": "OTHER",
+    "name": "Other"
+  }
+]

@@ -26,7 +26,18 @@ CREATE TABLE IF NOT EXISTS guests (
     status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed','leave'))
 )
 """)
-
+# 1️⃣ Guests Table
+cursor.execute("""
+CREATE TABLE users (
+    user_id      SERIAL PRIMARY KEY,
+    username     VARCHAR(100) UNIQUE NOT NULL,
+    name         VARCHAR(200),
+    role         VARCHAR(20) NOT NULL CHECK (role IN ('admin','owner','employee')),
+    email        VARCHAR(200),
+    phone        VARCHAR(30),
+    is_active    BOOLEAN DEFAULT TRUE
+)
+""")
 
 # 4️⃣ Guest Faces Table (NEW)
 cursor.execute("""

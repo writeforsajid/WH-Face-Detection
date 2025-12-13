@@ -121,7 +121,6 @@ class DashTable extends HTMLElement {
       const json = await res.json();
       const columns = this.headList;
       const rows = json.data || [];
-      debugger;
       this.renderHead(columns);
       this.renderBody(columns, rows);
 

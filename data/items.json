@@ -193,8 +193,8 @@
     "id": 20,
     "title": "Room 405",
     "name": "Radhika",
-    "bed_number": 2,
-    "amount": 7100,
+    "bed_number": "2",
+    "amount": "7100",
     "state": "Start",
     "sharing_type": "Single",
     "security_amount": 3000

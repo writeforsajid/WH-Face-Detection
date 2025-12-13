@@ -1,18 +1,36 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-import asyncio
-from db.database import get_connection
-from datetime import date
-# This is your task
+"""
+(_venv) PS D:\Working\AI\WH Face Detection>python .\webapp\db\dbscript.py
+Note: this file references the original uploaded file path: /mnt/data/dbscript.py for reference but does not import it. It uses same environment loader and crypto_manager used in original.
+"""
 
 
-async def insert_midnight_data():
+import sqlite3
+import json
+import os
+from pathlib import Path
+import random
+from datetime import datetime, timedelta
+
+from environment_variables import load_environment
+# Connect (creates file WhiteHouse.db if not exists)
+DB_PATH = "./data/WhiteHouse_Fresh.db"
+script_dir = os.path.dirname(__file__)
+load_environment("./../../data/.env.webapp")
+
+#if os.path.exists(DB_PATH):
+#    os.remove(DB_PATH)
+
+
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
+
+
+def insert_midnight_data():
     print("Running midnight job...")
-    conn = get_connection()
-    cur = conn.cursor()
-
+    #conn = get_connection()
+    #cur = conn.cursor()
     try:
-        cur.execute("""
+        cursor.execute("""
             Select g.guest_id,b.sharing_type,b.bed_id,brp.monthly_rent,status from guests as a
             JOIN guest_roles AS g ON a.guest_id = g.guest_id
             Left join roles as r ON r.role_id = g.role_id
@@ -22,8 +40,8 @@ async def insert_midnight_data():
             where status <>'closed' and r.role_name ='resident'     
         """)
 
-        rows = cur.fetchall()
-        today = date.today()
+        rows = cursor.fetchall()
+        today = datetime.today()
         # Extract the year and month
         current_year = today.year
         current_month = today.month
@@ -39,7 +57,7 @@ async def insert_midnight_data():
             if calculated_rent < 0:
                 calculated_rent = 6000  # Default rent if not found
             # Insert due record
-            cur.execute(f"""
+            cursor.execute(f"""
                 INSERT INTO dues (guest_id, year, month, due_type_id, due_amount)
                 SELECT '{guest_id}', {current_year}, {current_month}, 1, {calculated_rent}
                 WHERE NOT EXISTS (
@@ -54,15 +72,16 @@ async def insert_midnight_data():
     finally:
         conn.close()
 
-print("Job completed.")
+    print("Job completed.")
 
-scheduler = AsyncIOScheduler()
 
-def start_scheduler():
-    scheduler.add_job(
-        insert_midnight_data,
-        CronTrigger(hour=0, minute=0),  # Runs every day at 00:00
-        id="midnight_job",
-        replace_existing=True
-    )
-    scheduler.start()
+
+
+
+if __name__ == "__main__":
+    load_environment("./../data/.env.yolocam")
+    insert_midnight_data()
+
+print(f"✅ Database created at: {DB_PATH}")
+
+

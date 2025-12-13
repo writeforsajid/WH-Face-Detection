@@ -44,4 +44,4 @@ python -m yolo_cam.Yolo_Runner
 .\_venv\Scripts\activate   
 git add .
 git commit -m "More changes w.r.t docker"
-uvicorn webapp.main:app --reload
+uvicorn main:app --reload --host 127.0.0.1 --port 8000 --ssl-keyfile="webapp.key" --ssl-certfile="webapp.crt"

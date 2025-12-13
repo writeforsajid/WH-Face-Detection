@@ -6,66 +6,39 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
   <style>
-  .ui-autocomplete-category {
-    font-weight: bold;
-    padding: .2em .4em;
-    margin: .8em 0 .2em;
-    line-height: 1.5;
-  }
+
   </style>
   <style>
-    body { font-family: Arial; padding:20px }
-    .stage-box { display:flex; gap:20px; margin-top:20px; }
-    .box {
-      flex:1; min-height:250px;
-      padding:10px;
-      border:2px dashed #bbb;
-      border-radius:10px;
-      background:#f8f8f8;
-    }
-    .box h4 { margin-top:0; }
-    .item {
-      padding:10px;
-      margin:8px 0;
-      background:white;
-      border:1px solid #ccc;
-      border-radius:6px;
-      cursor:move;
-    }
-    .ui-state-highlight {
-      background:#e3f2ff;
-      border-color:#409eff;
-    }
-    #tabs { margin-top:20px; }
-    .save-btn {
-      margin-top:10px;
-      padding:8px 20px;
-      border:none;
-      background:#1971c2;
-      color:white;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    .meta-badge {
-      position:absolute;
-      top:6px;
-      right:6px;
-      background:var(--accent);
-      color:white;
-      font-size:11px;
-      padding:2px 6px;
-      border-radius:12px;
-      display:none;
-    }
-  </style>
+      body {font-family:Arial;padding:20px}
+      .stage-box {display:flex;gap:20px;margin-top:20px}
+      .box {flex:1;min-height:250px;padding:10px;border:2px dashed #bbb;border-radius:10px;background:#f8f8f8}
+      .box h4 {margin-top:0}
+      .item {padding:10px;margin:8px 0;background:white;border:1px solid #ccc;border-radius:6px;cursor:move;touch-action:none;position:relative}
+      .ui-state-highlight {background:#e3f2ff;border-color:#409eff}
+      #tabs {margin-top:20px}
+      .save-btn {margin-top:10px;padding:8px 20px;border:none;background:#1971c2;color:white;border-radius:6px;cursor:pointer}
+      .meta-badge {position:absolute;top:6px;right:6px;background:var(--accent);color:white;font-size:11px;padding:2px 6px;border-radius:12px;display:none}
+      
+      .ui-autocomplete-category {font-weight: bold;    padding: .2em .4em;    margin: .8em 0 .2em;    line-height: 1.5;  }
+</style>
+<script>
+    const API_BASE_URL = (function(){
+      const saved = localStorage.getItem('wh_api_base');
+      if (saved) return saved;
+      if (window.location.port === '8000') return window.location.origin;
+      return window.location.origin;
+    })();
+</script>
+
+
 </head>
 <body>
 
 <h2>Workflow Manager (Start → Review1 → Review2 → Final)</h2>
-<label for="search">Search: </label>
-<input id="search">Date: <input type="text" id="datepicker">
+Date: <input type="text" id="datepicker">
 <div id="tabs">
   <ul>
     <li><a href="#tab-start">Start</a></li>
@@ -77,6 +50,7 @@
   <!-- ----------------------- START TAB ----------------------- -->
   <div id="tab-start">
     <h3>Start Stage</h3>
+    <label for="search">Search: </label><input id="search">
     <button class="save-btn" id="save-start">Save & Move to Review 1</button>
     <div class="stage-box">
       <!-- Source -->
@@ -163,7 +137,6 @@
 
 <script>
 let itemsData = [];
-const jsonPath = "data/items.json";
 const STAGES = ["start","review1","review2","final"];
 let ITEMS = [];
 let META = {};
@@ -174,11 +147,39 @@ const LS_META  = "wf_meta_v3";
    LOAD JSON ITEMS
 --------------------------------------------------------- */
 function loadItems() {
-  $.getJSON(jsonPath, function(data) {
-    itemsData = data;
-    renderAllTabs();
-  });
+  // $.getJSON(jsonPath, function(data) {
+  //   itemsData = data;
+  //   renderAllTabs();
+  // });
+  // return
+  
+  $.ajax({
+      url: `${API_BASE_URL}/rentalmonth/tillmonthrent`,
+      type: "GET",
+      dataType: "json",
+      data: {
+        year: 2025,
+        month: 12
+      },
+      success: function (data) {
+        itemsData = data;
+        console.log(data);
+        renderAllTabs();
+        // loadGuests(currentPage);
+      },
+      error: function (xhr) {
+        alert(
+          "Error deleting guest: " +
+            (xhr.responseJSON?.detail || "Unknown error")
+        );
+      },
+    });
+  
+  
+
 }
+
+
 
 /* --------------------------------------------------------
    RENDER ITEMS INTO CORRECT TAB
@@ -189,7 +190,7 @@ function renderAllTabs() {
   itemsData.forEach(item => {
     const card = makeItemCard(item);
 
-    if (item.state === "Start") $("#start-source").append(card);
+    if (item.state === "active") $("#start-source").append(card);
     if (item.state === "Review1") $("#review1-source").append(card);
     if (item.state === "Review2") $("#review2-source").append(card);
     if (item.state === "Final") $("#final-source").append(card);
@@ -231,79 +232,86 @@ function makeCard(it){
 /* ---------------------------
    Dialog for meta editing
 ----------------------------*/
-function openDialog(id){
-  const m = META[id] || { desc:"", upi:"", fileName:"" };
+function openDialog(id) {
+  const card = $(`.item-card[data-id='${id}']`);
+  
+  // Read current metadata from the DOM
+  const m = {
+    desc: card.data("desc") || "",
+    upi: card.data("upi") || "",
+    fileName: card.data("fileName") || ""
+  };
 
   $("#dlg_id").val(id);
-  $("#dlg_desc").val(m.desc || "");
-  $("#dlg_upi").val(m.upi || "");
+  $("#dlg_desc").val(m.desc);
+  $("#dlg_upi").val(m.upi);
 
   $("#itemDialog").dialog({
-    modal:true,
-    width:400,
-    buttons:{
-      "Save":function(){
+    modal: true,
+    width: 400,
+    buttons: {
+      "Save": function () {
         const desc = $("#dlg_desc").val();
         const upi = $("#dlg_upi").val();
         const file = $("#dlg_file")[0].files[0];
 
-        META[id] = {
-          desc,
-          upi,
-          fileName: file ? file.name : (m.fileName || "")
-        };
+        // Update card dataset ONLY (no localStorage)
+        card.data("desc", desc);
+        card.data("upi", upi);
+        card.data("fileName", file ? file.name : m.fileName);
 
-        localStorage.setItem(LS_META, JSON.stringify(META));
-
-        // Update badge
-        if(desc || upi || file){
-          $(`.item-card[data-id='${id}']`).find(".meta-badge").addClass("visible");
+        // Show badge if any metadata exists
+        if (desc || upi || file) {
+          card.find(".meta-badge").addClass("visible");
+        } else {
+          card.find(".meta-badge").removeClass("visible");
         }
 
         $(this).dialog("close");
       },
-      "Cancel":function(){ $(this).dialog("close"); }
+
+      "Cancel": function () {
+        $(this).dialog("close");
+      }
     }
   });
 }
 
 
+
 /* --------------------------------------------------------
    MAKE CARD HTML
 --------------------------------------------------------- */
-function makeItemCard(item) {
-  debugger;
-  it=item;
-  const meta = META[it.id] || {};
-  const hasMeta = meta.desc || meta.upi || meta.fileName;
+function makeItemCard(it) {
 
   const $c = $(`
     <div class="item item-card" data-id="${it.id}">
-      <div class="meta-badge ${hasMeta ? 'visible':''}">●</div>
+      <div class="meta-badge">●</div>
       <h6>${it.title} (#${it.id})</h6>
-      <div>Name: ${it.name}</div>
-      <div>Bed: ${it.bed_number}</div>
+      <div>Name: ${it.name}(${it.bed_number})</div>
       <div>Amount: ₹${it.amount}</div>
     </div>
   `);
-  //debugger;
+
+  // APPLY METADATA FROM itemsData
+  if (it.meta_desc)  $c.data("desc", it.meta_desc);
+  if (it.meta_upi)   $c.data("upi", it.meta_upi);
+  if (it.meta_file)  $c.data("fileName", it.meta_file);
+
+  // Show badge if metadata exists
+  if (it.meta_desc || it.meta_upi || it.meta_file) {
+      $c.find(".meta-badge").addClass("visible");
+  } else {
+      $c.find(".meta-badge").removeClass("visible");
+  }
 
   $c.on("click", function(){
     openDialog(it.id);
   });
 
   return $c;
-
-  return $(`
-    <div class="item item-card" data-id="${item.id}">
-      <strong>${item.title}</strong><br>
-      ${item.name} — Bed ${item.bed_number}<br>
-      ₹${item.amount} | ${item.sharing_type}
-    </div>
-  `);
-
-
 }
+
 
 /* --------------------------------------------------------
    DRAG & DROP HANDLERS
@@ -395,22 +403,33 @@ $(function() {
         });
       }
     });
-    var data = [
-      { label: "anders", category: "" },
-      { label: "andreas", category: "" },
-      { label: "antal", category: "" },
-      { label: "annhhx10", category: "Products" },
-      { label: "annk K12", category: "Products" },
-      { label: "annttop C13", category: "Products" },
-      { label: "anders andersson", category: "People" },
-      { label: "andreas andersson", category: "People" },
-      { label: "andreas johnson", category: "People" }
-    ];
+
+    var itemsData = [];
+
  
-    $( "#search" ).catcomplete({
-      delay: 0,
-      source: data
-    });
+    $.ajax({
+        url: `${API_BASE_URL}/rentalmonth/guestswithdues`,
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+          itemsData = data;
+
+          $( "#search" ).catcomplete({
+            delay: 0,
+            source: itemsData
+          });
+          // loadGuests(currentPage);
+        },
+        error: function (xhr) {
+          alert(
+            "Error deleting guest: " +
+              (xhr.responseJSON?.detail || "Unknown error")
+          );
+        },
+      });
+    
+
+
   } );
   </script>
 
@@ -422,5 +441,16 @@ $(function() {
     });
   } );
   </script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
