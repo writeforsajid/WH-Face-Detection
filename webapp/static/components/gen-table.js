@@ -4,7 +4,7 @@ class GenTable extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.extraParams = {};
     this.page = 1;
-    this.pageSize = 50;
+    this.pageSize = 100;
     this.total = 0;
   }
 
@@ -28,6 +28,10 @@ class GenTable extends HTMLElement {
         if (userrole === 'resident')
         {
           url.searchParams.set('guest_id', guestid);
+        }
+        else
+        {
+          url.searchParams.set('guest_id', "owner");
         }
         url.searchParams.set("page", this.page);
         url.searchParams.set("pageSize", this.pageSize);
@@ -97,6 +101,7 @@ select { padding:4px; }
               <option value="10">10</option>
               <option value="20">20</option>
               <option value="50">50</option>
+              <option value="100">100</option>              
             </select>
           </div>
         </div>
@@ -163,7 +168,7 @@ select { padding:4px; }
 
       this.total = json.total || 0;
       const rows = json.data || [];
-
+      console.log("Table data:", rows);
       this.renderHead(columns);
       this.renderBody(columns, rows);
       this.updatePagination();

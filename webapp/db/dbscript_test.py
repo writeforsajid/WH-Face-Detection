@@ -37,6 +37,7 @@ def insert_midnight_data():
             Left join guest_beds as gb ON gb.guest_id = g.guest_id
             Left join beds as b ON b.bed_id= gb.bed_id
             Left join bed_rent_plan as brp ON brp.sharing_type = b.sharing_type
+
             where status <>'closed' and r.role_name ='resident'     
         """)
 

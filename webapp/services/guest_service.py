@@ -8,6 +8,7 @@ from fastapi import HTTPException
 import re
 import os, shutil, json, zipfile
 from datetime import datetime
+from utilities.crypto_manager import crypto
 #from passlib.context import CryptContext
 #import ffmpeg
 
@@ -285,6 +286,15 @@ def confirm_guest(guest_id: str) -> bool:
         # Update confirmed status
         data["confirmed"] = True
 
+        guest_id = datetime.now().strftime("%Y%m%d%H%M%S")
+        name=  data["guest_name"];
+        guest_type= data["guest_type"];
+        comments=  data["comment"];
+        email=  data["email"];
+        phone=  data["phone"];
+        _insert_guest(guest_id, name, guest_type, comments, email, phone)
+
+
         # Save back to the same file
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -308,6 +318,61 @@ def confirm_guest(guest_id: str) -> bool:
     except Exception as e:
         print(f"⚠️ Error updating guest {guest_id}: {e}")
         return False
+
+
+# ------------------------------------------------------------
+# Helper function OUTSIDE of execute()  (Correct place)
+# ------------------------------------------------------------
+def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
+    conn = get_connection()
+    cursor = conn.cursor()
+    breakpoint();
+    if (guest_type.lower() == "resident") and (email == "N/A" or email.strip() == ""):
+        raise ValueError("Email is required for Resident guest type.")
+
+
+    if (guest_type.lower() == "employee") or (guest_type.lower() == "owner"):
+            email =guest_id + "@gmail.com"
+
+
+    
+    
+    # 1️⃣ Check if email exists
+    cursor.execute("SELECT guest_id FROM guests WHERE email = ?", (email,))
+    existing = cursor.fetchone()
+
+    if existing:
+        return existing[0]
+    
+    # 2️⃣ Insert into guests table
+    cursor.execute("""
+        INSERT INTO guests (guest_id, name, comments, email, phone_number, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (guest_id, name, comments, email, phone_number, 'inactive'))
+    print(f"[Info] New Guest inserted.{guest_id}")
+    # 3️⃣ Insert authentication record
+    password_hash = crypto.encrypt("Pass@123")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT OR REPLACE INTO guest_auth 
+        (guest_id, password_hash, is_active, created_at, updated_at)
+        VALUES (?, ?, 1, ?, ?)
+    """, (guest_id, password_hash, now, now))
+    print(f"[Info] Guest auth record created.{guest_id}")
+    # 4️⃣ Assign role
+    role_id = 1 if guest_type.lower() == "resident" else \
+            2 if guest_type.lower() == "employee" else 3
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO guest_roles (guest_id, role_id, assigned_at)
+        VALUES (?, ?, ?)
+    """, (guest_id, role_id, datetime.now().strftime("%Y-%m-%d")))
+
+    print(f"[Info] Assigned role {role_id} to guest {guest_id}")
+    conn.commit()
+    conn.close()
+    return guest_id
 
 
 def get_history_records(guest_id, start_date, end_date, page, limit):
@@ -337,9 +402,10 @@ def get_history_records(guest_id, start_date, end_date, page, limit):
 
     # Get guest details
     cur.execute("""
-        SELECT g.*, ga.bed_id, ga.assign_date
+        SELECT g.*, ga.bed_id, ga.assign_date,(sd.amount-sd.refunded_amount) guest_security
         FROM guests g
         LEFT JOIN guest_beds ga ON g.guest_id = ga.guest_id
+        Left join security_deposits as sd ON sd.guest_id= g.guest_id
         WHERE g.guest_id = ?
     """, (guest_id,))
     
@@ -349,7 +415,6 @@ def get_history_records(guest_id, start_date, end_date, page, limit):
         return {"error": "Guest not found"}
     
     guest_data = dict(guest)
-
 
     data = []
     for row in records:

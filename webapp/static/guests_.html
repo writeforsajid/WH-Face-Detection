@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Guest Management</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+   
+  </head>
+  <body class="admin-bg">
+    <!-- Wrap header + page header + table into a single page wrapper so the injected header
+     and the page content share the same containing block -->
+    <div class="page-wrapper">
+      <div id="menu-container"></div>
+
+      <!-- Page Header (Full Width) -->
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Guest Management</h1>
+          </div>
+        </div>
+      </div>
+
+      <div class="">
+        <!-- Guest Table -->
+        <div class="container-fluid px-2">
+            
+            <!-- Responsive Table Wrap -->
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="guestTable"></tbody>
+                </table>
+            </div>
+
+            <nav>
+                <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Contact Modal -->
+    <div class="modal fade" id="contactModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          
+          <div class="modal-header">
+            <h5 class="modal-title">Update Contact</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="contact_guest_id">
+
+            <label class="form-label">Contact Name</label>
+            <input type="text" id="contact_name" class="form-control">
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-primary" onclick="applyContact()">Apply</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // ------------------- Load Guests -------------------
+      let currentPage = 1;
+      const API_BASE_URL = window.location.origin;
+
+      // function handleBack() {
+      //   try {
+      //     if (document.referrer && window.history.length > 1) {
+      //       window.history.back();
+      //       return;
+      //     }
+      //   } catch (e) { /* ignore */ }
+      //   // Fallback to Beds page if no history
+      //   window.location.href = 'Bed_Guest_Relationship.html';
+      // }
+
+      function loadGuests(page = 1) {
+        $.ajax({
+          url: `${API_BASE_URL}/guests?page=${page}&limit=100`,
+          type: "GET",
+          success: function (data) {
+            let rows = "";
+
+            if (data.items && data.items.length > 0) {
+              data.items.forEach((g) => {
+                
+                rows += `<tr>
+            
+            <td>${g.guest_id}</td>
+            <td><a href="${API_BASE_URL}/static/historydetails.html?id=${g.guest_id}" target="_blank">${g.name}</a>(${g.face_count || "-"})</td>
+            <td>${g.email || "-"}</td>
+            <td>${g.bed_no || "-"}</td>
+            <td>${g.status || "-"}</td>
+            <td>
+              <button class="btn btn-sm btn-info me-1" 
+                onclick="openContactModal('${g.guest_id}', '${g.name}', '${g.status}', '${g.bed_no}')">
+                <i class="bi bi-telephone-plus"></i> Cont
+              </button>
+
+              <button class="btn btn-sm btn-outline-secondary" onclick="toggleGuestStatus('${g.guest_id}')">
+                <i class="bi bi-toggle-on"></i> Shuf
+              </button>
+
+              <button class="btn btn-danger btn-sm" onclick="deleteGuest('${g.guest_id}')">
+                <i class="bi bi-trash"></i> Del
+              </button>
+            </td>
+            </tr>`;
+              });
+            } else {
+              rows = `<tr><td colspan="6" class="text-center">No guests found</td></tr>`;
+            }
+            $("#guestTable").html(rows);
+
+            // Pagination
+            let pagination = "";
+            for (let i = 1; i <= data.total_pages; i++) {
+              pagination += `<li class="page-item ${
+                i === page ? "active" : ""
+              }">
+          <a class="page-link" href="#" onclick="loadGuests(${i}); return false;">${i}</a>
+        </li>`;
+            }
+            $("#pagination").html(pagination);
+            currentPage = page;
+          },
+          error: function (xhr) {
+            console.error("Error loading guests:", xhr);
+            $("#guestTable").html(
+              `<tr><td colspan="6" class="text-center text-danger">Error loading guests: ${
+                xhr.responseJSON?.detail ||
+                xhr.statusText ||
+                "Server not reachable"
+              }</td></tr>`
+            );
+          },
+        });
+      }
+
+      // ------------------- Delete Guest -------------------
+      function deleteGuest(id) {
+        if (confirm("Delete this guest?")) {
+          $.ajax({
+            url: `${API_BASE_URL}/guests/${id}`,
+            type: "DELETE",
+            success: function () {
+              loadGuests(currentPage);
+            },
+            error: function (xhr) {
+              alert(
+                "Error deleting guest: " +
+                  (xhr.responseJSON?.detail || "Unknown error")
+              );
+            },
+          });
+        }
+      }
+
+      // ------------------- Active/Inactive Guest -------------------
+      function toggleGuestStatus(guest_id) {
+        $.ajax({
+          url: `${API_BASE_URL}/guests/${guest_id}/toggle`,
+          type: "PUT",
+          success: function (res) {
+            alert(`Guest is now ${res.active ? "Active" : "Inactive"}`);
+            loadGuests();
+          },
+          error: function (xhr) {
+            alert(xhr.responseJSON?.detail || "Error toggling guest status");
+          },
+        });
+      }
+
+      // ------------------- Open Modal -------------------
+      function openContactModal(guest_id, name, status, bed_no) {
+
+        // Prepare default contact text
+        let contactText = "";
+        if (status && status.toLowerCase() === "closed") {
+          contactText = `CL.${name}`;
+        } else {
+          contactText = `AV.${name} ${bed_no || ""}`.trim();
+        }
+
+        // Set modal values
+        $("#contact_guest_id").val(guest_id);
+        $("#contact_name").val(contactText);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById("contactModal"));
+        modal.show();
+      }
+
+      // ------------------- Apply Contact Update -------------------
+      function applyContact() {
+        const guest_id = $("#contact_guest_id").val();
+        const contact_name = $("#contact_name").val();
+
+        const formData = new FormData();
+        formData.append("guest_id", guest_id);
+        formData.append("contact_name", contact_name);
+        $.ajax({
+          url: `${API_BASE_URL}/guests/addupdatecontact`,
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function () {
+            alert("Contact updated successfully");
+            loadGuests(currentPage);
+            bootstrap.Modal.getInstance(document.getElementById("contactModal")).hide();
+          },
+
+          error: function (xhr) {
+            alert(xhr.responseJSON?.detail || "Error updating contact");
+          }
+        });
+      }
+
+
+
+
+
+      // ------------------- Initial Load -------------------
+      loadGuests();
+    </script>
+
+    <script src="./js/main.js"></script>
+    <script>
+      $(document).ready(function () {
+        const username =
+          JSON.parse(localStorage.getItem("wh_user") || "{}").name || "";
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+      });
+    </script>
+  </body>
+</html>

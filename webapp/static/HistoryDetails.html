@@ -140,8 +140,8 @@
 				guest.bed_id || guest.bed_no || 'Not Assigned';
 			document.getElementById('guest-assign-date').textContent =
 				formatDate(guest.assign_date);
-			document.getElementById('guest-type').textContent =
-				guest.guest_type || 'Standard';			
+			document.getElementById('guest-security').textContent =
+				guest.guest_security || 'Z';			
 
 		}
 
@@ -589,8 +589,8 @@
 					<div class="value" id="guest-assign-date">-</div>
 				</div>
 				<div class="info-item">
-					<div class="label"><i class="bi bi-person-badge"></i> Guest Type</div>
-					<div class="value" id="guest-type">Standard</div>
+					<div class="label"><i class="bi bi-person-badge"></i> Security Deposit</div>
+					<div class="value" id="guest-security">Standard</div>
 				</div>
 				</div>
 			</div>

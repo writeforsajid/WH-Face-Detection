@@ -10,7 +10,7 @@ import csv
 import sqlite3,os
 from dotenv import load_dotenv, find_dotenv
 from utilities.environment_variables import load_environment
-
+from db.database import get_connection
 
 
 #load_environment(env_path);
@@ -218,3 +218,109 @@ def guest_presence_report(till_date: str):
         "count": len(report),
         "data": report
     }
+
+
+
+
+
+
+
+def get_monthly_rents(guest_id, startDate, endDate, page, pageSize):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    where = ["a.status <>'closed' and r.role_name ='resident'"]
+    params = []
+
+    # Optional date filters
+    #if startDate:
+       # where.append("date(start_date) >= date(?)")
+       # params.append(startDate)
+
+    #if endDate:
+        #where.append("date(end_date) <= date(?)")
+        #params.append(endDate)
+
+    where_clause = " AND ".join(where)
+
+    # Pagination
+    offset = (page - 1) * pageSize
+
+    # 1) Count total
+    cur.execute(f"""
+        SELECT COUNT(*) FROM guests as a
+        JOIN guest_roles AS g ON a.guest_id = g.guest_id
+        Left join roles as r ON r.role_id = g.role_id
+        Left join guest_beds as gb ON gb.guest_id = g.guest_id
+        Left join beds as b ON b.bed_id= gb.bed_id
+        Left join bed_rent_plan as brp ON brp.sharing_type = b.sharing_type
+        Left join security_deposits as sd ON sd.guest_id= a.guest_id
+        Left join (
+            SELECT
+                guest_id,
+                SUM(due_amount) AS total_due,
+                SUM(amount_paid) AS total_paid
+            FROM dues
+            GROUP BY guest_id
+        ) d ON d.guest_id = a.guest_id
+        WHERE {where_clause}
+    """, params)
+
+    total = cur.fetchone()[0]
+
+    # 2) Fetch paginated list
+    cur.execute(f"""
+SELECT
+    g.guest_id,
+    a.name,
+    b.sharing_type,
+    b.bed_id,
+    brp.monthly_rent,
+    (sd.amount - sd.refunded_amount) AS security,
+    COALESCE(d.total_due - d.total_paid, 0) AS balance,
+    a.status
+FROM guests AS a
+JOIN guest_roles AS g 
+    ON a.guest_id = g.guest_id
+LEFT JOIN roles AS r 
+    ON r.role_id = g.role_id
+LEFT JOIN guest_beds AS gb 
+    ON gb.guest_id = g.guest_id
+LEFT JOIN beds AS b 
+    ON b.bed_id = gb.bed_id
+LEFT JOIN bed_rent_plan AS brp 
+    ON brp.sharing_type = b.sharing_type
+LEFT JOIN security_deposits AS sd 
+    ON sd.guest_id = a.guest_id
+LEFT JOIN (
+    SELECT
+        guest_id,
+        SUM(due_amount) AS total_due,
+        SUM(amount_paid) AS total_paid
+    FROM dues
+    GROUP BY guest_id
+) d 
+    ON d.guest_id = a.guest_id
+        WHERE {where_clause}
+        ORDER BY b.bed_id ASC
+        LIMIT ? OFFSET ?
+    """, params + [pageSize, offset])
+
+    rows = cur.fetchall()
+    conn.close()
+    return {
+        "success": True,
+        "total": total,
+        "page": page,
+        "pageSize": pageSize,
+        "data": [dict(zip([
+            "s.no","guest_id", "name","type","bed_id",  "monthly_rent", "security", "balance","status",
+            "comments"
+        ],
+            [i + 1] + list(r)
+        )
+    )
+    for i, r in enumerate(rows)
+]
+    }
+#b.sharing_type,b.bed_id,brp.monthly_rent,(sd.amount-sd.refunded_amount) security,(d.due_amount-d.amount_paid) balance, a.status

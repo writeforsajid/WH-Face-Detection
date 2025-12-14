@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script type="module" src="/static/components/employee-filter.js"></script>
+  <script type="module" src="/static/components/gen-table.js" ></script>
+
+	<!-- <script type="module" src="/static/components/employee-filter.js"></script> -->
+	
+	<style>
+    body {
+        font-family: Arial;
+        padding: 20px;
+        /* max-width: 450px; */
+        margin: auto;
+    }
+    label {
+        display: block;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 20px;
+        padding: 12px;
+        width: 100%;
+        background: #0275d8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #025aa5;
+    }
+    .error {
+        color: red;
+        margin-top: 5px;
+    }
+</style>
+
+</head>
+<body class="admin-bg">
+  <!-- Loading overlay removed for FAQ page -->
+	<!-- Main Content -->
+	<div class="page-wrapper">
+		<div id="menu-container"></div>
+    <div class="page-header">
+      <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Report rent</h1>
+          </div>
+
+    </div>
+    <div class="card">
+      <div class="card-body" style='padding: 10px 2%;'>
+
+        
+      <employee-filter  data-api="/guests/active"> </employee-filter>
+      <gen-table
+        id="table1"
+        data-api="/reports/monthly"
+        data-title="Monthly rents"
+        data-head='["s.no", "name","bed_id" ,"type", "status","monthly_rent", "security", "balance",
+            "comments"]'>
+
+      </gen-table>
+    
+                      <!-- "serial_number","guest_id", "name","sharing_type","bed_id",  "monthly_rent", "security", "balance","status", -->
+            <!-- "reason", "status"         -->
+<!-- <smart-table
+  id="leaveTable"
+  data-api="/leave/search"
+  data-title="Leave history"
+  data-id-key="leave_id" 
+  data-columns='[
+    {"key":"leave_id","label":"ID"},
+    {"key":"leave_type_id","label":"Type"},
+    {"key":"start_date","label":"Start"},
+    {"key":"end_date","label":"End"},
+    {"key":"reason","label":"Reason"},
+    {"key":"status","label":"Status"}
+  ]'
+  data-actions='["approve","reject","delete"]'
+>
+</smart-table> -->
+
+      </div>
+    
+    
+    </div>
+  
+  </div>
+
+  
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+
+
+
+  <script>
+  let currentFilter = {
+  startDate: new Date().toISOString().split("T")[0],
+  endDate: new Date().toISOString().split("T")[0],
+  employeeId: "all"
+  };
+  document.addEventListener("filter-data", async (e) => {
+    const filter = e.detail;  
+    const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+    const guestId = user.guest_id || '';
+    const role = user.role || '';
+    console.log("Received DATA:", filter);
+    //let filter = document.getElementById("logFilter");
+    let table = document.getElementById("table1");
+    table.setParams({
+      startDate: filter.startDate,
+      endDate: filter.endDate,
+    });
+
+
+    currentFilter = {
+    status: "success",
+    message: "Data fetched successfully",
+    filter
+  };
+});
+    
+  </script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
