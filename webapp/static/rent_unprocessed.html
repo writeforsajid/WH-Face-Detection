@@ -62,7 +62,7 @@
 					if (window.location.port === '8000') return window.location.origin;
 					return window.location.origin;
 				})();
-
+				const CURRENT_USER = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
 		async function ensureLoggedInOrRedirect() {
 			const token = localStorage.getItem('wh_token');
 			if (!token) {
@@ -159,6 +159,7 @@
 						   <td>${guest}(${r.bed_id || '-'})</td>
 							<td>${r.year || '-'}-${r.month || '-'}</td>
 							<td>${r.amount || '-'}</td>
+							<td>${r.balance || '-'}</td>
 							<td>${r.payment_date}</td>
 							<td>${r.mode || '-'}</td>
 							<td>${r.reference || '-'}</td>
@@ -172,6 +173,7 @@
 										year: r.year,
 										month: r.month,
 										amount: r.amount,
+										balance: r.balance,
 										payment_date: r.payment_date,
 										mode: r.mode,
 										reference: r.reference,
@@ -541,27 +543,43 @@
 			<div class="card shadow-sm">
 				<div class="card-body">
 					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
-						<div class="text-muted" id="status"></div>
-						<div class="d-flex align-items-center" style="gap: .5rem;">
-							<div class="input-group input-group-sm" style="width: 260px;">
-								<span class="input-group-text"><i class="bi bi-search"></i></span>
-								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
-							</div>
-							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
-								<option value="">All Statuses</option>
-								<option value="active">Active</option>
-								<option value="inactive">Inactive</option>
-								<option value="closed">Closed</option>
-							</select>
+					<div class="text-muted mb-2" id="status"></div>
 
-							<select id="filterSharingType" class="form-select form-select-sm" style="width: 180px;">
-								<option value="">All Sharing Types</option>
-								<option value="brass">Brass</option>
-								<option value="silver">Silver</option>
-								<option value="golden">Golden</option>
-							</select>
-							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+					<div class="d-flex flex-wrap align-items-center gap-2 w-100">
+						
+						<div class="input-group input-group-sm flex-grow-1 flex-md-grow-0"
+							style="max-width: 260px;">
+							<span class="input-group-text">
+								<i class="bi bi-search"></i>
+							</span>
+							<input type="text" id="searchName" class="form-control"
+								placeholder="Search by guest name..." />
 						</div>
+
+						<select id="filterStatus"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 160px;">
+							<option value="">All Statuses</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+							<option value="closed">Closed</option>
+						</select>
+
+						<select id="filterSharingType"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 180px;">
+							<option value="">All Sharing Types</option>
+							<option value="brass">Brass</option>
+							<option value="silver">Silver</option>
+							<option value="golden">Golden</option>
+						</select>
+
+						<button class="btn btn-sm btn-outline-secondary flex-grow-1 flex-md-grow-0">
+							Refresh
+						</button>
+
+					</div>
+
 					</div>
 					<div class="table-responsive">
 						<table class="table table-striped table-hover align-middle">
@@ -571,7 +589,8 @@
 								<tr>
 									<th>Guest/Bed</th>
 									<th>Year</th>
-									<th>Amount</th>									
+									<th>Amount</th>
+									<th>Balance</th>									
 									<th>Date</th>
 									<th>Mode</th>
 									<th>Reference</th>
@@ -653,21 +672,21 @@
 						<div id="tabs-2">
 							<div id="tab2-info"></div>
 							<div class="mt-3">	
-								<input type="text" id="comment_forward" class="form-control mb-1" placeholder="Enter comment" />
+								<input type="text" id="comment_others" class="form-control mb-1" placeholder="Enter comment" />
 								<br/>
 								<div class="d-flex gap-2">
 									
-									<button class="btn btn-sm btn-success confirm-action"
+									<button id="btnApprove" class="btn btn-sm btn-success confirm-action"
 											data-action="approve">
 										Approve payment
 									</button>
 
-									<button class="btn btn-sm btn-danger confirm-action"
+									<button id="btnCancel" class="btn btn-sm btn-danger confirm-action"
 											data-action="cancel">
 										Cancel payment
 									</button>
 
-									<button class="btn btn-sm btn-warning confirm-action"
+									<button id="btnReject" class="btn btn-sm btn-warning confirm-action"
 											data-action="reject">
 										Reject payment
 									</button>
@@ -704,6 +723,30 @@
 					let info = JSON.parse(e.target.dataset.info);
 
 					currentPayment = info.payment_id;
+					const status = info.status;
+					// Reset everything first
+					$("#btnApprove, #btnReject, #btnCancel").prop("disabled", false);
+					$("#tabs").tabs("enable", 0); // Forward tab
+					$("#forwardSelect, #comment_forward").prop("disabled", false);
+					$(".confirm-action[data-action='forward']").prop("disabled", false);
+					// 🔴 Case 1: FINAL APPROVED
+					if (status === "approved_final") {
+						// Disable approve & reject
+						$("#btnApprove, #btnReject").prop("disabled", true);
+						// Disable entire forward tab
+						$("#tabs").tabs("disable", 0);
+						// Optional: visually clear forward fields
+						$("#comment_forward").val("");
+						$("#forwardSelect").val("");
+						$("#tabs").tabs("option", "active", 1);
+					}
+					// 🔴 Case 2: NOT final approved → disable cancel
+					if (status !== "approved_final") {
+						$("#btnCancel").prop("disabled", true);
+					}
+
+
+
 					document.getElementById("actionPaymentLabel").textContent =
 						info.guest_name +info.bed_id + " - " + currentPayment;
 					document.getElementById("actionModal").classList.add("active");
@@ -767,15 +810,49 @@
 		let pendingBtn = null;
 
 		$(document).on("click", ".confirm-action", function () {
-
 			pendingAction = $(this).data("action");
 			pendingBtn = this;
+		// 🔴 Forward-specific validation
+			if (pendingAction === "forward") {
+				const comment = $("#comment_forward").val().trim();
+				const forwardTo = $("#forwardSelect").val();
 
+				if (!comment) {
+					alert("Please enter a comment before forwarding.");
+					$("#comment_forward").focus();
+					return;
+				}
+
+				if (!forwardTo) {
+					alert("Please select a user to forward.");
+					$("#forwardSelect").focus();
+					return;
+				}
+			}
+			
+			
+			if (pendingAction === "approve" || pendingAction === "cancel" || pendingAction === "reject") {
+				const comment = $("#comment_others").val().trim();
+				if (!comment) {
+					alert("Please enter a comment before continue.");
+					$("#comment_others").focus();
+					return;
+				}
+			}
+			
+			
+			
+						
+			
+			
+			
+			
+			
 			const messages = {
 				forward: "Forward this payment?",
 				approve: "Approve this payment?",
 				reject: "Reject this payment?",
-				hold: "Put this payment on hold?"
+				cancel: "cancel this payment?"
 			};
 
 			$("#confirmText").text(messages[pendingAction] || "Are you sure?");
@@ -792,16 +869,66 @@
 			$("#confirmBar").addClass("d-none");
 
 			if (!pendingAction || !pendingBtn) return;
-
+			
 			handleAction(pendingAction, pendingBtn);
 
 			pendingAction = null;
 			pendingBtn = null;
 		});
+
 		function handleAction(action, btn) {
-			console.log("Confirmed Action:", action);
-			// API calls go here
+
+			const rentPaymentId = currentPayment;
+			let comment = $("#comment_others").val() || "";
+			const forwardTo = $("#forwardSelect").val();
+			const approver = CURRENT_USER;   // set globally
+			let url = "";
+			let data = {
+				rent_payment_id: rentPaymentId,
+				approver: approver,
+				comment: comment
+			};
+
+			switch (action) {
+				case "approve":
+					url = "/rentalmonth/approve";
+					break;
+
+				case "cancel":
+					url = "/rentalmonth/cancel";
+					break;
+
+				case "reject":
+					url = "/rentalmonth/reject";
+					break;
+
+				case "forward":
+					url = "/rentalmonth/forward";
+					data.from_user = CURRENT_USER;
+					data.comment = $("#comment_forward").val() || "";
+					data.to_user = forwardTo;
+					break;
+
+				default:
+					console.error("Unknown action:", action);
+					return;
+			}
+			debugger;
+			$.ajax({
+				url: API_BASE_URL +url,
+				method: "GET",   // use POST later if you want
+				data:  data,
+				success: function (res) {
+					alert("Action completed successfully");
+					// optional refresh
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "Action failed");
+				}
+			});
 		}
+
 		</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>

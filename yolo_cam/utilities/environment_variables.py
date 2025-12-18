@@ -16,7 +16,7 @@ def load_environment(ENV_FILE_PATH: str):
         if os.path.exists(ENV_FILE_PATH):
             load_dotenv(dotenv_path=ENV_FILE_PATH)
             print(f"✅ Loaded environment variables from {ENV_FILE_PATH}")
-        else:
-            print(f"⚠️ Warning: {ENV_FILE_PATH} not found. Using system environment vars.")
+        #else:
+            #print(f"⚠️ Warning: {ENV_FILE_PATH} not found. Using system environment vars.")
     else:
         print("🐳 Running inside Docker — relying on Docker environment variables.")

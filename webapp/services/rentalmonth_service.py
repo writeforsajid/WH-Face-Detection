@@ -1,10 +1,14 @@
 from db.database import get_connection
-from datetime import datetime, timedelta
+from fastapi import APIRouter, HTTPException, Header, Query
+from typing import Optional, List, Dict, Any
+from db.database import get_connection
+from datetime import datetime, timezone
+
 from typing import List, Dict, Optional
 from utilities.environment_variables import load_environment
-import sqlite3,os
-import json
+import os, json
 from pathlib import Path
+from services.rentalmonth_guest_due_settlement import GuestDueSettlement
 #load_environment(env_path);
 
 load_environment("./../data/.env.webapp")
@@ -17,10 +21,6 @@ ITEMS_JSON_PATH = DB_LOCAL_PATH.with_name("items.json")  # same folder, sibling 
 
 
 
-from fastapi import APIRouter, HTTPException, Header, Query
-from typing import Optional, List, Dict
-from db.database import get_connection
-from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -329,6 +329,7 @@ def get_unprocessed_payments(
                 gb.bed_id,
                 rp.year,rp.month,
                 rp.amount AS amount,
+                d.total_due-d.total_paid as balance,
                 rp.created_at AS payment_date,
                 rp.mode,    
                 rp.reference,
@@ -342,14 +343,18 @@ def get_unprocessed_payments(
             LEFT JOIN guests u                      -- ⬅️ JOIN TO GET FORWARDED USER NAME
                 ON u.guest_id = rp.current_approver
                 
-            LEFT JOIN dues d 
-                ON d.guest_id = rp.guest_id
-                AND d.year = rp.year
-                AND d.month = rp.month
+            Left join (
+                SELECT
+                    guest_id,
+                    SUM(due_amount) AS total_due,
+                    SUM(amount_paid) AS total_paid
+                FROM dues
+                GROUP BY guest_id
+            ) d ON d.guest_id = rp.guest_id
             
             LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
                     
-            WHERE rp.status IN ('submitted', 'forwarded')
+            WHERE rp.status IN ('submitted', 'forwarded','approved_final') and g.status in ('null', 'inactive', 'active')
 
             ORDER BY rp.created_at DESC;
 
@@ -367,6 +372,7 @@ def get_unprocessed_payments(
                 "guest_name": r["guest_name"],
                 "bed_id": r["bed_id"],
                 "amount": r["amount"],
+                "balance": r["balance"],
                 "status": r["status"],
                 "forwarded_user": r["forwarded_user"],
                 "month": r["month"],
@@ -452,4 +458,665 @@ def list_bed_guest_assignments(
     finally:
         conn.close()
 
+
+
+
+
+def approve_rent_payment( rent_payment_id, approver, comment=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN")
+
+        # Fetch payment
+        payment = cur.execute("""
+            SELECT guest_id, amount, status, year, month
+            FROM rent_payments
+            WHERE rent_payment_id = ?
+        """, (rent_payment_id,)).fetchone()
+
+        if not payment:
+            raise Exception("Payment not found")
+
+        if payment["status"] not in ("submitted", "forwarded"):
+            raise Exception("Payment cannot be approved")
+
+        remaining = payment["amount"]
+
+        # Fetch open dues (oldest first)
+        dues = cur.execute("""
+            SELECT id, due_amount, amount_paid
+            FROM dues
+            WHERE guest_id = ?
+              AND status IN ('open','partial')
+            ORDER BY year, month, id
+        """, (payment["guest_id"],)).fetchall()
+
+        for d in dues:
+            if remaining <= 0:
+                break
+
+            balance = d["due_amount"] - d["amount_paid"]
+            alloc = min(balance, remaining)
+
+            # allocation
+            cur.execute("""
+                INSERT INTO rent_payment_allocations
+                (rent_payment_id, due_id, allocated_amount)
+                VALUES (?,?,?)
+            """, (rent_payment_id, d["id"], alloc))
+
+            # update dues
+            new_paid = d["amount_paid"] + alloc
+            status = "paid" if new_paid >= d["due_amount"] else "partial"
+
+            cur.execute("""
+                UPDATE dues
+                SET amount_paid = ?, status = ?
+                WHERE id = ?
+            """, (new_paid, status, d["id"]))
+
+            remaining -= alloc
+
+        # update payment
+        cur.execute("""
+            UPDATE rent_payments
+            SET status='approved_final',
+                approved_at=datetime('now'),
+                approved_by=?
+            WHERE rent_payment_id=?
+        """, (approver, rent_payment_id))
+
+        # history
+        cur.execute("""
+            INSERT INTO rent_approval_history
+            (rent_payment_id, acted_by, action, comment)
+            VALUES (?,?, 'approved', ?)
+        """, (rent_payment_id, approver, comment))
+
+        conn.commit()
+        return {
+            "success": True,
+            "message": "Approve action successfully complete"
+        }
+
+    except Exception as e:
+        conn.rollback()
+        raise e
+    
+
+
+def reject_rent_payment( rent_payment_id, rejected_by, comment):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN")
+
+        cur.execute("""
+            UPDATE rent_payments
+            SET status='rejected'
+            WHERE rent_payment_id=?
+              AND status IN ('submitted','forwarded')
+        """, (rent_payment_id,))
+
+        if cur.rowcount == 0:
+            raise Exception("Payment cannot be rejected")
+
+        cur.execute("""
+            INSERT INTO rent_approval_history
+            (rent_payment_id, acted_by, action, comment)
+            VALUES (?,?, 'rejected', ?)
+        """, (rent_payment_id, rejected_by, comment))
+
+        conn.commit()
+        return {
+            "success": True,
+            "message": "Reject action successfully complete"
+        }
+    except:
+        conn.rollback()
+        raise
+
+
+def cancel_rent_payment( rent_payment_id, cancelled_by, reason):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN")
+
+        payment = cur.execute("""
+            SELECT status
+            FROM rent_payments
+            WHERE rent_payment_id=?
+        """, (rent_payment_id,)).fetchone()
+
+        # if not payment or payment["status"] == "approved_final":
+        #     raise Exception("Approved payment cannot be cancelled")
+
+        # rollback dues
+        allocations = cur.execute("""
+            SELECT due_id, allocated_amount
+            FROM rent_payment_allocations
+            WHERE rent_payment_id=?
+        """, (rent_payment_id,)).fetchall()
+
+        for a in allocations:
+            cur.execute("""
+                UPDATE dues
+                SET amount_paid = amount_paid - ?
+                WHERE id=?
+            """, (a["allocated_amount"], a["due_id"]))
+
+            cur.execute("""
+                UPDATE dues
+                SET status = CASE
+                    WHEN amount_paid <= 0 THEN 'open'
+                    WHEN amount_paid < due_amount THEN 'partial'
+                    ELSE status
+                END
+                WHERE id=?
+            """, (a["due_id"],))
+
+        cur.execute("""
+            DELETE FROM rent_payment_allocations
+            WHERE rent_payment_id=?
+        """, (rent_payment_id,))
+
+        cur.execute("""
+            UPDATE rent_payments
+            SET status='cancelled'
+            WHERE rent_payment_id=?
+        """, (rent_payment_id,))
+
+        cur.execute("""
+            INSERT INTO rent_approval_history
+            (rent_payment_id, acted_by, action, comment)
+            VALUES (?, ?, 'rejected', ?)
+        """, (rent_payment_id, cancelled_by, reason))
+
+        conn.commit()
+        return {
+            "success": True,
+            "message": "cancel action successfully complete"
+        }
+    except:
+        conn.rollback()
+        raise
+
+
+
+def forward_rent_payment(
+    rent_payment_id: int,
+    from_user: str,
+    to_user: str,
+    comment: str = None
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN")
+
+        payment = cur.execute("""
+            SELECT status
+            FROM rent_payments
+            WHERE rent_payment_id = ?
+        """, (rent_payment_id,)).fetchone()
+
+        if not payment:
+            raise Exception("Payment not found")
+
+        if payment["status"] in ("approved_final", "rejected", "cancelled"):
+            raise Exception("Payment cannot be forwarded")
+
+        # Update payment
+        cur.execute("""
+            UPDATE rent_payments
+            SET status = 'forwarded',
+                current_approver = ?
+            WHERE rent_payment_id = ?
+        """, (to_user, rent_payment_id))
+
+
+        # Forward history
+        cur.execute("""
+            INSERT INTO rent_forward_history
+            (rent_payment_id, from_user, to_user, comment)
+            VALUES (?, ?, ?, ?)
+        """, (rent_payment_id, from_user, to_user, comment))
+
+        conn.commit()
+        return {
+            "success": True,
+            "message": "Forward action successfully complete"
+        }
+    except Exception as e:
+        conn.rollback()
+        raise e
+
+
+
+
+def get_onloadaction(guest_id: str)  -> Dict[str, Any]:
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # Fetch approval history
+        cur.execute("""
+            SELECT 
+                g.guest_id,
+                g.name,
+                b.bed_id AS bed_number,
+                b.bed_id AS title,
+                bed.sharing_type,
+                'active' as state,
+                balances.id,
+                balances.balance AS amount,
+                COALESCE(sec_paid.security_paid, 0) AS security_amount
+
+            FROM guests g
+
+            JOIN (
+                SELECT 
+                    guest_id,
+                    MIN(id) AS id,   -- Single ID reference
+                    SUM(due_amount - amount_paid) AS balance
+                FROM dues
+                GROUP BY guest_id
+                HAVING balance > 0
+            ) balances ON balances.guest_id = g.guest_id
+
+
+            LEFT JOIN (
+                SELECT 
+                    gb.guest_id,
+                    gb.bed_id
+                FROM guest_beds gb
+                JOIN (
+                    SELECT guest_id, MAX(assign_date) AS max_date
+                    FROM guest_beds
+                    GROUP BY guest_id
+                ) last_bed
+                    ON gb.guest_id = last_bed.guest_id
+                AND gb.assign_date = last_bed.max_date
+            ) b ON g.guest_id = b.guest_id
+
+
+            LEFT JOIN beds bed 
+                ON bed.bed_id = b.bed_id
+
+
+            LEFT JOIN (
+                SELECT 
+                    d.guest_id,
+                    SUM(d.due_amount) AS security_expected
+                FROM dues d
+                JOIN due_types dt ON d.due_type_id = dt.id
+                WHERE dt.code = 'SECURITY'
+                GROUP BY d.guest_id
+            ) sec_due ON g.guest_id = sec_due.guest_id
+
+
+            LEFT JOIN (
+                SELECT 
+                    guest_id,
+                    SUM(amount - refunded_amount) AS security_paid
+                FROM security_deposits
+                GROUP BY guest_id
+            ) sec_paid ON g.guest_id = sec_paid.guest_id
+            where g.guest_id=?
+        """, (guest_id,))
+        outdata = [dict(r) for r in cur.fetchall()]
+        return {
+            "success": True,
+            "records": outdata
+        }
+    finally:
+        conn.close()
+
+
+def pay_rent(created_by, guest_id,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by):
+                    
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("BEGIN")
+
+        # 1️⃣ Extract year & month
+        try:
+            year, month = map(int, pay_month_year.split("-"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid pay_month_year format (expected YYYY-MM)"
+            )
+
+        # 2️⃣ Validate payment mode
+        if payment_mode not in ("UPI", "CASH", "IMPS", "DD"):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid payment mode"
+            )
+
+        # 3️⃣ Insert rent payment
+        cur.execute("""
+            INSERT INTO rent_payments (
+                created_by,
+                guest_id,
+                year,
+                month,
+                amount,
+                mode,
+                reference,
+                description,
+                status,
+                created_at
+            )
+            VALUES (?,?, ?, ?, ?, ?,  ?,?, 'submitted', datetime('now'))
+        """, (
+            created_by,
+            guest_id,
+            year,
+            month,
+            pay_rent,
+            payment_mode,
+            trx_id,
+            paid_by
+        ))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Rent payment submitted successfully"
+        }
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
+
+
+def pay_initial_rent(
+    created_by,
+    guest_id,
+    rent_dueable,
+    pay_security,
+    pay_rent,
+    trx_id,
+    pay_month_year,
+    pay_date,
+    payment_mode,
+    paid_by
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN")
+
+        # 1️⃣ Extract year & month
+        try:
+            year, month = map(int, pay_month_year.split("-"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid pay_month_year format (expected YYYY-MM)"
+            )
+
+        # 2️⃣ Validate payment mode
+        if payment_mode not in ("UPI", "CASH", "IMPS", "DD"):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid payment mode"
+            )
+
+        # 3️⃣ Get due_type_ids
+        rent_due_type_id = get_due_type_id(cur, "RENT")
+        security_due_type_id = get_due_type_id(cur, "SECURITY")
+
+        cur.execute("""
+            UPDATE guests
+            SET status = 'active'
+            WHERE guest_id = ?
+        """, (guest_id,))
+
+        # 4️⃣ INSERT DUES (idempotent)
+        if rent_dueable and float(rent_dueable) > 0:
+            cur.execute("""
+                INSERT OR IGNORE INTO dues (
+                    guest_id,
+                    due_type_id,
+                    year,
+                    month,
+                    due_amount
+                )
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                guest_id,
+                rent_due_type_id,
+                year,
+                month,
+                rent_dueable
+            ))
+
+        if pay_security  and float(pay_security) > 0:
+            cur.execute("""
+                INSERT OR IGNORE INTO dues (
+                    guest_id,
+                    due_type_id,
+                    year,
+                    month,
+                    due_amount
+                )
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                guest_id,
+                security_due_type_id,
+                year,
+                month,
+                pay_security
+            ))
+
+        # 5️⃣ UPSERT SECURITY DEPOSIT
+        cur.execute("""
+            SELECT id FROM security_deposits WHERE guest_id = ?
+        """, (guest_id,))
+        row = cur.fetchone()
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        if pay_security and float(pay_security) > 0:
+            if row:
+                cur.execute("""
+                    UPDATE security_deposits
+                    SET amount = amount + ?, collected_on = ?
+                    WHERE guest_id = ?
+                """, (pay_security, now, guest_id))
+            else:
+                cur.execute("""
+                    INSERT INTO security_deposits (
+                        guest_id, amount, collected_on
+                    )
+                    VALUES (?, ?, ?)
+                """, (guest_id, pay_security, now))
+
+        # 6️⃣ INSERT RENT PAYMENT
+        if pay_rent and float(pay_rent) > 0:
+            cur.execute("""
+                INSERT INTO rent_payments (
+                    created_by,
+                    guest_id,
+                    year,
+                    month,
+                    amount,
+                    mode,
+                    reference,
+                    description,
+                    status,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'submitted', datetime('now'))
+            """, (
+                created_by,
+                guest_id,
+                year,
+                month,
+                pay_rent+pay_security,
+                payment_mode,
+                trx_id,
+                paid_by
+            ))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Initial rent & security processed successfully"
+        }
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
+
+
+
+def get_due_type_id(cur, code: str) -> int:
+    cur.execute("SELECT id FROM due_types WHERE code = ?", (code,))
+    row = cur.fetchone()
+    if not row:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Due type '{code}' not found"
+        )
+    return row["id"]
+
+
+
+
+def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,payment_mode,paid_by):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+
+        # 1️⃣ Extract year & month
+        try:
+            year, month = map(int, pay_month_year.split("-"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid pay_month_year format (expected YYYY-MM)"
+            )
+
+        cur.execute("""SELECT status FROM guests WHERE guest_id = ? """, (guest_id,))
+
+        row = cur.fetchone()
+
+        if not row:
+            raise Exception("Guest not found")
+
+        if row[0] == 'closed':
+            # Already settled, do nothing
+            return 0
+
+
+
+        # --------------------------------------------------
+        # 1️⃣ Settle all outstanding dues using ADVANCE + SECURITY
+        # --------------------------------------------------
+        settlement = GuestDueSettlement(conn)
+        settlement.settle_all_dues(guest_id)
+
+        # --------------------------------------------------
+        # 2️⃣ Insert SECURITY REFUND DUE (negative)
+        # --------------------------------------------------
+        cur.execute("""
+            INSERT INTO dues (
+                guest_id,
+                due_type_id,
+                year,
+                month,
+                due_amount,
+                amount_paid,
+                status
+            )
+            VALUES (?, 3, ?,?,?, ?, 'paid')
+        """, (
+            guest_id,
+            year,
+            month,
+            -refund_amount,
+            -refund_amount
+        ))
+
+        refund_due_id = cur.lastrowid  # ✅ now valid
+
+        # --------------------------------------------------
+        # 3️⃣ Store refund payment details (UPI / CASH / BANK)
+        # --------------------------------------------------
+        cur.execute("""
+            INSERT INTO rent_payment_refunds (
+                guest_id,
+                due_id,
+                amount,
+                payment_mode,
+                reference,
+                refunded_on
+                
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            guest_id,
+            refund_due_id,
+            refund_amount,
+            payment_mode,
+            trx_id,
+            pay_date
+        ))
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("""
+            UPDATE security_deposits
+            SET refunded_amount = refunded_amount + ?, refunded_on = ?
+            WHERE guest_id = ?
+        """, (refund_amount, now, guest_id))
+        # --------------------------------------------------
+        # 4️⃣ Final balance check
+        # --------------------------------------------------
+        cur.execute("""
+            SELECT COALESCE(SUM(due_amount - amount_paid), 0)
+            FROM dues
+            WHERE guest_id = ?
+        """, (guest_id,))
+        final_balance = cur.fetchone()[0]
+
+        # --------------------------------------------------
+        # 5️⃣ Close guest if fully settled
+        # --------------------------------------------------
+        if final_balance == 0:
+            cur.execute("""
+                UPDATE guests
+                SET status = 'closed'
+                WHERE guest_id = ?
+            """, (guest_id,))
+
+        conn.commit()
+        return final_balance
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+                
 

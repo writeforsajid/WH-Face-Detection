@@ -164,6 +164,7 @@ select { padding:4px; }
       const url = this.buildUrl();
       const res = await fetch(url);
       const json = await res.json();
+      debugger;
       const columns = this.headList;
 
       this.total = json.total || 0;

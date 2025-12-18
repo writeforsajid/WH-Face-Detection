@@ -682,28 +682,48 @@
 			<div class="card shadow-sm">
 				<div class="card-body">
 					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
-						<div class="text-muted" id="status"></div>
-						<div class="d-flex align-items-center" style="gap: .5rem;">
-							<div class="input-group input-group-sm" style="width: 260px;">
-								<span class="input-group-text"><i class="bi bi-search"></i></span>
-								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
-							</div>
-							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
-								<option value="">All Statuses</option>
-								<option value="active">Active</option>
-								<option value="inactive">Inactive</option>
-								<option value="closed">Closed</option>
-							</select>
 
-							<select id="filterSharingType" class="form-select form-select-sm" style="width: 180px;">
-								<option value="">All Sharing Types</option>
-								<option value="brass">Brass</option>
-								<option value="silver">Silver</option>
-								<option value="golden">Golden</option>
-							</select>
-							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+					<div class="text-muted mb-2" id="status"></div>
+
+					<div class="d-flex flex-wrap align-items-center gap-2 w-100">
+						
+						<div class="input-group input-group-sm flex-grow-1 flex-md-grow-0"
+							style="max-width: 260px;">
+							<span class="input-group-text">
+								<i class="bi bi-search"></i>
+							</span>
+							<input type="text" id="searchName" class="form-control"
+								placeholder="Search by guest name..." />
 						</div>
+
+						<select id="filterStatus"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 160px;">
+							<option value="">All Statuses</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+							<option value="closed">Closed</option>
+						</select>
+
+						<select id="filterSharingType"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 180px;">
+							<option value="">All Sharing Types</option>
+							<option value="brass">Brass</option>
+							<option value="silver">Silver</option>
+							<option value="golden">Golden</option>
+						</select>
+
+						<button class="btn btn-sm btn-outline-secondary flex-grow-1 flex-md-grow-0">
+							Refresh
+						</button>
+
 					</div>
+						
+
+
+					</div>
+
 					<div class="table-responsive">
 						<table class="table table-striped table-hover align-middle">
 							<thead class="table-dark">

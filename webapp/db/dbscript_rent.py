@@ -13,7 +13,7 @@ from pathlib import Path
 from environment_variables import load_environment
 
 # paths
-DB_PATH = "./data/WhiteHouse_Fresh.db"
+DB_PATH = "./data/WhiteHouse.db"
 script_dir = os.path.dirname(__file__)
 load_environment("./../../data/.env.webapp")
 
@@ -140,6 +140,17 @@ CREATE TABLE IF NOT EXISTS rent_change_events (
     changed_by TEXT,
     changed_at TEXT DEFAULT (datetime('now')),
     reason TEXT
+);
+
+CREATE TABLE IF NOT EXISTS rent_payment_refunds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id TEXT NOT NULL,
+    due_id INTEGER REFERENCES dues(id),
+    amount REAL NOT NULL,
+    payment_mode TEXT DEFAULT 'UPI',
+    reference TEXT,
+    refunded_on DATE DEFAULT CURRENT_DATE,
+    created_at TEXT DEFAULT (datetime('now'))
 );
 
 """)

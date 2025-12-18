@@ -57,8 +57,9 @@ def search(startDate, endDate, guest_id=None, name=None, text=None, page=1, page
         params = [startDate, endDate]
 
         if guest_id and guest_id.strip():
-            where.append("LOWER(m.guest_id) = ?")
-            params.append(f"{guest_id.lower().strip()}")
+            if (guest_id != 'owner'):
+                where.append("LOWER(m.guest_id) = ?")
+                params.append(f"{guest_id.lower().strip()}")
 
         if name and name.strip():
             where.append("LOWER(m.name) LIKE ?")
@@ -97,7 +98,6 @@ def search(startDate, endDate, guest_id=None, name=None, text=None, page=1, page
         """
 
         cur.execute(query, params + [page_size, offset])
-        
         rows = cur.fetchall()
 
         columns = [col[0] for col in cur.description]

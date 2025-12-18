@@ -76,3 +76,5 @@ docker-compose build
 D:\WH-Face-Detection\webapp\_venv\Scripts\Activate.ps1
 ## to run the app
 uvicorn main:app --reload
+
+uvicorn main:app --reload --host 127.0.0.1 --port 8000 --ssl-keyfile="webapp.key" --ssl-certfile="webapp.crt"

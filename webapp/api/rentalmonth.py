@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, HTTPException, Query, Header,Form, UploadFi
 from pydantic import BaseModel
 from services import rentalmonth_service,dash_rental_service
 from datetime import datetime, timezone
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional,Any
 
 router = APIRouter()
 
@@ -150,7 +150,6 @@ async def pay_my_rent(
     return result
 
 @router.get("/get_unprocessed_payments")
-#@router.get("/guest-attendance")
 def get_unprocessed_payments(
     authorization: Optional[str] = Header(None),
     search: Optional[str] = None,
@@ -158,3 +157,118 @@ def get_unprocessed_payments(
     sharing_type: Optional[str] = Query(None, regex="^(brass|silver|golden)$"),
 ) -> List[Dict]:
     return rentalmonth_service.get_unprocessed_payments(authorization, search, status, sharing_type)
+
+
+
+@router.get("/approve")
+def approve_rent_payment(
+    rent_payment_id: str = Query(...),
+    approver: str = Query(None),
+    comment: str = Query(None),
+) :
+    return rentalmonth_service.approve_rent_payment( rent_payment_id, approver, comment)
+
+
+
+@router.get("/reject")
+def reject_rent_payment( 
+    rent_payment_id: str = Query(...),
+    approver: str = Query(None),
+    comment: str = Query(None),
+) :
+    return rentalmonth_service.reject_rent_payment( rent_payment_id, approver, comment)
+
+
+
+@router.get("/cancel")
+def cancel_rent_payment( 
+    rent_payment_id: str = Query(...),
+    approver: str = Query(None),
+    comment: str = Query(None),
+) :
+    return rentalmonth_service.cancel_rent_payment( rent_payment_id, approver, comment)
+
+
+
+@router.get("/forward")
+def forward_rent_payment( 
+    rent_payment_id: str = Query(...),
+    from_user: str = Query(...),
+    to_user: str = Query(...),
+    comment: str = None
+) :
+    return rentalmonth_service.forward_rent_payment( rent_payment_id, from_user,to_user, comment)
+
+
+
+@router.get("/onloadaction")
+def get_onloadaction( 
+    guest_id: str = Query(...),
+) ->  Dict[str, Any]:
+    return rentalmonth_service.get_onloadaction( guest_id)
+
+
+@router.post("/payrent")
+def pay_rent(
+    created_by:str = Form(...),
+    guest_id:str = Form(...),
+    pay_rent: float = Form(...),
+    trx_id: str = Form(...),
+    pay_month_year: str = Form(...),        
+    pay_date: str = Form(...),          # YYYY-MM or YYYY-MM-DD
+    payment_mode: str = Form(...),
+    paid_by: str = Form(...)
+):
+        return rentalmonth_service.pay_rent(created_by, guest_id,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+
+
+@router.post("/adddues")
+def add_dues(
+    guest_id:str = Form(...),
+    dues_amount: float = Form(...),
+    dues_type: str = Form(...),
+    due_month_year: str = Form(...),          # YYYY-MM or YYYY-MM-DD
+    due_date: str = Form(...)
+):
+        return rentalmonth_service.add_dues( guest_id,dues_amount,dues_type,due_month_year,due_date)
+
+
+
+@router.post("/payInitialrent")
+def pay_initial_rent(
+    created_by:str = Form(...),
+    guest_id:str = Form(...),
+    rent_dueable: float = Form(...),
+    pay_security: float = Form(...),    
+    pay_rent: float = Form(...),
+    trx_id: str = Form(...),
+    pay_month_year: str = Form(...),        
+    pay_date: str = Form(...),          # YYYY-MM or YYYY-MM-DD
+    payment_mode: str = Form(...),
+    paid_by: str = Form(...)
+):
+        return rentalmonth_service.pay_initial_rent(created_by, guest_id,rent_dueable,pay_security,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+
+
+
+@router.post("/clear_moveout")
+def clear_moveout_rent(
+    guest_id:str = Form(...),
+    refund_amount: float = Form(...),
+    trx_id: str = Form(...),
+    pay_month_year: str = Form(...),        
+    pay_date: str = Form(...),          # YYYY-MM or YYYY-MM-DD
+    payment_mode: str = Form(...),
+    paid_by: str = Form(...)
+):
+        
+					#data.security_paid   = section.find(".security-paid").val();
+					#data.refund_amount   = section.find(".rent-paid").val();
+
+        
+        return rentalmonth_service.clear_moveout_rent( guest_id,refund_amount,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+
+
+
+
+

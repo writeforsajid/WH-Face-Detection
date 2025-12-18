@@ -77,8 +77,8 @@ def get_appconfig(name: str = Query(..., description="AppConfig name, e.g. LOG_I
 
 @router.get("/search")
 def search_guest_metadata(
-    startDate: str = Query(...),
-    endDate: str = Query(...),
+    startDate: Optional[str] = None,
+    endDate: Optional[str] = None,
     guest_id: Optional[str] = None,
     name: Optional[str] = None,
     text: Optional[str] = None,

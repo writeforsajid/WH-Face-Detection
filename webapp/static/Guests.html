@@ -51,7 +51,9 @@
 		.snackbar button:hover{color:#93c5fd;text-decoration:underline}
 		@keyframes snackIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-
+		.is-invalid {
+		border-color: #dc3545;
+		}
 
 		</style>
 	<script>
@@ -62,7 +64,7 @@
 					if (window.location.port === '8000') return window.location.origin;
 					return window.location.origin;
 				})();
-
+				const CURRENT_USER = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
 		async function ensureLoggedInOrRedirect() {
 			const token = localStorage.getItem('wh_token');
 			if (!token) {
@@ -116,12 +118,7 @@
 			// }
 		}
 
-		// function handleLogout() {
-		// 	localStorage.removeItem('wh_token');
-		// 	localStorage.removeItem('wh_user');
-		// 	localStorage.removeItem('wh_api_base');
-		// 	window.location.href = 'index2.html';
-		// }
+
 
 		function handleBack() {
 			try {
@@ -170,14 +167,20 @@
 									<i class="bi bi-telephone-plus"></i> Cont
 								</button>
 
-								<button class="btn btn-sm btn-outline-secondary" onclick="toggleGuestStatus('${r.guest_id}')">
-									<i class="bi bi-toggle-on"></i> Shuf
-								</button>
-
 								<button class="btn btn-danger btn-sm" onclick="deleteGuest('${r.guest_id}')">
 									<i class="bi bi-trash"></i> Del
 								</button>
-
+								<button class="btn btn-dark btn-sm paydue-btn" data-info='${JSON.stringify({
+										guest_id: r.guest_id,
+										name: r.name,
+										bed_no: r.bed_no,
+										face_count: r.face_count,
+										email: r.email,
+										status: r.status
+									})}'
+								>
+									Payment
+								</button>
 								<button class="btn btn-dark btn-sm action-btn" data-info='${JSON.stringify({
 										guest_id: r.guest_id,
 										name: r.name,
@@ -550,27 +553,47 @@
 			<div class="card shadow-sm">
 				<div class="card-body">
 					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
-						<div class="text-muted" id="status"></div>
-						<div class="d-flex align-items-center" style="gap: .5rem;">
-							<div class="input-group input-group-sm" style="width: 260px;">
-								<span class="input-group-text"><i class="bi bi-search"></i></span>
-								<input type="text" id="searchName" class="form-control" placeholder="Search by guest name..." />
-							</div>
-							<select id="filterStatus" class="form-select form-select-sm" style="width: 160px;">
-								<option value="">All Statuses</option>
-								<option value="active">Active</option>
-								<option value="inactive">Inactive</option>
-								<option value="closed">Closed</option>
-							</select>
 
-							<select id="filterSharingType" class="form-select form-select-sm" style="width: 180px;">
-								<option value="">All Sharing Types</option>
-								<option value="brass">Brass</option>
-								<option value="silver">Silver</option>
-								<option value="golden">Golden</option>
-							</select>
-							<button class="btn btn-sm btn-outline-secondary" onclick="loadData()">Refresh</button>
+					<div class="text-muted mb-2" id="status"></div>
+
+					<div class="d-flex flex-wrap align-items-center gap-2 w-100">
+						
+						<div class="input-group input-group-sm flex-grow-1 flex-md-grow-0"
+							style="max-width: 260px;">
+							<span class="input-group-text">
+								<i class="bi bi-search"></i>
+							</span>
+							<input type="text" id="searchName" class="form-control"
+								placeholder="Search by guest name..." />
 						</div>
+
+						<select id="filterStatus"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 160px;">
+							<option value="">All Statuses</option>
+							<option value="active">Active</option>
+							<option value="inactive">Inactive</option>
+							<option value="closed">Closed</option>
+						</select>
+
+						<select id="filterSharingType"
+								class="form-select form-select-sm flex-grow-1 flex-md-grow-0"
+								style="max-width: 180px;">
+							<option value="">All Sharing Types</option>
+							<option value="brass">Brass</option>
+							<option value="silver">Silver</option>
+							<option value="golden">Golden</option>
+						</select>
+
+						<button class="btn btn-sm btn-outline-secondary flex-grow-1 flex-md-grow-0">
+							Refresh
+						</button>
+
+					</div>
+						
+
+
+
 					</div>
 					<div class="table-responsive">
 						<table class="table table-striped table-hover align-middle">
@@ -605,7 +628,7 @@
 			</div>
 		</div>
 
-		<!-- ACTION MODAL -->
+		<!-- ACTION MODAL (Initate and Moveout) -->
 		<div class="modal-overlay" id="actionModal">
 			<div class="modal-card">
 				<div class="modal-header">
@@ -628,85 +651,268 @@
 					</div>
 					<div id="tabs">
 						<ul>
-							<li><a href="#tabs-1">Initate</a></li>
+							<li><a href="#tabs-1">Initiate</a></li>
 							<li><a href="#tabs-2">Move Out</a></li>
 
 						</ul>
 						<!-- jQuery UI will load the tab content here -->
-						<div id="tabs-1">
+						<div id="tabs-1" class="refund-section guest-refund">
 
-							<div id="tab1-info"></div>
-							<!-- Dynamic Combo Box -->
-							<div class="mt-3">
-								<input type="text" id="comment_forward" class="form-control mb-1" placeholder="Enter comment" />
-								<br/>
+						<strong>Guest Initate</strong>
 
-								<div class="d-flex gap-2">
-									<select id="forwardSelect" class="form-control">
-										<option value="">Loading...</option>
-									</select>
+						<div class="row g-2">
+							<div class="col-md-6">
+							<!-- <input type="text" class="form-control form-control-sm mb-2 security-due amount "
+									placeholder="Default security on bed" value='0' disabled/> -->
 
-									<button class="btn btn-sm btn-outline-secondary confirm-action"
-											data-action="forward">
-										Forward
-									</button>
-								</div>
+							<input type="text" class="form-control form-control-sm mb-2 rent-due amount required"
+									value ='0' placeholder="Default rent of bed" />
+							<hr/>
+								<div>
+									<h5>Description</h5>
+									Para1<br>
+									Para1<br>
+									Para1<br>
+									Para1
+
+								</div>	
+							</div>
+
+							<div class="col-md-6">
+							<input type="text" class="form-control form-control-sm mb-2 pay-rent amount required"
+									value ='0' placeholder="Pay Rent" />
+							<input type="text" class="form-control form-control-sm mb-2 pay-security amount required"
+									value ='0' placeholder="Pay Security" />
+							<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+									placeholder="Transaction ID" />
+							<input type="month"  class="form-control form-control-sm mb-2 payinitate-month-year"  min="1990-01" max="2030-12">
+							<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+							<select class="form-control mb-2 payment-mode required">
+								<option value="">Select</option>
+								<option value="DIGIT">Digital</option>
+								<option value="CASH">Cash</option>
+								<option value="UPI">UPI</option>
+								<option value="IMPS">IMPS</option>
+							</select>
+
+							<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+									placeholder="Made by guest name" />
 							</div>
 						</div>
-						<div id="tabs-2">
-							<div id="tab2-info"></div>
-							<div class="mt-3">	
-								<input type="text" id="comment_forward" class="form-control mb-1" placeholder="Enter comment" />
-								<br/>
-								<div class="d-flex gap-2">
-									
-									<button class="btn btn-sm btn-success confirm-action"
-											data-action="approve">
-										Approve payment
-									</button>
 
-									<button class="btn btn-sm btn-danger confirm-action"
-											data-action="cancel">
-										Cancel payment
-									</button>
-
-									<button class="btn btn-sm btn-warning confirm-action"
-											data-action="reject">
-										Reject payment
-									</button>
-
-								</div>
-								</div>
+						<div class="mt-2 text-end">
+							<button class="btn btn-sm btn-outline-secondary confirm-action"
+									data-action="initiate_ok" disabled>
+							OK
+							</button>
 						</div>
+						</div>
+
+						
+
+
+						<div id="tabs-2" class="refund-section owner-refund">
+
+						
+
+						<div class="row g-2">
+							
+							<div class="col-md-6">
+							<strong>Guest final payment</strong>
+							<input type="text" class="form-control form-control-sm mb-2 security-paid amount"
+									placeholder="Security Paid" disabled/>
+
+							<input type="text" class="form-control form-control-sm mb-2 rent-paid amount"
+									placeholder="Rent Paid" disabled/>
+							<hr/>
+								<div>
+									<h5>Description2</h5>
+									Bring paid security and amount from DB
+									Securty paid<br>
+									Amount pending<br>
+									and<br>
+									Refund at right portion
+								</div>
+							</div>
+							
+							<div class="col-md-6">
+							<strong>Owner Refund</strong>
+							<input type="text" class="form-control form-control-sm mb-2 refund-security amount required"
+									placeholder="Refund Security" />
+
+							<!-- <input type="text" class="form-control form-control-sm mb-2 refund-rent amount required"
+									placeholder="Refund Rent" /> -->
+							<hr/>
+							<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+									placeholder="Transaction ID" />
+							<input type="month"  class="form-control form-control-sm mb-2 paymoveout-month-year"  min="1990-01" max="2030-12">
+							<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+							<select class="form-control mb-2 payment-mode required">
+								<option value="">Select</option>
+								<option value="DIGIT">Digital</option>
+								<option value="CASH">Cash</option>
+								<option value="UPI">UPI</option>
+								<option value="IMPS">IMPS</option>
+							</select>
+
+							<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+									placeholder="Made by owner name" />
+							</div>
+						</div>
+
+						<div class="mt-2 text-end">
+							<button class="btn btn-sm btn-outline-secondary confirm-action "
+									data-action="moveout_ok" disabled>
+							OK
+							</button>
+						</div>
+						</div>
+
+						
+
+
 					</div>
 				</div>
 			</div>
 		</div>
 
-    <!-- Contact Modal -->
-    <div class="modal fade" id="contactModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          
-          <div class="modal-header">
-            <h5 class="modal-title">Update Contact</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
+		<!-- Contact Modal -->
+		<div class="modal fade" id="contactModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			
+			<div class="modal-header">
+				<h5 class="modal-title">Update Contact</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
 
-          <div class="modal-body">
-            <input type="hidden" id="contact_guest_id">
+			<div class="modal-body">
+				<input type="hidden" id="contact_guest_id">
 
-            <label class="form-label">Contact Name</label>
-            <input type="text" id="contact_name" class="form-control">
-          </div>
+				<label class="form-label">Contact Name</label>
+				<input type="text" id="contact_name" class="form-control">
+			</div>
 
-          <div class="modal-footer">
-            <button class="btn btn-primary" onclick="applyContact()">Apply</button>
-          </div>
+			<div class="modal-footer">
+				<button class="btn btn-primary" onclick="applyContact()">Apply</button>
+			</div>
 
-        </div>
-      </div>
-    </div>
+			</div>
+		</div>
+		</div>
+
+
+		<!-- Pay Due MODAL -->
+		<div class="modal-overlay" id="paydueModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3 id="payduePaymentLabel" >Payment Paydues</h3>
+					<button class="modal-close" onclick="closepaydueModal()">×</button>
+				</div>
+
+				<div class="modal-body">
+					<div id="pdconfirmBar" class="alert alert-warning d-none"
+						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+								z-index:1055; min-width:300px;">
+						<span id="pdconfirmText">Are you sure?</span>
+
+						<div class="float-end">
+							<button id="pdconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+							<button id="pdconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+						</div>
+					</div>
+					<div id="pdtabs">
+						<ul>
+							<li><a href="#pdtabs-1">Payment</a></li>
+							<li><a href="#pdtabs-2">Dues</a></li>
+
+						</ul>
+						<!-- jQuery UI will load the tab content here -->
+						<div id="pdtabs-1" class="refund-section guest-refund">
+
+						<strong>Payment collection</strong>
+
+						<div class="row g-2">
+							<div class="col-md-12">
+
+							<input type="text" class="form-control form-control-sm mb-2 pay-rent amount required"
+									placeholder="Pay Rent" />
+
+							<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+									placeholder="Transection amount ID" />
+							<input type="month"  class="form-control form-control-sm mb-2 pay-month-year"  min="1990-01" max="2030-12">
+							<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+							<select class="form-control mb-2 payment-mode required">
+								<option value="">Select</option>
+								<option value="DIGIT">Digital</option>
+								<option value="CASH">Cash</option>
+								<option value="UPI">UPI</option>
+								<option value="IMPS">IMPS</option>
+							</select>
+
+							<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+									placeholder="Made by guest name" />
+							</div>
+						</div>
+
+						<div class="mt-2 text-end">
+							<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+									data-Paydue="payment_ok" disabled>
+							OK
+							</button>
+						</div>
+						</div>
+
+						
+
+
+						<div id="pdtabs-2" class="refund-section owner-refund">
+
+						
+
+						<div class="row g-2">
+							
+							<div class="col-md-12">
+							<strong>Add dues</strong>
+							<select class="form-control mb-2 dues-type required">
+								<option value="">Select</option>
+								<option value="RENT"> Monthly Rent</option>								
+								<option value="ADVANCE"> Advance Payment</option>
+								<option value="SECURITY"> Security Deposit</option>
+								<option value=" MAINT"> Maintenance</option>
+								<option value="ELEC"> Electricity</option>
+								<option value="FOOD"> Food</option>
+								<option value="REG"> Registration</option>
+								<option value="FINE"> Fine</option>
+								<option value="OTHER"> Other</option>
+							</select>									
+
+							<input type="text" class="form-control form-control-sm mb-2 dues-amount amount" placeholder="Amount" />
+							<input type="month"  class="form-control form-control-sm mb-2 due-month-year"  min="1990-01" max="2030-12">
+							<input type="date" class="form-control form-control-sm mb-2 due-date amount" placeholder="Date" />
+							
+							</div>
+							
+						</div>
+
+						<div class="mt-2 text-end">
+							<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+									data-Paydue="dues_ok" disabled>
+							OK
+							</button>
+						</div>
+						</div>
+
+						
+
+
+					</div>
+				</div>
+			</div>
+		</div>
 
 
 	</div>
@@ -721,7 +927,7 @@
 			$("#username").text(username);
 		});
 	</script>
-
+<!-- Contact: Contact Model -->
 <script>
 
       // ------------------- Delete Guest -------------------
@@ -744,19 +950,19 @@
       }
 
       // ------------------- Active/Inactive Guest -------------------
-      function toggleGuestStatus(guest_id) {
-        $.ajax({
-          url: `${API_BASE_URL}/guests/${guest_id}/toggle`,
-          type: "PUT",
-          success: function (res) {
-            alert(`Guest is now ${res.active ? "Active" : "Inactive"}`);
-            loadData();
-          },
-          error: function (xhr) {
-            alert(xhr.responseJSON?.detail || "Error toggling guest status");
-          },
-        });
-      }
+    //   function toggleGuestStatus(guest_id) {
+    //     $.ajax({
+    //       url: `${API_BASE_URL}/guests/${guest_id}/toggle`,
+    //       type: "PUT",
+    //       success: function (res) {
+    //         alert(`Guest is now ${res.active ? "Active" : "Inactive"}`);
+    //         loadData();
+    //       },
+    //       error: function (xhr) {
+    //         alert(xhr.responseJSON?.detail || "Error toggling guest status");
+    //       },
+    //     });
+    //   }
 
       // ------------------- Open Modal -------------------
       function openContactModal(guest_id, name, status, bed_no) {
@@ -812,30 +1018,89 @@
 </script>
 
 
-
-	<script>	
+<!-- ACTION: Initate-Payment/Refund(Moveout) -->
+<script>	
 		
-
-		// open modal
+		let tabsInput;
+		let action_dataset_info;
+		// open Initate-Moveout modal
 		document.addEventListener("click", function(e) {
 			if (e.target.classList.contains("action-btn")) {
-					let info = JSON.parse(e.target.dataset.info);
+					action_dataset_info = JSON.parse(e.target.dataset.info);
+					
+					let url = "/rentalmonth/onloadaction";   // change to actual API later
+					let data = {
+						guest_id: action_dataset_info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							if (!dataout.records || dataout.records.length === 0) {
+								return;
+							}
+							tabsInput = dataout.records[0];
+							const section1 = $("#tabs-2");
+							$("#tabs").tabs("option", "active", 1);
+							section1.find(".security-paid").val(tabsInput.security_amount).trigger("input");
+							section1.find(".rent-paid").val(tabsInput.amount).trigger("input");
+
+
+							section1.find(".refund-security").val(0).trigger("input");
+							section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							// section1.find(".refund-rent").val(0).trigger("input");
+							section1.find(".paid-by").val(action_dataset_info.name).trigger("input");
+							section1.find(".payment-mode").val("UPI").trigger("change");
+							section1.find(".trx-id").val('').trigger("input");
+							section1.find(".paymoveout-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+							$("#tabs").tabs("option", "active", 0);
+							const section = $("#tabs-1");
+							section.find(".pay-rent").val(0).trigger("input");
+							section.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section.find(".paid-by").val(action_dataset_info.name).trigger("input");
+							section.find(".payment-mode").val("UPI").trigger("change");
+							section.find(".trx-id").val('').trigger("input");
+							section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
+
+							
+
+
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "Action failed");
+						}
+					});					
+					document.getElementById("actionPaymentLabel").textContent =
+						action_dataset_info.name +'-'+action_dataset_info.guest_id ;
+					document.getElementById("actionModal").classList.add("active");
+					const section1 = $("#tabs-2");
+					$("#tabs").tabs("option", "active", 1);
+					section1.find(".refund-security").val(0).trigger("input");
+					section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+					// section1.find(".refund-rent").val(0).trigger("input");
+					section1.find(".paid-by").val(action_dataset_info.name).trigger("input");
+					section1.find(".payment-mode").val("UPI").trigger("change");
+					section1.find(".trx-id").val('').trigger("input");
+					section1.find(".paymoveout-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+					$("#tabs").tabs("option", "active", 0);
+					const section = $("#tabs-1");
+					section.find(".pay-rent").val(0).trigger("input");
+					section.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+					section.find(".paid-by").val(action_dataset_info.name).trigger("input");
+					section.find(".payment-mode").val("UPI").trigger("change");
+					section.find(".trx-id").val('').trigger("input");
+					section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
 
 					
-					document.getElementById("actionPaymentLabel").textContent =
-						info.name +'-'+info.guest_id ;
-					document.getElementById("actionModal").classList.add("active");
-					let html = `
-						<table class="table table-bordered table-sm mt-2">
-							<tr>
-								<td><strong>Bed</strong><br/>${info.bed_no || '-'}</td>
-								<td><strong>status</strong><br/>${info.status || '-'}</td>
-								<td><strong>Email</strong><br/>${info.email || '-'}</td>
-							</tr>
 
-						</table>
-					`;
 
+
+					let html = '';
 					// Put same content in both tabs
 					$("#tab1-info").html(html);
 					$("#tab2-info").html(html);
@@ -843,7 +1108,7 @@
 			}
 		});
 
-		// close modal
+		// close Initate-Moveout modal
 		function closeActionModal() {
 			document.getElementById("actionModal").classList.remove("active");
 		}
@@ -880,16 +1145,83 @@
 		let pendingAction = null;
 		let pendingBtn = null;
 
-		$(document).on("click", ".confirm-action", function () {
+		function validateSectionAction(section) {
+			let valid = true;
 
+			// 🔹 1. REQUIRED FIELDS
+			section.find(".required").each(function () {
+				const val = $(this).val()?.trim();
+
+				if (!val) {
+					$(this).addClass("is-invalid");
+					valid = false;
+				} else {
+					$(this).removeClass("is-invalid");
+				}
+			});
+
+			// 🔹 2. AMOUNT FIELDS (>= 0 allowed)
+			section.find(".amount").each(function () {
+				const raw = $(this).val();
+				const value = parseFloat(raw);
+
+				if (raw !== "" && (isNaN(value) || value < 0)) {
+					$(this).addClass("is-invalid");
+					valid = false;
+				} else {
+					$(this).removeClass("is-invalid");
+				}
+			});
+
+			// 🔹 3. BUSINESS RULE:
+			// At least ONE of pay-rent or pay-security must be > 0
+			const payRentEl = section.find(".pay-rent");
+			const paySecurityEl = section.find(".pay-security");
+
+			if (payRentEl.length && paySecurityEl.length) {
+				const rent = parseFloat(payRentEl.val()) || 0;
+				const security = parseFloat(paySecurityEl.val()) || 0;
+
+				if (rent <= 0 && security <= 0) {
+					payRentEl.addClass("is-invalid");
+					paySecurityEl.addClass("is-invalid");
+					valid = false;
+				} else {
+					payRentEl.removeClass("is-invalid");
+					paySecurityEl.removeClass("is-invalid");
+				}
+			}
+
+			// 🔹 4. Enable / Disable OK button
+			section.find(".confirm-action").prop("disabled", !valid);
+
+			return valid;
+		}
+
+		// Live validation on input/change
+
+		$(document).on(
+			"input change",
+			".refund-section input, .refund-section  select",
+			function () {
+				const section = $(this).closest(".refund-section");
+				validateSectionAction(section);
+			}
+		)
+		
+		$(document).on("click", ".confirm-action", function () {
 			pendingAction = $(this).data("action");
 			pendingBtn = this;
+			const section = $(this).closest(".refund-section");
 
+			if (!validateSectionAction(section)) {
+			alert("⚠️ Please fill all required fields with valid values");
+			section.find(".is-invalid").first().focus();
+			return;
+			}			
 			const messages = {
-				forward: "Forward this payment?",
-				approve: "Approve this payment?",
-				reject: "Reject this payment?",
-				hold: "Put this payment on hold?"
+				initiate_ok: "Initialize guest with this payment?",
+				moveout_ok: "Clear and close account?"
 			};
 
 			$("#confirmText").text(messages[pendingAction] || "Are you sure?");
@@ -906,18 +1238,328 @@
 			$("#confirmBar").addClass("d-none");
 
 			if (!pendingAction || !pendingBtn) return;
-
-			handleAction(pendingAction, pendingBtn);
+			handleActionButton(pendingAction, pendingBtn);
 
 			pendingAction = null;
 			pendingBtn = null;
 		});
-		function handleAction(action, btn) {
-			console.log("Confirmed Action:", action);
-			// API calls go here
+
+		function handleActionButton(action, btn) {
+
+			const section = $(btn).closest(".refund-section");
+			//const rentPaymentId = currentPayment;   // already global
+			const approver = CURRENT_USER;           // already global
+			let url = "";
+			let data = {
+				created_by: CURRENT_USER,
+				guest_id: action_dataset_info.guest_id,
+			};
+
+			switch (action) {
+
+				case "initiate_ok":
+					url = "/rentalmonth/payInitialrent";
+
+//					data.security_due  = section.find(".security-due").val();
+					data.rent_dueable  = section.find(".rent-due").val();
+					data.pay_security  = section.find(".pay-security").val();
+					data.pay_rent      = section.find(".pay-rent").val();
+					data.trx_id        = section.find(".trx-id").val();
+					data.pay_month_year = section.find(".payinitate-month-year").val();					
+					data.pay_date      = section.find(".pay-date").val();
+					data.payment_mode  = section.find(".payment-mode").val();
+					data.paid_by       = section.find(".paid-by").val();
+					break;
+
+				case "moveout_ok":
+					url = "/rentalmonth/clear_moveout";
+					// data.security_paid   = section.find(".security-paid").val();
+					// data.refund_amount   = section.find(".rent-paid").val();
+					// data.refund_security = section.find(".refund-security").val();
+					// data.refund_rent     = section.find(".refund-rent").val();
+					// data.trx_id          = section.find(".trx-id").val();
+					// data.pay_month_year = section.find(".paymoveout-month-year").val();					
+					// data.pay_date        = section.find(".pay-date").val();
+					// data.payment_mode    = section.find(".payment-mode").val();
+					// data.paid_by         = section.find(".paid-by").val();
+					data.refund_amount = section.find(".refund-security").val();
+					data.trx_id          = section.find(".trx-id").val();
+					data.pay_month_year = section.find(".paymoveout-month-year").val();					
+					data.pay_date        = section.find(".pay-date").val();
+					data.payment_mode    = section.find(".payment-mode").val();
+					data.paid_by         = section.find(".paid-by").val();					
+					
+					break;
+
+				default:
+					console.error("Unknown action:", action);
+					return;
+			}
+
+			console.log("Submitting:", data);
+
+			$.ajax({
+				url: API_BASE_URL + url,
+				method: "POST",   // change to POST later
+				data: data,
+				success: function () {
+					alert("Action completed successfully");
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "Action failed");
+				}
+			});
 		}
-		</script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+		
+</script>
+
+
+
+
+
+
+<!-- Manual Rent Payment/Raise(DUE) payment --> 
+<script>	
+		
+		let pdtabsInput;
+		// open modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("paydue-btn")) {
+					let info = JSON.parse(e.target.dataset.info);
+					let url = "/rentalmonth/onloadaction";   // change to actual API later
+					let data = {
+						guest_id: info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							if (!dataout.records || dataout.records.length === 0) {
+								return;
+							}
+							pdtabsInput = dataout.records[0];
+							
+							const section2 = $("#pdtabs-2");
+							$("#pdtabs").tabs("option", "active", 1);
+							section2.find(".due-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section2.find(".dues-type").val('RENT').trigger("input");
+							section2.find(".dues-amount").val(0).trigger("input");
+							section2.find(".due-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+							const section1 = $("#pdtabs-1");
+							$("#pdtabs").tabs("option", "active", 0);
+							section1.find(".pay-rent").val(pdtabsInput.amount).trigger("input");
+							section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section1.find(".paid-by").val(pdtabsInput.name).trigger("input");
+							section1.find(".payment-mode").val("UPI").trigger("change");
+							section1.find(".trx-id").val('').trigger("input");
+							section2.find(".pay-month-year").val(getCurrentYearMonth()).trigger("change");
+					
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "paydue failed");
+						}
+					});					
+					document.getElementById("payduePaymentLabel").textContent =
+						info.name +'-'+info.guest_id ;
+					document.getElementById("paydueModal").classList.add("active");
+					// let html = `
+					// 	<table class="table table-bordered table-sm mt-2">
+					// 		<tr>
+					// 			<td><strong>Bed</strong><br/>${info.bed_no || '-'}</td>
+					// 			<td><strong>status</strong><br/>${info.status || '-'}</td>
+					// 			<td><strong>Email</strong><br/>${info.email || '-'}</td>
+					// 		</tr>
+
+					// 	</table>
+					// `;
+					let html = '';
+					// Put same content in both pdtabs
+					$("#tab1-info").html(html);
+					$("#tab2-info").html(html);
+
+			}
+		});
+		function getCurrentYearMonth() {
+			const d = new Date();
+			const year = d.getFullYear();
+			const month = String(d.getMonth() + 1).padStart(2, "0");
+			return `${year}-${month}`;
+		}
+		// close modal
+		function closepaydueModal() {
+			document.getElementById("paydueModal").classList.remove("active");
+		}
+
+		// paydue handler
+		function dopaydue(type) {
+			console.log("paydue:", type, "for payment:", currentPayment);
+
+			// You can plug API later
+			alert(`paydue: ${type}\nPayment ID: ${currentPayment}`);
+
+			closepaydueModal();
+		}
+
+		$(function () {
+
+			// Initialize pdtabs with AJAX loading
+			$("#pdtabs").tabs({
+				beforeLoad: function (event, ui) {
+					ui.jqXHR.fail(function (e) {
+						ui.panel.html(`
+							<div style="padding:1rem;color:#b91c1c;">
+								<strong>Error ${e.status}</strong><br>
+								${e.statusText}<br><br>
+								Unable to load the content. Please try again.
+							</div>
+						`);
+					});
+				}
+			});
+
+		});
+
+		let pendingpaydue = null;
+		
+
+		function validateSection(section) {
+			let valid = true;
+
+			section.find(".required").each(function () {
+			const value = $(this).val().trim();
+
+			if (!value) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".amount").each(function () {
+			const value = parseFloat($(this).val());
+
+			if ($(this).val() && (isNaN(value) || value <= 0)) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".pdconfirm-paydue").prop("disabled", !valid);
+			return valid;
+		}
+
+		// Live validation on input/change
+		$(document).on("input change", ".refund-section input, .refund-section select", function () {
+			const section = $(this).closest(".refund-section");
+			validateSection(section);
+		});
+
+		
+		$(document).on("click", ".pdconfirm-paydue", function () {
+			pendingpaydue = $(this).data("paydue");
+			pendingBtn = this;
+
+			const section = $(this).closest(".refund-section");
+
+			if (!validateSection(section)) {
+			alert("⚠️ Please fill all required fields with valid values");
+			section.find(".is-invalid").first().focus();
+			return;
+			}			
+			const messages = {
+				payment_ok: "Initialize guest with this payment?",
+				dues_ok: "Add new dues to account?"
+			};
+
+			$("#pdconfirmText").text(messages[pendingpaydue] || "Are you sure?");
+			$("#pdconfirmBar").removeClass("d-none");
+		});
+
+		$("#pdconfirmNo").on("click", function () {
+			$("#pdconfirmBar").addClass("d-none");
+			pendingpaydue = null;
+			pendingBtn = null;
+		});
+
+		$("#pdconfirmYes").on("click", function () {
+			$("#pdconfirmBar").addClass("d-none");
+
+			if (!pendingpaydue || !pendingBtn) return;
+			
+			handleRefundpaydue(pendingpaydue, pendingBtn);
+
+			pendingpaydue = null;
+			pendingBtn = null;
+		});
+
+		function handleRefundpaydue(paydue, btn) {
+			const section = $(btn).closest(".refund-section");
+			//const rentPaymentId = currentPayment;   // already global
+			const approver = CURRENT_USER;           // already global
+			
+			let url = "";
+			let data = {
+				guest_id: pdtabsInput.guest_id,
+				created_by: CURRENT_USER
+
+			};
+
+			switch (paydue) {
+
+				case "payment_ok":
+					url = "/rentalmonth/payrent";
+					data.pay_rent      = section.find(".pay-rent").val();
+					data.trx_id        = section.find(".trx-id").val();
+					data.pay_month_year = section.find(".pay-month-year").val();
+					data.pay_date      = section.find(".pay-date").val();
+					data.payment_mode  = section.find(".payment-mode").val();
+					data.paid_by       = section.find(".paid-by").val();
+					break;
+
+				case "dues_ok":
+					url = "/rentalmonth/adddues";
+					data.dues_amount = section.find(".dues-amount").val();
+					data.dues_type = section.find(".dues-type").val();
+					data.due_month_year = section.find(".due-month-year").val();
+					data.due_date    = section.find(".due-date").val();
+					break;
+
+				default:
+					console.error("Unknown paydue:", paydue);
+					return;
+			}
+
+			console.log("Submitting:", data);
+			
+			$.ajax({
+				url: API_BASE_URL + url,
+				method: "POST",   // change to POST later
+				data: data,
+				success: function () {
+					alert("paydue completed successfully");
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "paydue failed");
+				}
+			});
+		}
+		
+</script>
+
+
+
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

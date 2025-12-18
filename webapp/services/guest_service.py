@@ -49,10 +49,10 @@ def create_guest(guest: dict):
         return {"error": "Guest already exists with this ID."}
     
     cur.execute("""
-        INSERT INTO guests (guest_id, name, comment, email, password, phone_number, status)
+        INSERT INTO guests (guest_id, name, comment, email, password, phone_number)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (guest_id, guest["name"],  guest["comment"],
-          guest.get("email"), guest.get("password"), guest.get("phone_number"), 'active'))
+          guest.get("email"), guest.get("password"), guest.get("phone_number")))
  
     id = 1 if guest.get("guest_type").lower() == "resident" else 2 if guest.get("guest_type").lower() == "employee" else 3
     cur.execute("""
@@ -179,26 +179,76 @@ def delete_guest(guest_id: str):
 
     try:
         # 🧹 Step 1: Delete associated face encodings first (to maintain referential integrity)
-        cur.execute("DELETE FROM guest_faces WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_auth WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_beds WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_faces WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_metadata WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_roles WHERE guest_id = ?", (guest_id,))
-        cur.execute("DELETE FROM guest_sessions WHERE guest_id = ?", (guest_id,))
-        # 🧹 Step 2: Now delete the guest record
-        cur.execute("DELETE FROM guests WHERE guest_id = ?", (guest_id,))
-        conn.commit()
+        conn.execute("BEGIN")
+        conn.execute("PRAGMA foreign_keys = OFF")
 
-        # 🧾 Step 3: Check if any guest record was deleted
-        deleted = cur.rowcount > 0
+        queries = [
+            # Attendance
+            "DELETE FROM attendance_alerts WHERE guest_id = ?",
+            "DELETE FROM attendance WHERE guest_id = ?",
+
+            # Auth
+            "DELETE FROM guest_sessions WHERE guest_id = ?",
+            "DELETE FROM guest_password_resets WHERE guest_id = ?",
+            "DELETE FROM guest_auth WHERE guest_id = ?",
+
+            # Guest data
+            "DELETE FROM guest_faces WHERE guest_id = ?",
+            "DELETE FROM guest_metadata WHERE guest_id = ?",
+            "DELETE FROM guest_roles WHERE guest_id = ?",
+            "DELETE FROM guest_beds WHERE guest_id = ?",
+
+            # Leaves
+            "DELETE FROM leave_calendar_cache WHERE guest_id = ?",
+            "DELETE FROM leave_requests WHERE guest_id = ?",
+
+            # Rent payment chain
+            """DELETE FROM rent_approval_history
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_forward_history
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_payment_allocations
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_payment_attachments
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+
+            "DELETE FROM rent_payment_refunds WHERE guest_id = ?",
+            "DELETE FROM rent_payments WHERE guest_id = ?",
+
+            # Finance
+            "DELETE FROM dues WHERE guest_id = ?",
+            "DELETE FROM security_deposits WHERE guest_id = ?",
+            "DELETE FROM rent_change_events WHERE guest_id = ?",
+
+            # Guest
+            "DELETE FROM guests WHERE guest_id = ?"
+        ]
+
+        for q in queries:
+            cur.execute(q, (guest_id,))
+
+        conn.commit()
 
     except Exception as e:
         conn.rollback()
         print(f"❌ Error deleting guest {guest_id}: {e}")
         deleted = False
 
+
+        # 🧾 Step 3: Check if any guest record was deleted
+        deleted = cur.rowcount > 0
+
+
     finally:
+        conn.execute("PRAGMA foreign_keys = ON")
         conn.close()
 
     return deleted
@@ -326,7 +376,6 @@ def confirm_guest(guest_id: str) -> bool:
 def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
     conn = get_connection()
     cursor = conn.cursor()
-    breakpoint();
     if (guest_type.lower() == "resident") and (email == "N/A" or email.strip() == ""):
         raise ValueError("Email is required for Resident guest type.")
 
@@ -346,9 +395,9 @@ def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
     
     # 2️⃣ Insert into guests table
     cursor.execute("""
-        INSERT INTO guests (guest_id, name, comments, email, phone_number, status)
+        INSERT INTO guests (guest_id, name, comments, email, phone_number)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (guest_id, name, comments, email, phone_number, 'inactive'))
+    """, (guest_id, name, comments, email, phone_number))
     print(f"[Info] New Guest inserted.{guest_id}")
     # 3️⃣ Insert authentication record
     password_hash = crypto.encrypt("Pass@123")
