@@ -66,7 +66,7 @@ from api import auth as auth_router
 from api import syst as syst_router
 from api import leave as leave_router
 from api import rentalmonth as rentalmonth_router
-from api import scheduler as scheduler_router
+from scheduler import scheduler as scheduler_router
 from db import database
 
 app.include_router(leave_router.router, prefix="/leave", tags=["Leave"])

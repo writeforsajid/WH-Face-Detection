@@ -161,8 +161,27 @@ def list_bed_guest_assignments(
             ORDER BY b.bed_id ASC, gra.assign_date DESC, gra.assignment_id DESC
             """.replace("{WHERE_SQL}", where_sql)
         , params)
-        rows = [dict(r) for r in cur.fetchall()]
-        return rows
+
+
+
+                # b.id AS id,
+                # b.bed_id AS bed_id,
+                # b.sharing_type AS bed_sharing_type,
+                # gra.assignment_id AS assignment_id,
+                # gra.guest_id AS guest_id,
+                # g.name AS guest_name,
+                # gra.assign_date AS assign_date,
+                # COUNT(gf.face_id) AS face_count 
+        #rows = [dict(r) for r in cur.fetchall()]
+        rows =  cur.fetchall()
+        return [dict(zip([
+            "s_no","id", "bed_id","bed_sharing_type","assignment_id",  "guest_id", "guest_name", "assign_date","face_count"],
+            [i + 1] + list(r)
+        )
+    )
+    for i, r in enumerate(rows)
+]
+    
     finally:
         conn.close()
 

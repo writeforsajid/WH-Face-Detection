@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script type="module" src="/static/components/employee-filter.js"></script>
+
+  
+
+	<!-- <script type="module" src="/static/components/employee-filter.js"></script> -->
+	
+	<style>
+    body {
+        font-family: Arial;
+        padding: 20px;
+        /* max-width: 450px; */
+        margin: auto;
+    }
+    label {
+        display: block;
+        font-weight: bold;
+        margin-top: 15px;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 20px;
+        padding: 12px;
+        width: 100%;
+        background: #0275d8;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #025aa5;
+    }
+    .error {
+        color: red;
+        margin-top: 5px;
+    }
+  .cursor-pointer { cursor: pointer; }
+  .row-updated { background-color: #d1e7dd !important; }
+</style>
+<script>
+  				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return window.location.origin;
+				})();
+          let currentPage = 1;
+          const pageLimit = 100;
+          let lastFilter = {};
+</script>
+</head>
+<body class="admin-bg">
+  <!-- Loading overlay removed for FAQ page -->
+	<!-- Main Content -->
+	<div class="page-wrapper">
+		<div id="menu-container"></div>
+    <div class="page-header">
+      <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> Rental dues</h1>
+          </div>
+
+    </div>
+    <div class="card">
+      <div class="card-body" style='padding: 10px 2%;'>
+
+        
+      <employee-filter  data-api="/guests/active"> </employee-filter>
+      <!-----Summary-->
+      <div class="row mb-3" id="duesSummary">
+        <div class="col-md-4">
+          <div class="alert alert-primary">
+            <strong>Total Due:</strong> ₹ <span id="sumDue">0</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="alert alert-success">
+            <strong>Total Paid:</strong> ₹ <span id="sumPaid">0</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="alert alert-warning">
+            <strong>Balance:</strong> ₹ <span id="sumBalance">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-----Table-->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover align-middle" id="duesTable">
+          <thead class="table-dark">
+            <tr>
+              <th>S.No</th>
+              <th>Due Type</th>
+              <th>Year</th>
+              <th>Month</th>
+              <th>Due Amount</th>
+              <th>Amount Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <nav>
+          <ul class="pagination justify-content-center" id="pagination">
+            <li class="page-item">
+              <button class="page-link" onclick="changePage(-1)">Pre</button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link" id="pageInfo">Page 1</span>
+            </li>
+            <li class="page-item">
+              <button class="page-link" onclick="changePage(1)">Nex</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      
+  
+
+      </div>
+    
+    
+    </div>
+  
+  </div>
+
+  
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+			
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+
+
+
+<script>
+  let currentFilter = {
+  startDate: new Date().toISOString().split("T")[0],
+  endDate: new Date().toISOString().split("T")[0],
+  employeeId: "all"
+  };
+
+  document.addEventListener("filter-data", async (e) => {
+    const filter = e.detail;  
+    const user = JSON.parse(localStorage.getItem('wh_user') || '{}');
+    const guestId = user.guest_id || '';
+    const role = user.role || '';
+    currentPage = 1;
+    console.log("Received DATA:", filter);
+
+    
+
+      //let filter = document.getElementById("logFilter");
+    filter.guest_id=filter.employeeId;
+    currentFilter = {
+    status: "success",
+    message: "Data fetched successfully",
+    filter
+  };
+
+
+    loadDues({
+    guest_id: filter.guest_id,
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+    page: 1,
+    limit: 100
+  }); 
+
+
+});
+ 
+  </script>
+
+<script>
+
+    let editingDueId = null;
+    let editingRow = null;
+    let editModal = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      editModal = new bootstrap.Modal(
+        document.getElementById("editDueModal")
+      );
+    });
+
+    function openDueEditModal(dueId, amount, icon) {
+      editingDueId = dueId;
+      editingRow = icon.closest("tr");
+
+      document.getElementById("editDueAmount").value = amount;
+      editModal.show();
+    }
+
+
+</script>
+
+<script>
+  async function fetchDuesFromAPI(filters = {}) {
+    const params = new URLSearchParams({
+      guest_id: filters.guest_id,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      page: filters.page || 1,
+      limit: filters.limit || 100
+    });
+    try {
+      const url = `${API_BASE_URL}/rentalmonth/list_guest_dues${params.toString() ? ('?' + params.toString()) : ''}`;
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch dues");
+
+      //const json = await res.json();
+      return await res.json();
+      //return json.data || [];
+
+    } catch (err) {
+      console.error(err);
+      alert("Unable to load dues data");
+      return [];
+    }
+  }
+</script>
+
+<script>
+
+
+  function renderDuesTable(data) {
+    const tbody = document.querySelector("#duesTable tbody");
+    tbody.innerHTML = "";
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="11" class="text-center text-muted">
+            No dues found
+          </td>
+        </tr>`;
+      return;
+    }
+
+    data.forEach(row => {
+      const isEditable = row.status === "open";
+
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-id", row.id);
+
+      tr.innerHTML = `
+        <td>${row.s_no}</td>
+        <td>${row.due_type_name}</td>
+        <td>${row.year}</td>
+        <td>${row.month}</td>
+        <td>
+          ₹ ${row.due_amount}
+          ${
+            row.status === "open"
+              ? `<i class="bi bi-pencil-square text-primary ms-2 cursor-pointer"
+                  title="Edit Due Amount"
+                  onclick="openDueEditModal(${row.id}, ${row.due_amount}, this)">
+                </i>`
+              : ""
+          }
+        </td>
+
+        <td>₹ ${row.amount_paid}</td>
+        <td>₹ ${row.balance}</td>
+
+        <td>
+          <span class="badge bg-${row.status === 'open' ? 'warning' : 'success'}">
+            ${row.status}
+          </span>
+        </td>
+
+        <td>${row.date}</td>
+        <td>-</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split("T")[0];
+    loadDues({ guest_id:'',startDate: today, endDate: today });
+  });
+
+  
+</script>
+<script>
+      function renderSummary(summary) {
+        document.getElementById("sumDue").innerText = summary.total_due_amount;
+        document.getElementById("sumPaid").innerText = summary.total_amount_paid;
+        document.getElementById("sumBalance").innerText = summary.total_balance;
+      }
+
+      function updatePageInfo(page, total) {
+        document.getElementById("pageInfo").innerText =
+          `Page ${page} (Total: ${total})`;
+      }
+</script>
+<script>
+  async function loadDues(filter) {
+    lastFilter = filter;
+    const response = await fetchDuesFromAPI({
+      ...filter,
+      page: currentPage
+    });
+
+    renderDuesTable(response.data);
+    renderSummary(response.summary);
+    updatePageInfo(currentPage, response.total);
+  }
+</script>
+<script>
+    function changePage(step) {
+      if (currentPage + step < 1) return;
+      currentPage += step;
+      loadDues(lastFilter);
+    }
+</script>
+
+<script>
+function editDueInline(span, dueId, oldValue) {
+  const input = document.createElement("input");
+  input.type = "number";
+  input.className = "form-control form-control-sm";
+  input.value = oldValue;
+  input.style.width = "100px";
+
+  span.replaceWith(input);
+  input.focus();
+
+  const save = async () => {
+    const newValue = parseFloat(input.value);
+
+    if (isNaN(newValue) || newValue <= 0) {
+      alert("Invalid amount");
+      input.focus();
+      return;
+    }
+
+    if (!confirm(`Save new due amount ₹${newValue}?`)) {
+      input.replaceWith(span);
+      return;
+    }
+
+    await saveDueAmount(dueId, newValue);
+
+    span.textContent = `₹ ${newValue}`;
+    input.replaceWith(span);
+
+    const row = span.closest("tr");
+    row.classList.add("row-updated");
+  };
+
+  //input.addEventListener("blur", save);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") save();
+    if (e.key === "Escape") input.replaceWith(span);
+  });
+}
+</script>
+
+
+
+<script>
+  async function saveDueFromModal() {
+  const input = document.getElementById("editDueAmount");
+  const newAmount = parseFloat(input.value);
+
+  if (isNaN(newAmount) || newAmount <= 0) {
+    alert("Enter a valid amount");
+    return;
+  }
+
+  if (!confirm(`Save new due amount ₹${newAmount}?`)) return;
+
+  await saveDueAmount(editingDueId, newAmount);
+
+  // update UI
+  const cell = editingRow.children[4]; // due_amount column index
+  cell.querySelector("i").previousSibling.textContent = `₹ ${newAmount}`;
+
+  editingRow.classList.add("row-updated");
+
+  editModal.hide();
+}
+
+async function saveDueAmount(dueId, amount) {
+
+  const url = `${API_BASE_URL}/rentalmonth/update_due_amount`;
+    const formData = new FormData();
+    formData.append("id", dueId);
+    formData.append("due_amount", amount);
+
+    const res = await fetch(url, {
+    method: "POST",
+    body: formData
+  });
+
+  const json = await res.json();
+  debugger;
+  if (json.success !== true) {
+    alert(json.message || "Update failed");
+  }
+}
+</script>
+
+
+
+
+<div class="modal fade" id="editDueModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Due Amount</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="number" id="editDueAmount"
+               class="form-control"
+               min="1" />
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="saveDueFromModal()">
+          Save
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

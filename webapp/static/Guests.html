@@ -155,7 +155,7 @@
 				return `
 					   <tr>
 
-           
+            <td>${r.s_no || "-"}</td>           
             <td><a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" target="_blank">${r.name}</a>(${r.face_count || "-"})</td>
             <td style='max-width:280px;overflow:hidden;text-overflow:ellipsis;'>${r.email || "-"}</td>
             <td>${r.bed_no || "-"}</td>
@@ -601,6 +601,7 @@
 
 
 								<tr>
+									<th>S.no</th>									
 									<th>Name</th>
 									<th>Type</th>
 									<th>Room</th>

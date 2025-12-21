@@ -314,9 +314,7 @@ LEFT JOIN (
         "page": page,
         "pageSize": pageSize,
         "data": [dict(zip([
-            "s.no","guest_id", "name","type","bed_id",  "monthly_rent", "security", "balance","status",
-            "comments"
-        ],
+            "s.no","guest_id", "name","type","bed_id",  "monthly_rent", "security", "balance","status","comments"],
             [i + 1] + list(r)
         )
     )

@@ -20,10 +20,11 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS guests (
     guest_id    VARCHAR(20) PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
-    email       TEXT,
+    email       TEXT UNIQUE,
     phone_number TEXT,
-    comments      VARCHAR(10),
-    status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed','leave'))
+    comments      VARCHAR(100),
+    status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('_blank','inactive','active',  'closed')),
+    email_enabled INTEGER DEFAULT 1
 )
 """)
 # 1️⃣ Guests Table

@@ -167,6 +167,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_due_types_code ON due_types(code);
 CREATE INDEX IF NOT EXISTS idx_dues_guest_year_month ON dues(guest_id, year, month);
 CREATE INDEX IF NOT EXISTS idx_dues_guest_due_type ON dues(guest_id, due_type_id);
 CREATE INDEX IF NOT EXISTS idx_dues_type_year_month ON dues(due_type_id, year, month);
+CREATE INDEX IF NOT EXISTS idx_dues_guest_date ON dues (guest_id, created_at);
+
 
 CREATE INDEX IF NOT EXISTS idx_rentpayments_guest ON rent_payments(guest_id);
 CREATE INDEX IF NOT EXISTS idx_rentpayments_status ON rent_payments(status);
@@ -182,6 +184,7 @@ CREATE INDEX IF NOT EXISTS idx_approval_rpid ON rent_approval_history(rent_payme
 
 CREATE INDEX IF NOT EXISTS idx_security_guest ON security_deposits(guest_id);
 CREATE INDEX IF NOT EXISTS idx_rent_change_guest ON rent_change_events(guest_id);
+
 """
 cursor.executescript(indexes)
 print("✔ Indexes created/updated")

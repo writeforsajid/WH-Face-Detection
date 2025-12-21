@@ -533,7 +533,7 @@
 			<div class="page-header">
 				<div class="page-header-content">
 				<div>
-					<h1><i class="bi bi-people-fill"></i> Payments ↔ status</h1>
+					<h1><i class="bi bi-people-fill"></i> Payments ↔ unprocessed</h1>
 				</div>
 				</div>
 			</div>
@@ -754,7 +754,27 @@
 						<table class="table table-bordered table-sm mt-2">
 							<tr>
 								<td><strong>Year/Month</strong><br/>${info.year || '-'}/${info.month || '-'}</td>
-								<td><strong>Amount</strong><br/>${info.amount || '-'}</td>
+								<td>
+									<strong>Amount</strong><br/>
+
+									<span id="amountDisplay">
+										${info.amount || '-'}
+										<i class="bi bi-pencil-square ms-2 text-primary"
+										style="cursor:pointer"
+										onclick="enableAmountEdit(${info.amount || 0})"></i>
+									</span>
+
+									<input type="number"
+										id="amountInput"
+										class="form-control form-control-sm d-none mt-1"
+										min="0"
+										step="0.01"/>
+
+									<div class="mt-1 d-none" id="amountActions">
+										<button class="btn btn-sm btn-success me-1" onclick="confirmAmountUpdate()">Save</button>
+										<button class="btn btn-sm btn-secondary" onclick="cancelAmountEdit()">Cancel</button>
+									</div>
+								</td>
 								<td><strong>Mode</strong><br/>${info.mode || '-'}</td>
 							</tr>
 							<tr>
@@ -930,6 +950,82 @@
 		}
 
 		</script>
+
+
+<!----Payment amount update-->
+	<script>
+			let originalAmount = null;
+
+			function enableAmountEdit(currentAmount) {
+				originalAmount = currentAmount;
+
+				$("#amountDisplay").addClass("d-none");
+				$("#amountInput").removeClass("d-none").val(currentAmount).focus();
+				$("#amountActions").removeClass("d-none");
+			}
+
+			function cancelAmountEdit() {
+				$("#amountInput").addClass("d-none");
+				$("#amountActions").addClass("d-none");
+				$("#amountDisplay").removeClass("d-none");
+			}
+
+			function confirmAmountUpdate() {
+				const newAmount = parseFloat($("#amountInput").val());
+
+				if (isNaN(newAmount) || newAmount <= 0) {
+					alert("Please enter a valid amount");
+					return;
+				}
+
+				if (newAmount === originalAmount) {
+					cancelAmountEdit();
+					return;
+				}
+
+				const confirmMsg = `Update amount from ₹${originalAmount} to ₹${newAmount}?`;
+
+				if (!confirm(confirmMsg)) return;
+
+				updatePaymentAmount(newAmount);
+			}
+
+			function updatePaymentAmount(newAmount) {
+				const token = localStorage.getItem("wh_token");
+
+				$.ajax({
+					url: API_BASE_URL + "/rentalmonth/update_amount",
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${token}`
+					},
+					data: {
+						rent_payment_id: currentPayment,
+						amount: newAmount
+					},
+					success: function () {
+						alert("Amount updated successfully");
+
+						// update UI
+						$("#amountDisplay").html(
+							`${newAmount}
+							<i class="bi bi-pencil-square ms-2 text-primary"
+							style="cursor:pointer"
+							onclick="enableAmountEdit(${newAmount})"></i>`
+						);
+
+						cancelAmountEdit();
+						loadData(); // refresh table if needed
+					},
+					error: function (xhr) {
+						alert(xhr.responseJSON?.detail || "Failed to update amount");
+					}
+				});
+			}
+
+	</script>
+
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

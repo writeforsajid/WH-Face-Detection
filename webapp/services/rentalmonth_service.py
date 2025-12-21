@@ -224,7 +224,7 @@ def get_guests_with_dues() -> Dict:
             else:
                 category = ""
             result.append({
-                "label": r["name"] +' (Bed: '+ r["current_bed"] +')',
+                "label": f'{r["name"]}' + (f' (Bed: {r["current_bed"]})' if r["current_bed"] else ''),
                 "category": category
             })
 
@@ -354,7 +354,95 @@ def get_unprocessed_payments(
             
             LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
                     
-            WHERE rp.status IN ('submitted', 'forwarded','approved_final') and g.status in ('null', 'inactive', 'active')
+            WHERE rp.status IN ('submitted', 'forwarded') and g.status in ('_blank', 'inactive', 'active')
+
+            ORDER BY rp.created_at DESC;
+
+
+        """)
+        rows = cur.fetchall()
+        result = []
+        
+
+        for r in rows:
+            formatted = datetime.strptime(r["payment_date"], "%Y-%m-%d %H:%M:%S").strftime("%#d/%#m/%y")
+            result.append({
+                "rent_payment_id": r["rent_payment_id"],
+                "guest_id": r["guest_id"],                
+                "guest_name": r["guest_name"],
+                "bed_id": r["bed_id"],
+                "amount": r["amount"],
+                "balance": r["balance"],
+                "status": r["status"],
+                "forwarded_user": r["forwarded_user"],
+                "month": r["month"],
+                "year": r["year"],
+                "payment_date":formatted,
+                "mode": r["mode"],
+                "reference": r["reference"]
+            })
+
+
+        # with open(ITEMS_JSON_PATH, "r", encoding="utf-8") as f:
+        #     data = json.load(f)
+        return result
+    except FileNotFoundError:
+        return {"error": "items.json not found"}
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON format"}
+
+
+
+def get_processed_payments(    
+    authorization: Optional[str] = Header(None),
+    search: Optional[str] = None,
+    status: Optional[str] = Query(None, regex="^(active|inactive|closed)$"),
+    sharing_type: Optional[str] = Query(None, regex="^(brass|silver|golden)$"),
+) -> List[Dict]:
+    """
+    Fetch guest metadata records for the window [till_date - days, till_date].
+    Returns a dict with keys: status, guest_id, from_date, till_date, count, data
+    """
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+
+    # 2) Fetch paginated list
+        cur.execute(f"""
+            SELECT 
+                rp.rent_payment_id ,
+                g.guest_id AS guest_id,                    
+                g.name AS guest_name,
+                gb.bed_id,
+                rp.year,rp.month,
+                rp.amount AS amount,
+                d.total_due-d.total_paid as balance,
+                rp.created_at AS payment_date,
+                rp.mode,    
+                rp.reference,
+                rp.status,
+                u.name  AS forwarded_user
+
+            FROM rent_payments rp
+            LEFT JOIN guests g 
+                ON g.guest_id = rp.guest_id
+
+            LEFT JOIN guests u                      -- ⬅️ JOIN TO GET FORWARDED USER NAME
+                ON u.guest_id = rp.current_approver
+                
+            Left join (
+                SELECT
+                    guest_id,
+                    SUM(due_amount) AS total_due,
+                    SUM(amount_paid) AS total_paid
+                FROM dues
+                GROUP BY guest_id
+            ) d ON d.guest_id = rp.guest_id
+            
+            LEFT JOIN guest_beds AS gb ON g.guest_id = gb.guest_id
+                    
+            WHERE rp.status IN ('approved_final','rejected', 'cancelled') and g.status in ('_blank', 'inactive', 'active')
 
             ORDER BY rp.created_at DESC;
 
@@ -1120,3 +1208,183 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
         conn.close()
                 
 
+def update_payment_amount(rent_payment_id,amount):
+   
+    conn = get_connection()
+    cur = conn.cursor()
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Invalid amount")
+
+    #cur = db.cursor()
+
+    # 1️⃣ Fetch existing payment
+    cur.execute("""
+        SELECT amount, status
+        FROM rent_payments
+        WHERE rent_payment_id = ?
+    """, (rent_payment_id,))
+
+    row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Payment not found")
+
+    old_amount, status = row
+
+    # 2️⃣ Optional: block edit if final approved
+    if status == "approved_final":
+        raise HTTPException(
+            status_code=403,
+            detail="Final approved payment cannot be edited"
+        )
+
+    # 3️⃣ Update payment amount
+    cur.execute("""
+        UPDATE rent_payments
+        SET amount = ?
+        WHERE rent_payment_id = ?
+    """, (amount, rent_payment_id))
+
+
+    conn.commit()
+
+    return {
+        "success": True,
+        "rent_payment_id": rent_payment_id,
+        "old_amount": old_amount,
+        "new_amount": amount
+    }
+
+
+
+def list_guest_dues(guest_id, start_date, end_date, page, limit):
+
+    offset = (page - 1) * limit
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # --- Base query parts ---
+    base_query = """
+        FROM dues AS a
+        JOIN guests AS g ON a.guest_id = g.guest_id
+        LEFT JOIN due_types AS dt ON a.due_type_id = dt.id
+        WHERE DATE(a.created_at) BETWEEN ? AND ?
+    """
+
+    params = [
+        start_date.strftime("%Y-%m-%d"),
+        end_date.strftime("%Y-%m-%d")
+    ]
+
+    if guest_id != "all":
+        base_query += " AND a.guest_id = ?"
+        params.append(guest_id)
+
+    # --- Fetch paginated records ---
+    cur.execute(f"""
+        SELECT 
+            a.id,
+            g.name AS guest_name,
+            dt.name AS due_type_name,
+            a.year,
+            a.month,
+            a.due_amount,
+            a.amount_paid,
+            (a.due_amount - a.amount_paid) AS balance,
+            a.status,
+            a.created_at
+        {base_query}
+        ORDER BY a.created_at DESC
+        LIMIT ? OFFSET ?
+    """, [*params, limit, offset])
+
+    records = cur.fetchall()
+    data = []
+
+    for index, row in enumerate(records):
+        data.append({
+            "s_no": offset + index + 1,   # ✅ serial number
+            "id": row["id"],
+            "guest_name": row["guest_name"],
+            "due_type_name": row["due_type_name"],
+            "year": row["year"],
+            "month": row["month"],
+            "due_amount": row["due_amount"],
+            "amount_paid": row["amount_paid"],
+            "balance": row["balance"],
+            "status": row["status"],
+            "date": row["created_at"],
+        })
+
+    # --- Summary ---
+    cur.execute(f"""
+        SELECT
+            COUNT(*) AS total,
+            COALESCE(SUM(a.due_amount), 0) AS total_due_amount,
+            COALESCE(SUM(a.amount_paid), 0) AS total_amount_paid,
+            COALESCE(SUM(a.due_amount - a.amount_paid), 0) AS total_balance
+        {base_query}
+    """, params)
+
+    summary = cur.fetchone()
+    conn.close()
+
+    return {
+        "total": summary["total"],
+        "page": page,
+        "limit": limit,
+        "summary": {
+            "total_due_amount": summary["total_due_amount"],
+            "total_amount_paid": summary["total_amount_paid"],
+            "total_balance": summary["total_balance"]
+        },
+        "data": data
+    }
+
+
+
+
+def update_due_amount(due_id,due_amount):
+   
+    conn = get_connection()
+    cur = conn.cursor()
+    if due_amount <= 0:
+        raise HTTPException(status_code=400, detail="Invalid amount")
+
+    #cur = db.cursor()
+
+    # 1️⃣ Fetch existing payment
+    cur.execute("""
+        SELECT due_amount, status
+        FROM dues
+        WHERE id = ?
+    """, (due_id,))
+
+    row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Due id not found")
+
+    old_amount, status = row
+
+    # 2️⃣ Optional: block edit if final approved
+    if status != "open":
+        raise HTTPException(
+            status_code=403,
+            detail="processed dues records cannot be edited"
+        )
+
+    # 3️⃣ Update payment amount
+    cur.execute("""
+        UPDATE dues
+        SET due_amount = ?
+        WHERE id = ?
+    """, (due_amount, due_id))
+
+
+    conn.commit()
+
+    return {
+        "success": True,
+        "id": due_id,
+        "old_amount": old_amount,
+        "new_amount": due_amount
+    }

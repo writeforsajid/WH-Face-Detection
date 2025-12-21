@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS guests (
     email       TEXT UNIQUE,
     phone_number TEXT,
     comments      VARCHAR(100),
-    status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('inactive','active',  'closed'))
+    status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('_blank','inactive','active',  'closed')),
+    email_enabled INTEGER DEFAULT 1
 )
 """)
 
@@ -238,6 +239,18 @@ cursor.execute('''CREATE TABLE guest_metadata (
         ON DELETE CASCADE
 )''')
 
+cursor.execute('''CREATE TABLE IF NOT EXISTS email_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id TEXT,
+    email_to TEXT NOT NULL,
+    email_cc TEXT,
+    email_bcc TEXT,
+    subject TEXT,
+    template_name TEXT,
+    status TEXT CHECK(status IN ('SUCCESS','FAILED')) NOT NULL,
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)''')
 
 
 

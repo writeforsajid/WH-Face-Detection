@@ -159,6 +159,15 @@ def get_unprocessed_payments(
     return rentalmonth_service.get_unprocessed_payments(authorization, search, status, sharing_type)
 
 
+@router.get("/get_processed_payments")
+def get_processed_payments(
+    authorization: Optional[str] = Header(None),
+    search: Optional[str] = None,
+    status: Optional[str] = Query(None, regex="^(active|inactive|closed)$"),
+    sharing_type: Optional[str] = Query(None, regex="^(brass|silver|golden)$"),
+) -> List[Dict]:
+    return rentalmonth_service.get_processed_payments(authorization, search, status, sharing_type)
+
 
 @router.get("/approve")
 def approve_rent_payment(
@@ -269,6 +278,60 @@ def clear_moveout_rent(
         return rentalmonth_service.clear_moveout_rent( guest_id,refund_amount,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
 
 
+@router.post("/update_amount")
+def update_payment_amount(
+    rent_payment_id: int = Form(...),
+    amount: float = Form(...),
+):
+        return rentalmonth_service.update_payment_amount( rent_payment_id,amount)
 
 
+def parse_date(value: str):
+    value = value.strip()  # ✅ remove extra spaces
 
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+
+    raise ValueError(f"Invalid date format: {value}")
+
+@router.get("/list_guest_dues")
+def list_guest_dues(
+    guest_id: str = Query(...),
+    startDate: str = Query(None),
+    endDate: str = Query(None),
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(100, ge=1)
+):
+   
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+
+    try:
+        # start_date = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").date()
+        # end_date   = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S").date()
+        start_date = parse_date(startDate)
+        end_date   = parse_date(endDate)
+        # start_date = datetime.fromisoformat(start_date).date()
+        # end_date = datetime.fromisoformat(end_date).date()
+        return rentalmonth_service.list_guest_dues(
+        guest_id, start_date, end_date, page, pageSize
+    )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="Attendance data not found")
+    return result
+
+
+   
+   
+@router.post("/update_due_amount")
+def update_due_amount(
+    id: int = Form(...),
+    due_amount: float = Form(...),
+):
+        return rentalmonth_service.update_due_amount( id,due_amount)   

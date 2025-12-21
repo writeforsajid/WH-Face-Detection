@@ -153,7 +153,7 @@ def signup(payload: SignupRequest, request: Request):
             if not existing:
                 # create guest row if provided gid not present
                 cur.execute(
-                    "INSERT INTO guests (guest_id, name, email, password, phone_number, guest_type, status) VALUES (?,?,?,?,?,?,'active')",
+                    "INSERT INTO guests (guest_id, name, email, password, phone_number, guest_type) VALUES (?,?,?,?,?,?)",
                     (gid, payload.full_name, str(payload.email), payload.password, payload.phone_number, guest_type),
                 )
             else:

@@ -235,9 +235,9 @@ class RegisterUserInDataBase(PrecessingStrategy):
         
         # 2️⃣ Insert into guests table
         cursor.execute("""
-            INSERT INTO guests (guest_id, name, comments, email, phone_number, status)
+            INSERT INTO guests (guest_id, name, comments, email, phone_number,status)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (guest_id, name, comments, email, phone_number, 'inactive'))
+        """, (guest_id, name, comments, email, phone_number,'_blank'))
         print(f"[Info] New Guest inserted.{guest_id}")
         # 3️⃣ Insert authentication record
         password_hash = crypto.encrypt("Pass@123")

@@ -6,6 +6,7 @@ class GenTable extends HTMLElement {
     this.page = 1;
     this.pageSize = 100;
     this.total = 0;
+    this.rows = [];
   }
 
   connectedCallback() {
@@ -94,6 +95,7 @@ select { padding:4px; }
         <div class="top-bar">
             <div>
               <button id="pdfBtn">Download PDF</button>
+              <button id="csvBtn">Download CSV</button>
            </div>
           <div>
             Page size:
@@ -134,7 +136,8 @@ select { padding:4px; }
       });
     this.shadowRoot.getElementById("pdfBtn")
       .addEventListener("click", () => this.downloadPDF());
-
+    this.shadowRoot.getElementById("csvBtn")
+      .addEventListener("click", () => this.downloadCSV());
     this.shadowRoot.getElementById("nextBtn")
       .addEventListener("click", () => {
         const totalPages = Math.ceil(this.total / this.pageSize);
@@ -164,11 +167,11 @@ select { padding:4px; }
       const url = this.buildUrl();
       const res = await fetch(url);
       const json = await res.json();
-      debugger;
       const columns = this.headList;
 
       this.total = json.total || 0;
       const rows = json.data || [];
+      this.rows = rows;
       console.log("Table data:", rows);
       this.renderHead(columns);
       this.renderBody(columns, rows);
@@ -216,6 +219,40 @@ select { padding:4px; }
       tbody.appendChild(tr);
     });
   }
+  
+  downloadCSV() {
+    if (!this.rows || this.rows.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const columns = this.headList;
+
+    // CSV header
+    let csv = columns.join(",") + "\n";
+
+    // CSV rows
+    this.rows.forEach(row => {
+      const line = columns.map(col => {
+        let value = row[col] ?? "";
+        value = String(value).replace(/"/g, '""'); // escape quotes
+        return `"${value}"`;
+      }).join(",");
+      csv += line + "\n";
+    });
+
+    // Create file
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${this.title || "table"}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   async downloadPDF() {
       const { jsPDF } = window.jspdf;
 

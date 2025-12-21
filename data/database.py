@@ -11,15 +11,15 @@ def init_db():
 
     # Guests Table
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS guests (
-        guest_id    VARCHAR(20) PRIMARY KEY,
-        name        VARCHAR(100) NOT NULL,
-        email       TEXT,
-        password    TEXT,
-        phone_number TEXT,
-        comments      VARCHAR(10),
-        status      VARCHAR(20) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed','leave'))
-    )
+        CREATE TABLE IF NOT EXISTS guests (
+            guest_id    VARCHAR(20) PRIMARY KEY,
+            name        VARCHAR(100) NOT NULL,
+            email       TEXT UNIQUE,
+            phone_number TEXT,
+            comments      VARCHAR(100),
+            status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('_blank','inactive','active',  'closed')),
+            email_enabled INTEGER DEFAULT 1
+        )
     """)
 
     # Guest Faces Table

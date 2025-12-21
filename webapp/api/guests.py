@@ -85,14 +85,14 @@ def guests_stats(
         conn.close()
 
 
-@router.post("/")
-def add_guest(guest: dict):
-    result = guest_service.create_guest(guest)
-    if isinstance(result, dict) and "error" in result:
-        # Handle custom error (e.g., missing video)
-        raise HTTPException(status_code=400, detail=result["error"]) 
+# @router.post("/")
+# def add_guest(guest: dict):
+#     result = guest_service.create_guest(guest)
+#     if isinstance(result, dict) and "error" in result:
+#         # Handle custom error (e.g., missing video)
+#         raise HTTPException(status_code=400, detail=result["error"]) 
 
-    return result
+#     return result
 
 @router.get("/")
 def list_guests(

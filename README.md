@@ -1,3 +1,14 @@
+# Guest Registration
+   ## Video Registration
+      - Unique gmail id 
+   ## Initate Guest
+   - Guest will now be able to get auto month due raised.
+   - Email alert sent.. Welcome..
+   - Active status
+
+
+
+
 # WH Face Detection
 
 This project provides a face detection and attendance system using deep learning models (YOLO and SSD) and a simple database for logging attendance. It is designed for use in environments like the White House, but can be adapted for other organizations.
@@ -78,3 +89,5 @@ D:\WH-Face-Detection\webapp\_venv\Scripts\Activate.ps1
 uvicorn main:app --reload
 
 uvicorn main:app --reload --host 127.0.0.1 --port 8000 --ssl-keyfile="webapp.key" --ssl-certfile="webapp.crt"
+
+

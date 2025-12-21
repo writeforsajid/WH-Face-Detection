@@ -27,17 +27,15 @@ def init_db():
     
     # Create tables if not exist
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS guests (
-        guest_id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT,
-        password TEXT,
-        phone TEXT,
-        phone_number TEXT,
-        bed_no TEXT,
-        guest_type TEXT DEFAULT 'Resident' CHECK(guest_type IN ('Owner', 'Employee', 'Resident', 'Others')),
-        status TEXT DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'closed'))
-    )
+CREATE TABLE IF NOT EXISTS guests (
+    guest_id    VARCHAR(20) PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    email       TEXT UNIQUE,
+    phone_number TEXT,
+    comments      VARCHAR(100),
+    status      VARCHAR(10) DEFAULT 'null' CHECK(status IN ('_blank','inactive','active',  'closed')),
+    email_enabled INTEGER DEFAULT 1
+)
     """)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS attendance (

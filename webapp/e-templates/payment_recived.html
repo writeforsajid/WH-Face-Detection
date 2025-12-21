@@ -1,0 +1,11 @@
+<p>Hello {{ name }},</p>
+
+<p>We have received your payment of <b>₹{{ paid_amount }}</b>.</p>
+
+{% if remaining_due > 0 %}
+<p>Your remaining balance is <b>₹{{ remaining_due }}</b>.</p>
+{% else %}
+<p>You have no pending dues. Thank you!</p>
+{% endif %}
+
+<p>Regards,<br>{{ company_name }}</p>

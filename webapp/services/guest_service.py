@@ -9,6 +9,7 @@ import re
 import os, shutil, json, zipfile
 from datetime import datetime
 from utilities.crypto_manager import crypto
+from utilities.email_service import send_email
 #from passlib.context import CryptContext
 #import ffmpeg
 
@@ -21,53 +22,53 @@ STATIC_TEMP_PATH=os.getenv("STATIC_TEMP_PATH","./static/temp")
 
 
 
-def create_guest(guest: dict):
-  # ✅ Auto-generate Guest ID if not given
+# def create_guest(guest: dict):
+#   # ✅ Auto-generate Guest ID if not given
 
-# Construct expected video filename
-    guest_name_safe = guest["name"].replace(" ", "_")
-    print(guest["name"])
-    possible_files = [f for f in os.listdir(VIDEOS_PATH) if f.startswith(guest_name_safe)]
+# # Construct expected video filename
+#     guest_name_safe = guest["name"].replace(" ", "_")
+#     print(guest["name"])
+#     possible_files = [f for f in os.listdir(VIDEOS_PATH) if f.startswith(guest_name_safe)]
     
-    if not possible_files:
-        # No video uploaded yet
-        return {"error": "Please capture and upload the video before saving the guest."}
+#     if not possible_files:
+#         # No video uploaded yet
+#         return {"error": "Please capture and upload the video before saving the guest."}
    
-    possible_files.sort(key=lambda f: os.path.getmtime(os.path.join(VIDEOS_PATH, f)), reverse=True)
-    video_filename = possible_files[0]
-    parts = video_filename.replace(".webm", "").split("_")
-    guest_id = parts[-2] + parts[-1] if len(parts) == 3 else ""
+#     possible_files.sort(key=lambda f: os.path.getmtime(os.path.join(VIDEOS_PATH, f)), reverse=True)
+#     video_filename = possible_files[0]
+#     parts = video_filename.replace(".webm", "").split("_")
+#     guest_id = parts[-2] + parts[-1] if len(parts) == 3 else ""
 
-    if not guest_id:
-        return {"error": "Invalid video filename format. Expected two underscores in name."}
+#     if not guest_id:
+#         return {"error": "Invalid video filename format. Expected two underscores in name."}
 
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM guests WHERE guest_id=?", (guest_id,))
-    if cur.fetchone():
-        conn.close()
-        return {"error": "Guest already exists with this ID."}
+#     conn = get_connection()
+#     cur = conn.cursor()
+#     cur.execute("SELECT * FROM guests WHERE guest_id=?", (guest_id,))
+#     if cur.fetchone():
+#         conn.close()
+#         return {"error": "Guest already exists with this ID."}
     
-    cur.execute("""
-        INSERT INTO guests (guest_id, name, comment, email, password, phone_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (guest_id, guest["name"],  guest["comment"],
-          guest.get("email"), guest.get("password"), guest.get("phone_number")))
+#     cur.execute("""
+#         INSERT INTO guests (guest_id, name, comment, email, password, phone_number)
+#         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#     """, (guest_id, guest["name"],  guest["comment"],
+#           guest.get("email"), guest.get("password"), guest.get("phone_number")))
  
-    id = 1 if guest.get("guest_type").lower() == "resident" else 2 if guest.get("guest_type").lower() == "employee" else 3
-    cur.execute("""
-        INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
-        VALUES (?,?, ?)
-    """, (guest_id, id,datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+#     id = 1 if guest.get("guest_type").lower() == "resident" else 2 if guest.get("guest_type").lower() == "employee" else 3
+#     cur.execute("""
+#         INSERT OR IGNORE INTO guest_roles (guest_id, role_id,assigned_at) 
+#         VALUES (?,?, ?)
+#     """, (guest_id, id,datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
  
  
-    # ✅ Start background processing
-    process_guest_video_async(guest_id, guest["name"])
+#     # ✅ Start background processing
+#     process_guest_video_async(guest_id, guest["name"])
 
-    return {"guest_id": guest_id, **guest,"message": "Guest saved! Face encoding in progress."}
+#     return {"guest_id": guest_id, **guest,"message": "Guest saved! Face encoding in progress."}
 
 def get_guests(page=1, limit=20, search: str | None = None, status: str | None = None):
     """
@@ -136,7 +137,7 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         [*params, limit, offset],
     )
 
-    rows = [dict(r) for r in cur.fetchall()]
+    rows = cur.fetchall(); # [dict(r) for r in cur.fetchall()]
     conn.close()
 
     return {
@@ -144,8 +145,17 @@ def get_guests(page=1, limit=20, search: str | None = None, status: str | None =
         "limit": limit,
         "total": total,
         "total_pages": total_pages,
-        "items": rows,
+        "items": [dict(zip([
+            "s_no","guest_id", "name","email","bed_no",  "status", "face_count"],
+            [i + 1] + list(r)
+        )
+    )
+    for i, r in enumerate(rows)
+]
     }
+
+
+
 
 def get_bunch_of_beds():
     conn = get_connection()
@@ -202,6 +212,8 @@ def delete_guest(guest_id: str):
             "DELETE FROM leave_calendar_cache WHERE guest_id = ?",
             "DELETE FROM leave_requests WHERE guest_id = ?",
 
+            "DELETE FROM email_logs WHERE guest_id = ?",
+       
             # Rent payment chain
             """DELETE FROM rent_approval_history
                WHERE rent_payment_id IN (
@@ -236,7 +248,7 @@ def delete_guest(guest_id: str):
             cur.execute(q, (guest_id,))
 
         conn.commit()
-
+        deleted = True
     except Exception as e:
         conn.rollback()
         print(f"❌ Error deleting guest {guest_id}: {e}")
@@ -392,11 +404,11 @@ def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
 
     if existing:
         return existing[0]
-    
+
     # 2️⃣ Insert into guests table
     cursor.execute("""
-        INSERT INTO guests (guest_id, name, comments, email, phone_number)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO guests (guest_id, name, comments, email, phone_number,status)
+        VALUES (?, ?, ?, ?, ?,'_blank')
     """, (guest_id, name, comments, email, phone_number))
     print(f"[Info] New Guest inserted.{guest_id}")
     # 3️⃣ Insert authentication record
@@ -421,6 +433,12 @@ def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
     print(f"[Info] Assigned role {role_id} to guest {guest_id}")
     conn.commit()
     conn.close()
+
+    thisdict = { "company_name": "White House residence", "contact": 8744000574 }
+    thisdict.name=name;
+    thisList =[]
+    thisList.append(email);
+    send_email(thisList,"Welcome to White House residence","welcome.html",thisdict)
     return guest_id
 
 
