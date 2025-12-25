@@ -8,11 +8,14 @@
 	<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="./css/style.css">
-
+	<link rel="stylesheet" href="./css/wizard.css">
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>	
+
+
+
 	<!-- header styles moved to Header.html -->
 	
 		<style>
@@ -151,7 +154,7 @@
 					guest = '<span class="badge badge-unassigned">Unassigned</span>';
 				}
 				const assignDate = r.payment_date || '-';
-
+				const isDisabled = r.status === "_blank";
 				return `
 					   <tr>
 
@@ -170,7 +173,10 @@
 								<button class="btn btn-danger btn-sm" onclick="deleteGuest('${r.guest_id}')">
 									<i class="bi bi-trash"></i> Del
 								</button>
-								<button class="btn btn-dark btn-sm paydue-btn" data-info='${JSON.stringify({
+								<button 
+            class="btn btn-dark btn-sm paydue-btn ${isDisabled ? 'disabled' : ''}"
+            ${isDisabled ? 'disabled title="Payment disabled for blank status"' : ''}
+            data-info='${JSON.stringify({
 										guest_id: r.guest_id,
 										name: r.name,
 										bed_no: r.bed_no,
@@ -629,6 +635,60 @@
 			</div>
 		</div>
 
+
+  <!-- <div class="step-app" id="demo">
+    <ul class="step-steps">
+      <li data-step-target="step1">Step 1</li>
+      <li data-step-target="step2">Step 2</li>
+      <li data-step-target="step3">Step 3</li>
+      <li data-step-target="step4">Step 4</li>
+      <li data-step-target="step5">Step 5</li>
+    </ul>
+    <div class="step-content">
+      <div class="step-tab-panel" data-step="step1">
+        <h3>Tab1</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus facere porro iste quas numquam officia totam facilis suscipit, expedita rem quod, fugiat quo, veniam voluptate ut autem quia qui amet necessitatibus perferendis dignissimos ipsa doloremque. Necessitatibus delectus voluptatem unde. Architecto animi unde nostrum tenetur, doloremque distinctio, porro officiis dicta similique omnis quos odit ducimus minima ea quas facilis quod. Natus adipisci consequuntur sapiente alias culpa fugit tenetur, doloribus? Magni ipsum dolor debitis beatae quo, dicta voluptas veritatis, quos. Iusto quisquam doloribus laboriosam esse, dicta, odio facilis eligendi explicabo sequi accusamus a iste minus alias. Nisi sed laborum, aut maiores beatae aliquam voluptatum est enim impedit delectus blanditiis, neque sint nemo deleniti a quaerat voluptatem harum! Laboriosam assumenda, ullam iure. Corrupti maxime perferendis facilis ipsum, eius excepturi commodi consectetur, velit nobis reiciendis, ipsam! Maiores possimus tempore vel doloremque in facilis qui quos molestias. Culpa eius magnam repellat, ad eaque. Possimus, voluptatem.</p>
+      </div>
+      <div class="step-tab-panel" data-step="step2">
+        <h3>Tab2</h3>
+        <form name="frmInfo" id="frmInfo">
+          First name:<br>
+          <input type="text" name="txtFirstName" required>
+          <br> Last name:<br>
+          <input type="text" name="txtLastName" required>
+        </form>
+      </div>
+      <div class="step-tab-panel" data-step="step3">
+        <h3>Tab3</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus facere porro iste quas numquam officia totam facilis suscipit, expedita rem quod, fugiat quo, veniam voluptate ut autem quia qui amet necessitatibus perferendis dignissimos ipsa doloremque. Necessitatibus delectus voluptatem unde. Architecto animi unde nostrum tenetur, doloremque distinctio, porro officiis dicta similique omnis quos odit ducimus minima ea quas facilis quod. Natus adipisci consequuntur sapiente alias culpa fugit tenetur, doloribus? Magni ipsum dolor debitis beatae quo, dicta voluptas veritatis, quos. Iusto quisquam doloribus laboriosam esse, dicta, odio facilis eligendi explicabo sequi accusamus a iste minus alias. Nisi sed laborum, aut maiores beatae aliquam voluptatum est enim impedit delectus blanditiis, neque sint nemo deleniti a quaerat voluptatem harum! Laboriosam assumenda, ullam iure. Corrupti maxime perferendis facilis ipsum, eius excepturi commodi consectetur, velit nobis reiciendis, ipsam! Maiores possimus tempore vel doloremque in facilis qui quos molestias. Culpa eius magnam repellat, ad eaque. Possimus, voluptatem.</p>
+      </div>
+      <div class="step-tab-panel" data-step="step4">
+        <h3>Tab4</h3>
+        <form name="frmLogin" id="frmLogin">
+          Email address:<br>
+          <input type="text" name="txtEmail" required>
+          <br> Password:<br>
+          <input type="text" name="txtPassword" required>
+        </form>
+      </div>
+      <div class="step-tab-panel" data-step="step5">
+        <h3>Tab5</h3>
+        <form name="frmMobile" id="frmMobile">
+          Mobile No:<br>
+          <input type="text" name="txtMobileNum" required>
+        </form>
+      </div>
+    </div>
+    <div class="step-footer">
+      <button data-step-action="prev" class="step-btn">Previous</button>
+      <button data-step-action="next" class="step-btn">Next</button>
+      <button data-step-action="finish" class="step-btn">Finish</button>
+    </div>
+  </div> -->
+
+
+
+
 		<!-- ACTION MODAL (Initate and Moveout) -->
 		<div class="modal-overlay" id="actionModal">
 			<div class="modal-card">
@@ -659,6 +719,7 @@
 						<!-- jQuery UI will load the tab content here -->
 						<div id="tabs-1" class="refund-section guest-refund">
 
+
 						<strong>Guest Initate</strong>
 
 						<div class="row g-2">
@@ -671,11 +732,7 @@
 							<hr/>
 								<div>
 									<h5>Description</h5>
-									Para1<br>
-									Para1<br>
-									Para1<br>
-									Para1
-
+									<div id="dues-summary" class="mt-2"></div>
 								</div>	
 							</div>
 
@@ -872,40 +929,57 @@
 
 						<div id="pdtabs-2" class="refund-section owner-refund">
 
-						
+						<div class="row g-3">
 
-						<div class="row g-2">
-							
-							<div class="col-md-12">
+							<!-- 🔹 LEFT COLUMN (EXISTING FORM – unchanged) -->
+							<div class="col-md-6">
+
 							<strong>Add dues</strong>
+
 							<select class="form-control mb-2 dues-type required">
 								<option value="">Select</option>
-								<option value="RENT"> Monthly Rent</option>								
-								<option value="ADVANCE"> Advance Payment</option>
-								<option value="SECURITY"> Security Deposit</option>
-								<option value=" MAINT"> Maintenance</option>
-								<option value="ELEC"> Electricity</option>
-								<option value="FOOD"> Food</option>
-								<option value="REG"> Registration</option>
-								<option value="FINE"> Fine</option>
-								<option value="OTHER"> Other</option>
-							</select>									
+								<option value="RENT">Monthly Rent</option>
+								<option value="ADVANCE">Advance Payment</option>
+								<option value="SECURITY">Security Deposit</option>
+								<option value="MAINT">Maintenance</option>
+								<option value="ELEC">Electricity</option>
+								<option value="FOOD">Food</option>
+								<option value="REG">Registration</option>
+								<option value="FINE">Fine</option>
+								<option value="OTHER">Other</option>
+							</select>
 
-							<input type="text" class="form-control form-control-sm mb-2 dues-amount amount" placeholder="Amount" />
-							<input type="month"  class="form-control form-control-sm mb-2 due-month-year"  min="1990-01" max="2030-12">
-							<input type="date" class="form-control form-control-sm mb-2 due-date amount" placeholder="Date" />
-							
+							<input type="text" class="form-control form-control-sm mb-2 dues-amount amount"
+									placeholder="Amount" />
+
+							<input type="month" class="form-control form-control-sm mb-2 due-month-year"
+									min="1990-01" max="2030-12">
+
+							<input type="date" class="form-control form-control-sm mb-2 due-date required" />
+
+							<div class="mt-2 text-end">
+								<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+										data-paydue="dues_ok" disabled>
+								OK
+								</button>
 							</div>
-							
+
+							</div>
+
+							<!-- 🔹 RIGHT COLUMN (DYNAMIC DUES SUMMARY) -->
+							<div class="col-md-6">
+
+							<strong>Current dues summary</strong>
+
+							<div id="pd-dues-summary" class="border rounded p-2 mt-2 bg-light">
+								<div class="text-muted">Select tab to load dues...</div>
+							</div>
+
+							</div>
+
+						</div>
 						</div>
 
-						<div class="mt-2 text-end">
-							<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
-									data-Paydue="dues_ok" disabled>
-							OK
-							</button>
-						</div>
-						</div>
 
 						
 
@@ -928,6 +1002,10 @@
 			$("#username").text(username);
 		});
 	</script>
+
+
+
+
 <!-- Contact: Contact Model -->
 <script>
 
@@ -1028,7 +1106,6 @@
 		document.addEventListener("click", function(e) {
 			if (e.target.classList.contains("action-btn")) {
 					action_dataset_info = JSON.parse(e.target.dataset.info);
-					
 					let url = "/rentalmonth/onloadaction";   // change to actual API later
 					let data = {
 						guest_id: action_dataset_info.guest_id
@@ -1066,7 +1143,7 @@
 							section.find(".trx-id").val('').trigger("input");
 							section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
 
-							
+							handleTabsByStatus(action_dataset_info.status);		
 
 
 						},
@@ -1097,7 +1174,7 @@
 					section.find(".trx-id").val('').trigger("input");
 					section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
 
-					
+					handleTabsByStatus(action_dataset_info.status);						
 
 
 
@@ -1127,24 +1204,57 @@
 		$(function () {
 
 			// Initialize tabs with AJAX loading
-			$("#tabs").tabs({
-				beforeLoad: function (event, ui) {
-					ui.jqXHR.fail(function (e) {
-						ui.panel.html(`
-							<div style="padding:1rem;color:#b91c1c;">
-								<strong>Error ${e.status}</strong><br>
-								${e.statusText}<br><br>
-								Unable to load the content. Please try again.
-							</div>
-						`);
-					});
-				}
-			});
+				$("#tabs").tabs({
+					activate: function (event, ui) {
+						const tabId = ui.newPanel.attr("id");
 
+						// ✅ Run only for specific tab
+						if (tabId === "tabs-1") {
+
+							fetchDues({
+								guest_id: action_dataset_info.guest_id,
+								year: new Date().getFullYear(),
+								month: new Date().getMonth() + 1,
+								due_type_id: 1
+							})
+							.then(data => {
+								renderDuesSummary(data);
+							})
+							.catch(err => {
+								$("#dues-summary").html(
+									`<div class="text-danger">${err.message}</div>`
+								);
+							});
+						}
+					}
+				});
+			
 		});
 
 		let pendingAction = null;
 		let pendingBtn = null;
+		function renderDuesSummary(data) {
+			const _data=data.data;
+			const _summary=data.summary;
+			
+			if (!_data  || _data.length === 0) {
+				$("#dues-summary").html("<p>No dues found.</p>");
+				return;
+			}
+
+			const d = _summary;
+
+			const html = `
+				<div class="card p-3">
+					<p><strong>Total Due:</strong> ₹${d.total_due_amount}</p>
+					<p><strong>Total Paid:</strong> ₹${d.total_amount_paid}</p>
+					<p><strong>Balance:</strong> ₹${d.total_balance}</p>
+					<p><strong>Security Amount:</strong> ₹${d.total_security_paid}</p>
+				</div>
+			`;
+
+			$("#dues-summary").html(html);
+		}
 
 		function validateSectionAction(section) {
 			let valid = true;
@@ -1211,6 +1321,7 @@
 		)
 		
 		$(document).on("click", ".confirm-action", function () {
+			
 			pendingAction = $(this).data("action");
 			pendingBtn = this;
 			const section = $(this).closest(".refund-section");
@@ -1244,9 +1355,30 @@
 			pendingAction = null;
 			pendingBtn = null;
 		});
+		function handleTabsByStatus(status) {
+			debugger;
+			if (status === "active" || status === "inactive") {
+ 				$('#tabs ul li:has(a[href="#tabs-1"])').hide();
+				$("#tabs").tabs("option", "active", 1);
+				// // remove Initiate tab
+				// $('#tabs ul li[data-tab="initiate"]').remove();
+
+				// // remove Initiate content
+				// $('#tabs-1').remove();
+
+				// // refresh jQuery UI tabs
+				// $("#tabs").tabs("refresh");
+
+				// // make sure Move Out is active
+				// $("#tabs").tabs("option", "active", 1);
+			}
+			else
+			{
+				$('#tabs ul li:has(a[href="#tabs-1"])').show();
+			}
+		}
 
 		function handleActionButton(action, btn) {
-
 			const section = $(btn).closest(".refund-section");
 			//const rentPaymentId = currentPayment;   // already global
 			const approver = CURRENT_USER;           // already global
@@ -1255,13 +1387,14 @@
 				created_by: CURRENT_USER,
 				guest_id: action_dataset_info.guest_id,
 			};
-
+			debugger;
 			switch (action) {
 
 				case "initiate_ok":
 					url = "/rentalmonth/payInitialrent";
 
 //					data.security_due  = section.find(".security-due").val();
+					debugger;
 					data.rent_dueable  = section.find(".rent-due").val();
 					data.pay_security  = section.find(".pay-security").val();
 					data.pay_rent      = section.find(".pay-rent").val();
@@ -1313,6 +1446,36 @@
 			});
 		}
 		
+
+		async function fetchDues(filters) {
+			const params = new URLSearchParams(filters).toString();
+			const response = await fetch(
+				`${API_BASE_URL}/rentalmonth/dues-of-guest?${params}`,
+				{
+					method: "GET",
+					headers: {
+						"Accept": "application/json"
+					}
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch dues");
+			}
+
+			return await response.json();
+		}
+
+		// // ✅ Example usage
+		// fetchDues({
+		// 	guest_id: "20251128171314",
+		// 	year: 2024,
+		// 	month: 1,
+		// 	due_type_id: 1
+		// })
+		// .then(data => console.log("Dues:", data))
+		// .catch(err => console.error("Error:", err));
+
 </script>
 
 
@@ -1324,10 +1487,12 @@
 <script>	
 		
 		let pdtabsInput;
+		let infoFromBaseRow
 		// open modal
 		document.addEventListener("click", function(e) {
 			if (e.target.classList.contains("paydue-btn")) {
 					let info = JSON.parse(e.target.dataset.info);
+					infoFromBaseRow=info;
 					let url = "/rentalmonth/onloadaction";   // change to actual API later
 					let data = {
 						guest_id: info.guest_id
@@ -1409,23 +1574,84 @@
 
 			// Initialize pdtabs with AJAX loading
 			$("#pdtabs").tabs({
-				beforeLoad: function (event, ui) {
-					ui.jqXHR.fail(function (e) {
-						ui.panel.html(`
-							<div style="padding:1rem;color:#b91c1c;">
-								<strong>Error ${e.status}</strong><br>
-								${e.statusText}<br><br>
-								Unable to load the content. Please try again.
-							</div>
-						`);
-					});
+			activate: function (event, ui) {
+				const tabId = ui.newPanel.attr("id");
+
+				if (tabId === "pdtabs-2") {
+				loadPayDueSummary();
 				}
+			}
 			});
 
 		});
 
 		let pendingpaydue = null;
+		let allDuesofAGuest = null;
+		async function loadPayDueSummary() {
+			allDuesofAGuest=null
+			$("#pd-dues-summary").html("<div>Loading...</div>");
+
+		try {
+			const params = new URLSearchParams({
+			guest_id: infoFromBaseRow.guest_id, 
+			year: new Date().getFullYear(),
+			month: new Date().getMonth() + 1
+			});
+
+			const response = await fetch(
+			`${API_BASE_URL}/rentalmonth/dues-of-guest?${params}`,
+			{ method: "GET", headers: { "Accept": "application/json" } }
+			);
+
+			if (!response.ok) throw new Error("Failed to load dues");
+
+			const data = await response.json();
+			allDuesofAGuest=data.data;
+			renderPayDueSummary(data);
+
+		} catch (err) {
+			$("#pd-dues-summary").html(
+			`<div class="text-danger">${err.message}</div>`
+			);
+		}
+		}
+
+
+		function renderPayDueSummary(data) {
+		const _data=data.data;
+		const _summary=data.summary;
 		
+		if (!_data  || _data.length === 0) {
+			$("#dues-summary").html("<p>No dues found.</p>");
+			return;
+		}
+
+		const d = _summary;
+		const html = `
+			<table class="table table-sm table-bordered mb-0">
+			<tr>
+				<th>Total Due</th>
+				<td>₹ ${d.total_due_amount}</td>
+			</tr>
+			<tr>
+				<th>Total Paid</th>
+				<td>₹ ${d.total_amount_paid}</td>
+			</tr>
+			<tr>
+				<th>Balance</th>
+				<td class="${d.total_balance > 0 ? 'text-danger' : 'text-success'}">
+				₹ ${d.total_balance}
+				</td>
+			</tr>
+			<tr>
+				<th>Security</th>
+				<td>₹ ${d.total_security_paid}</td>
+			</tr>
+			</table>
+		`;
+
+		$("#pd-dues-summary").html(html);
+		}
 
 		function validateSection(section) {
 			let valid = true;
@@ -1453,6 +1679,41 @@
 			section.find(".pdconfirm-paydue").prop("disabled", !valid);
 			return valid;
 		}
+		function checkDuplicateDue(section, data) {
+			const dueTypeId = section.find(".dues-type")[0].selectedIndex;
+			const dueMonthYear = section.find(".due-month-year").val(); // "2025-01"
+			const amountToAdd = parseFloat(section.find(".dues-amount").val() || 0);
+
+			if (!dueTypeId || !dueMonthYear) return true;
+
+			const [year, month] = dueMonthYear.split("-").map(Number);
+
+			for (let i = 0; i < data.length; i++) {
+				const d = data[i];
+
+				if (
+					d.due_type_id === dueTypeId &&
+					d.year === year &&
+					d.month === month
+				) {
+					const msg =
+						`This due already exists for ${year}-${month}.\n\n` +
+						`Existing Due: ₹${d.due_amount}\n` +
+						`Do you want to increase it by ₹${amountToAdd}?`;
+
+					if (confirm(msg)) {
+						// ✔ Allow increase
+						return true;
+					} else {
+						// ❌ Stop process
+						return false;
+					}
+				}
+			}
+
+			// ✔ No duplicate found
+			return true;
+		}
 
 		// Live validation on input/change
 		$(document).on("input change", ".refund-section input, .refund-section select", function () {
@@ -1471,7 +1732,14 @@
 			alert("⚠️ Please fill all required fields with valid values");
 			section.find(".is-invalid").first().focus();
 			return;
-			}			
+			}	
+			if (pendingpaydue=="dues_ok")
+			{
+				if (!checkDuplicateDue(section, allDuesofAGuest)) {
+					return; // STOP execution
+				}
+			}
+
 			const messages = {
 				payment_ok: "Initialize guest with this payment?",
 				dues_ok: "Add new dues to account?"
@@ -1505,7 +1773,7 @@
 			
 			let url = "";
 			let data = {
-				guest_id: pdtabsInput.guest_id,
+				guest_id: infoFromBaseRow.guest_id,
 				created_by: CURRENT_USER
 
 			};
@@ -1558,7 +1826,7 @@
 
 
 
-
+ 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>

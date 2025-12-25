@@ -9,6 +9,9 @@ from utilities.environment_variables import load_environment
 import os, json
 from pathlib import Path
 from services.rentalmonth_guest_due_settlement import GuestDueSettlement
+from services import rentalmonth_pay_Initial_rent as rpir
+from Designs.Chain_of_Responsibility  import TaskContext
+from services import rentalmonth_service_models as rsm
 #load_environment(env_path);
 
 load_environment("./../data/.env.webapp")
@@ -855,9 +858,29 @@ def get_onloadaction(guest_id: str)  -> Dict[str, Any]:
             where g.guest_id=?
         """, (guest_id,))
         outdata = [dict(r) for r in cur.fetchall()]
+        # ----------------------------------
+        # Get due_type_id
+        # ----------------------------------
+        cur.execute("SELECT sharing_type,monthly_rent FROM bed_rent_plan")
+        sharing_type_data = [dict(r) for r in cur.fetchall()]
+
+        cur.execute("""
+        SELECT b.sharing_type, b.bed_id
+        FROM beds b
+        LEFT JOIN guest_beds gb ON b.bed_id = gb.bed_id
+        WHERE gb.bed_id IS NULL
+        ORDER BY b.sharing_type, b.bed_id
+        """)
+
+        vacant_beds = [dict(r) for r in cur.fetchall()]
+
         return {
             "success": True,
-            "records": outdata
+            "records": outdata,
+            "step2": {
+                "sharing_type": sharing_type_data,
+                "vacant_beds": vacant_beds
+        },
         }
     finally:
         conn.close()
@@ -930,23 +953,191 @@ def pay_rent(created_by, guest_id,pay_rent,trx_id,pay_month_year,pay_date,paymen
 
 
 
+
+def add_dues( guest_id, dues_amount, dues_type, due_month_year, due_date):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        # ----------------------------------
+        # Parse year & month
+        # ----------------------------------
+        if len(due_month_year) == 7:  # YYYY-MM
+            year, month = map(int, due_month_year.split("-"))
+        else:  # YYYY-MM-DD
+            dt = datetime.strptime(due_month_year, "%Y-%m-%d")
+            year, month = dt.year, dt.month
+
+        # ----------------------------------
+        # Get due_type_id
+        # ----------------------------------
+        cur.execute(
+            "SELECT id FROM due_types WHERE code = ?",
+            (dues_type,)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise Exception("Invalid due type")
+
+        due_type_id = row[0]
+
+        # ----------------------------------
+        # Check if due already exists
+        # ----------------------------------
+        cur.execute("""
+            SELECT id, due_amount
+            FROM dues
+            WHERE guest_id = ?
+              AND due_type_id = ?
+              AND year = ?
+              AND month = ?
+        """, (guest_id, due_type_id, year, month))
+
+        existing = cur.fetchone()
+
+        if existing:
+            # ----------------------------------
+            # UPDATE → increase due amount
+            # ----------------------------------
+            due_id, old_amount = existing
+            new_amount = old_amount + dues_amount
+
+            cur.execute("""
+                UPDATE dues
+                SET due_amount = ?,
+                    created_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (new_amount, due_id))
+
+            action = "updated"
+
+        else:
+            # ----------------------------------
+            # INSERT new due
+            # ----------------------------------
+            cur.execute("""
+                INSERT INTO dues (
+                    guest_id,
+                    due_type_id,
+                    year,
+                    month,
+                    due_amount,
+                    amount_paid,
+                    status,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, 0, 'open', CURRENT_TIMESTAMP)
+            """, (
+                guest_id,
+                due_type_id,
+                year,
+                month,
+                dues_amount
+            ))
+
+            action = "inserted"
+
+        conn.commit()
+
+        return {
+            "status": "success",
+            "action": action,
+            "guest_id": guest_id,
+            "year": year,
+            "month": month,
+            "due_type": dues_type
+        }
+
+    except Exception as e:
+        conn.rollback()
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+    finally:
+        conn.close()
+
+
 def pay_initial_rent(
-    created_by,
-    guest_id,
-    rent_dueable,
-    pay_security,
-    pay_rent,
-    trx_id,
-    pay_month_year,
-    pay_date,
-    payment_mode,
-    paid_by
+payload: rsm.PayInitialRentRequest
 ):
+    
+
+    conn = get_connection()
+    cur = conn.cursor()
+    # 🔹 Context explicitly populated
+    ctx = TaskContext(
+        created_by=payload.created_by,
+        guest_id=payload.guest_id,
+        rent_dueable=payload.rent_dueable,
+        security_due=payload.security_due,
+        pay_security=payload.pay_security,
+        pay_rent=payload.pay_rent,
+        trx_id=payload.trx_id,
+        pay_month_year=payload.pay_month_year,
+        pay_date=payload.pay_date,
+        payment_mode=payload.payment_mode,
+        paid_by=payload.paid_by,
+        activate_user=payload.activate_user,
+        send_email=payload.send_email,
+        roomType=payload.roomType,
+        roomBed=payload.roomBed,
+        roomAssignedAt=payload.roomAssignedAt,
+        bdasign=payload.bdasign,
+        rent_payment_id=0,
+        approved_payment=payload.approved_payment,
+        bedNumber=payload.bedNumber,
+        conn=conn,
+        cur=cur
+    )
+
+
+    workflow = rpir.ParseMonthTask(                         # Split Month/Year
+        rpir.ValidatePaymentModeTask(                       # in ("UPI", "CASH", "IMPS", "DD"):
+            rpir.ActivateGuestTask(                         # UPDATE guests SET status='active'
+                rpir.RentDueTask(                           # Add/Update RENT DUES
+                    rpir.SecurityDueTask(                   # Add/Update SECURITY DUES
+                            rpir.RentPaymentTask(
+                                rpir.AssignBed(
+                                  rpir.ApprovePayment()
+                            )
+                         )
+                    )
+                )
+            )
+        )
+    )
+
+    try:
+        cur.execute("BEGIN")
+       
+        workflow.execute(ctx)
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Initial rent & security processed successfully"
+        }
+
+    except StopIteration:
+        # intentional skip (nothing to pay)
+        conn.commit()
+        return {
+            "success": True,
+            "message": "No payable action"
+        }
+
+    except Exception as e:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
     conn = get_connection()
     cur = conn.cursor()
     try:
         cur.execute("BEGIN")
-
         # 1️⃣ Extract year & month
         try:
             year, month = map(int, pay_month_year.split("-"))
@@ -973,42 +1164,164 @@ def pay_initial_rent(
             WHERE guest_id = ?
         """, (guest_id,))
 
-        # 4️⃣ INSERT DUES (idempotent)
-        if rent_dueable and float(rent_dueable) > 0:
-            cur.execute("""
-                INSERT OR IGNORE INTO dues (
-                    guest_id,
-                    due_type_id,
-                    year,
-                    month,
-                    due_amount
-                )
-                VALUES (?, ?, ?, ?, ?)
-            """, (
-                guest_id,
-                rent_due_type_id,
-                year,
-                month,
-                rent_dueable
-            ))
 
-        if pay_security  and float(pay_security) > 0:
-            cur.execute("""
-                INSERT OR IGNORE INTO dues (
+
+
+
+        # 4️⃣ INSERT DUES (idempotent)
+        # ----------------------------------
+        # Check if due already exists
+        # ----------------------------------
+        cur.execute("""
+            SELECT id, due_amount
+            FROM dues
+            WHERE guest_id = ?
+              AND due_type_id = ?
+              AND year = ?
+              AND month = ?
+        """, (guest_id, rent_due_type_id, year, month))
+
+
+
+        existing = cur.fetchone()
+        if rent_dueable and float(rent_dueable) > 0:
+            if existing:
+                # ----------------------------------
+                # UPDATE → increase due amount
+                # ----------------------------------
+                due_id, old_amount = existing
+                new_amount = old_amount + rent_dueable
+
+                cur.execute("""
+                    UPDATE dues
+                    SET due_amount = ?,
+                        created_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (new_amount, due_id))
+
+                action = "updated"
+
+            else:
+                # ----------------------------------
+                # INSERT new due
+                # ----------------------------------
+                cur.execute("""
+                    INSERT INTO dues (
+                        guest_id,
+                        due_type_id,
+                        year,
+                        month,
+                        due_amount,
+                        amount_paid,
+                        status,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, ?, 0, 'open', CURRENT_TIMESTAMP)
+                """, (
                     guest_id,
-                    due_type_id,
+                    rent_due_type_id,
                     year,
                     month,
-                    due_amount
-                )
-                VALUES (?, ?, ?, ?, ?)
-            """, (
-                guest_id,
-                security_due_type_id,
-                year,
-                month,
-                pay_security
-            ))
+                    rent_dueable
+                ))
+
+
+
+
+
+
+        # 4️⃣ INSERT DUES Security(idempotent)
+        # ----------------------------------
+        # Check if due already exists
+        # ----------------------------------
+        cur.execute("""
+            SELECT id, due_amount
+            FROM dues
+            WHERE guest_id = ?
+              AND due_type_id = ?
+              AND year = ?
+              AND month = ?
+        """, (guest_id, security_due_type_id, year, month))
+
+
+
+        existing = cur.fetchone()
+        if pay_security  and float(pay_security) > 0:
+            if existing:
+                # ----------------------------------
+                # UPDATE → increase due amount
+                # ----------------------------------
+                due_id, old_amount = existing
+                new_amount = old_amount + pay_security
+
+                cur.execute("""
+                    UPDATE dues
+                    SET due_amount = ?,
+                        created_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (new_amount, due_id))
+
+                action = "updated"
+
+            else:
+                # ----------------------------------
+                # INSERT new due
+                # ----------------------------------
+                cur.execute("""
+                    INSERT INTO dues (
+                        guest_id,
+                        due_type_id,
+                        year,
+                        month,
+                        due_amount,
+                        amount_paid,
+                        status,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, ?, 0, 'open', CURRENT_TIMESTAMP)
+                """, (
+                    guest_id,
+                    security_due_type_id,
+                    year,
+                    month,
+                    pay_security
+                ))
+
+
+
+        # if rent_dueable and float(rent_dueable) > 0:
+        #     cur.execute("""
+        #         INSERT OR IGNORE INTO dues (
+        #             guest_id,
+        #             due_type_id,
+        #             year,
+        #             month,
+        #             due_amount
+        #         )
+        #         VALUES (?, ?, ?, ?, ?)
+        #     """, (
+        #         guest_id,
+        #         rent_due_type_id,
+        #         year,
+        #         month,
+        #         rent_dueable
+        #     ))
+
+        # if pay_security  and float(pay_security) > 0:
+        #     cur.execute("""
+        #         INSERT OR IGNORE INTO dues (
+        #             guest_id,
+        #             due_type_id,
+        #             year,
+        #             month,
+        #             due_amount
+        #         )
+        #         VALUES (?, ?, ?, ?, ?)
+        #     """, (
+        #         guest_id,
+        #         security_due_type_id,
+        #         year,
+        #         month,
+        #         pay_security
+        #     ))
 
         # 5️⃣ UPSERT SECURITY DEPOSIT
         cur.execute("""
@@ -1145,6 +1458,28 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
             month,
             -refund_amount,
             -refund_amount
+        ))
+
+
+        cur.execute("""
+            INSERT INTO dues (guest_id, year, month, due_type_id, due_amount,amount_paid)
+            SELECT ?, ?, ?, 3, ?,?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM dues
+                WHERE guest_id = ?
+                AND year = ?
+                AND month = ?
+                AND due_type_id = 3
+            )
+        """, (
+            guest_id,
+            year,
+            month,
+            -refund_amount,
+            -refund_amount,            
+            guest_id,
+            year,
+            month
         ))
 
         refund_due_id = cur.lastrowid  # ✅ now valid
@@ -1344,7 +1679,6 @@ def list_guest_dues(guest_id, start_date, end_date, page, limit):
 
 
 def update_due_amount(due_id,due_amount):
-   
     conn = get_connection()
     cur = conn.cursor()
     if due_amount <= 0:
@@ -1387,4 +1721,90 @@ def update_due_amount(due_id,due_amount):
         "id": due_id,
         "old_amount": old_amount,
         "new_amount": due_amount
+    }
+
+
+def duesofguest( guest_id,year,month,due_type_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT
+            guest_id,
+            due_type_id,
+            year,
+            month,
+            due_amount,
+            amount_paid,
+            status
+        FROM dues
+        WHERE 1 = 1
+    """
+
+    params = []
+
+    if guest_id:
+        query += " AND guest_id = ?"
+        params.append(guest_id)
+
+    if due_type_id is not None:
+        query += " AND due_type_id = ?"
+        params.append(due_type_id)
+
+    if year:
+        query += " AND year = ?"
+        params.append(year)
+
+    if month:
+        query += " AND month = ?"
+        params.append(month)
+
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    data=[
+        {
+            "guest_id": r[0],
+            "due_type_id": r[1],
+            "year": r[2],
+            "month": r[3],
+            "due_amount": r[4],
+            "amount_paid": r[5],
+            "status": r[6]
+        }
+        for r in rows
+    ]
+    params = []
+    query ="""
+             SELECT
+            COUNT(*) AS total,
+            COALESCE(SUM(a.due_amount), 0) AS total_due_amount,
+            COALESCE(SUM(a.amount_paid), 0) AS total_amount_paid,
+            COALESCE(SUM(a.due_amount - a.amount_paid), 0) AS total_balance,
+            COALESCE(SUM(CASE WHEN a.due_type_id = 3 THEN a.due_amount ELSE 0 END),0) AS security_amount
+            FROM dues AS a
+            JOIN guests AS g ON a.guest_id = g.guest_id
+            LEFT JOIN due_types AS dt ON a.due_type_id = dt.id
+            WHERE 1 = 1 
+            """
+    if guest_id:
+        query += " AND a.guest_id = ?"
+        params.append(guest_id)
+
+        # --- Summary ---
+    cur.execute(query, params)
+
+    summary = cur.fetchone()
+
+    
+    conn.close()
+
+    return {
+    "total": summary["total"],
+    "summary": {
+        "total_due_amount": summary["total_due_amount"],
+        "total_amount_paid": summary["total_amount_paid"],
+        "total_balance": summary["total_balance"],
+        "total_security_paid": summary["security_amount"]
+    },
+    "data": data
     }

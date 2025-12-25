@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, HTTPException, Query, Header,Form, UploadFile
 from pydantic import BaseModel
-from services import rentalmonth_service,dash_rental_service
+from services import rentalmonth_service,dash_rental_service,rentalmonth_service_models
 from datetime import datetime, timezone
 from typing import List, Dict, Optional,Any
 
@@ -214,6 +214,7 @@ def forward_rent_payment(
 def get_onloadaction( 
     guest_id: str = Query(...),
 ) ->  Dict[str, Any]:
+    
     return rentalmonth_service.get_onloadaction( guest_id)
 
 
@@ -245,18 +246,11 @@ def add_dues(
 
 @router.post("/payInitialrent")
 def pay_initial_rent(
-    created_by:str = Form(...),
-    guest_id:str = Form(...),
-    rent_dueable: float = Form(...),
-    pay_security: float = Form(...),    
-    pay_rent: float = Form(...),
-    trx_id: str = Form(...),
-    pay_month_year: str = Form(...),        
-    pay_date: str = Form(...),          # YYYY-MM or YYYY-MM-DD
-    payment_mode: str = Form(...),
-    paid_by: str = Form(...)
+payload: rentalmonth_service_models.PayInitialRentRequest
 ):
-        return rentalmonth_service.pay_initial_rent(created_by, guest_id,rent_dueable,pay_security,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+        
+        return rentalmonth_service.pay_initial_rent(payload)
+        #return rentalmonth_service.pay_initial_rent(created_by, guest_id,rent_dueable,pay_security,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
 
 
 
@@ -335,3 +329,19 @@ def update_due_amount(
     due_amount: float = Form(...),
 ):
         return rentalmonth_service.update_due_amount( id,due_amount)   
+
+
+@router.get("/dues-of-guest")
+def duesofguest(
+    guest_id: str = Query(...),
+    year: int = Query(...),
+    month: int = Query(...),
+    due_type_id: Optional[int] = Query(None),
+):
+        return rentalmonth_service.duesofguest( guest_id,year,month,due_type_id) 
+
+
+
+
+
+

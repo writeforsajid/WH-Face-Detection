@@ -11,231 +11,33 @@
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<!-- header styles moved to Header.html -->
 	
-	<style>
-
-		@media (max-width: 768px) {
-			.welcome-header-content {
-				padding: 0 1rem;
-				flex-direction: column;
-				align-items: stretch;
-				gap: 0.75rem;
-			}
-			.welcome-header h1 {
-				font-size: 1.5rem;
-			}
-			.welcome-header .user-info {
-				font-size: 0.875rem;
-			}
-			.logout-btn, .back-btn {
-				padding: 0.5rem 1rem;
-				font-size: 0.875rem;
-			}
-
-			/* Group header buttons nicely on mobile */
-			.header-actions {
-				display: flex;
-				gap: 0.5rem;
-				flex-wrap: wrap;
-				width: 100%;
-			}
-			.header-actions .back-btn,
-			.header-actions .logout-btn {
-				flex: 1 1 48%;
-				min-width: 140px;
-			}
-
-			/* Top toolbar (Home / Guests) wraps cleanly */
-			.toolbar-actions {
-				display: flex;
-				gap: 0.5rem;
-				flex-wrap: wrap;
-			}
-			.toolbar-actions .btn {
-				flex: 1 1 48%;
-				min-width: 120px;
-			}
-		} 
-		
-		/* Modal Styles */
-		.modal-overlay {
-			display: none;
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: rgba(0, 0, 0, 0.6);
-			backdrop-filter: blur(5px);
-			z-index: 9998;
-			animation: fadeIn 0.3s ease;
-		}
-		
-		.modal-overlay.active {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-		
-		.modal-card {
-			background: white;
-			border-radius: 20px;
-			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-			max-width: 600px;
-			width: 90%;
-			max-height: 80vh;
-			overflow: hidden;
-			animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-			position: relative;
-			z-index: 9999;
-		}
-		
-		@keyframes fadeIn {
-			from { opacity: 0; }
-			to { opacity: 1; }
-		}
-		
-		@keyframes slideUp {
-			from {
-				opacity: 0;
-				transform: translateY(50px);
-			}
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-		
-		.modal-header {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-			color: white;
-			padding: 1.5rem;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-		
-		.modal-header h3 {
-			margin: 0;
-			font-size: 1.5rem;
-			font-weight: 700;
-		}
-		
-		.modal-close {
-			background: rgba(255, 255, 255, 0.2);
-			border: none;
-			color: white;
-			font-size: 1.5rem;
-			width: 36px;
-			height: 36px;
-			border-radius: 50%;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			transition: all 0.2s ease;
-		}
-		
-		.modal-close:hover {
-			background: rgba(255, 255, 255, 0.3);
-			transform: rotate(90deg);
-		}
-		
-		.modal-body {
-			padding: 1.5rem;
-			max-height: calc(80vh - 120px);
-			overflow-y: auto;
-		}
-		
-		.inactive-guest-item {
-			padding: 1rem;
-			border: 2px solid #e5e7eb;
-			border-radius: 12px;
-			margin-bottom: 1rem;
-			transition: all 0.3s ease;
-			cursor: pointer;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-		
-		.inactive-guest-item:hover {
-			border-color: #818cf8;
-			background: rgba(129, 140, 248, 0.05);
-			transform: translateX(5px);
-		}
-		
-		.guest-info h5 {
-			margin: 0 0 0.5rem 0;
-			color: #1f2937;
-			font-weight: 600;
-		}
-		
-		.guest-info p {
-			margin: 0;
-			color: #6b7280;
-			font-size: 0.875rem;
-		}
-		
-		.assign-inactive-btn {
-			background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-			color: white;
-			border: none;
-			padding: 0.5rem 1.25rem;
-			border-radius: 8px;
-			font-weight: 600;
-			cursor: pointer;
-			transition: all 0.3s ease;
-			white-space: nowrap;
-		}
-		
-		.assign-inactive-btn:hover {
-			transform: translateY(-2px);
-			box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
-		}
-		
-		.no-inactive-guests {
-			text-align: center;
-			padding: 3rem 1rem;
-			color: #6b7280;
-		}
-		
-		.no-inactive-guests i {
-			font-size: 3rem;
-			margin-bottom: 1rem;
-			opacity: 0.5;
-		}
-
-		/* Snackbar (Undo) */
-		.snackbar {
-			position: fixed;
-			left: 50%;
-			bottom: 24px;
-			transform: translateX(-50%) translateY(20px);
-			background: rgba(31, 41, 55, 0.95);
-			color: #fff;
-			padding: 0.75rem 1rem;
-			border-radius: 12px;
-			box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-			display: none;
-			align-items: center;
-			gap: 1rem;
-			z-index: 10000;
-			animation: snackIn 0.2s ease forwards;
-		}
-		.snackbar.show { display: flex; }
-		.snackbar-message { font-weight: 500; }
-		.snackbar button {
-			background: transparent;
-			border: 0;
-			color: #60a5fa;
-			font-weight: 700;
-			cursor: pointer;
-			padding: 0.25rem 0.5rem;
-			border-radius: 6px;
-		}
-		.snackbar button:hover { color: #93c5fd; text-decoration: underline; }
-		@keyframes snackIn { from { opacity:0; transform: translateX(-50%) translateY(20px);} to { opacity:1; transform: translateX(-50%) translateY(0);} }
-	</style> 
+<style>
+	@media (max-width: 768px){.welcome-header-content{padding:0 1rem;flex-direction:column;align-items:stretch;gap:.75rem}.welcome-header h1{font-size:1.5rem}.welcome-header .user-info{font-size:.875rem}.logout-btn,.back-btn{padding:.5rem 1rem;font-size:.875rem}.header-actions{display:flex;gap:.5rem;flex-wrap:wrap;width:100%}.header-actions .back-btn,.header-actions .logout-btn{flex:1 1 48%;min-width:140px}.toolbar-actions{display:flex;gap:.5rem;flex-wrap:wrap}.toolbar-actions .btn{flex:1 1 48%;min-width:120px}}
+	.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:9998;animation:fadeIn .3s ease}
+	.modal-overlay.active{display:flex;justify-content:center;align-items:center}
+	.modal-card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:600px;width:90%;max-height:80vh;overflow:hidden;animation:slideUp .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:9999}
+	@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+	@keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+	.modal-header{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+	.modal-header h3{margin:0;font-size:1.5rem;font-weight:700}
+	.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease}
+	.modal-close:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
+	.modal-body{padding:1.5rem;max-height:calc(80vh - 120px);overflow-y:auto}
+	.inactive-guest-item{padding:1rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:1rem;transition:all .3s ease;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+	.inactive-guest-item:hover{border-color:#818cf8;background:rgba(129,140,248,.05);transform:translateX(5px)}
+	.guest-info h5{margin:0 0 .5rem 0;color:#1f2937;font-weight:600}
+	.guest-info p{margin:0;color:#6b7280;font-size:.875rem}
+	.assign-inactive-btn{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;border:none;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;cursor:pointer;transition:all .3s ease;white-space:nowrap}
+	.assign-inactive-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(129,140,248,.4)}
+	.no-inactive-guests{text-align:center;padding:3rem 1rem;color:#6b7280}
+	.no-inactive-guests i{font-size:3rem;margin-bottom:1rem;opacity:.5}
+	.snackbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:rgba(31,41,55,.95);color:#fff;padding:.75rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;align-items:center;gap:1rem;z-index:10000;animation:snackIn .2s ease forwards}
+	.snackbar.show{display:flex}
+	.snackbar-message{font-weight:500}
+	.snackbar button{background:transparent;border:0;color:#60a5fa;font-weight:700;cursor:pointer;padding:.25rem .5rem;border-radius:6px}
+	.snackbar button:hover{color:#93c5fd;text-decoration:underline}
+	@keyframes snackIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
 	<script>
 				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
 				const API_BASE_URL = (function(){

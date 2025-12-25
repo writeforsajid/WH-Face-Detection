@@ -192,20 +192,73 @@ def delete_guest(guest_id: str):
         conn.execute("BEGIN")
         conn.execute("PRAGMA foreign_keys = OFF")
 
+        # queries = [
+        #     # Attendance
+        #     "DELETE FROM attendance_alerts WHERE guest_id = ?",
+        #     "DELETE FROM attendance WHERE guest_id = ?",
+
+        #     # Auth
+        #     "DELETE FROM guest_sessions WHERE guest_id = ?",
+        #     "DELETE FROM guest_password_resets WHERE guest_id = ?",
+        #     "DELETE FROM guest_auth WHERE guest_id = ?",
+
+        #     # Guest data
+        #     "DELETE FROM guest_faces WHERE guest_id = ?",
+        #     "DELETE FROM guest_metadata WHERE guest_id = ?",
+        #     "DELETE FROM guest_roles WHERE guest_id = ?",
+        #     "DELETE FROM guest_beds WHERE guest_id = ?",
+
+        #     # Leaves
+        #     "DELETE FROM leave_calendar_cache WHERE guest_id = ?",
+        #     "DELETE FROM leave_requests WHERE guest_id = ?",
+
+        #     "DELETE FROM email_logs WHERE guest_id = ?",
+       
+        #     # Rent payment chain
+        #     """DELETE FROM rent_approval_history
+        #        WHERE rent_payment_id IN (
+        #          SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+        #        )""",
+        #     """DELETE FROM rent_forward_history
+        #        WHERE rent_payment_id IN (
+        #          SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+        #        )""",
+        #     """DELETE FROM rent_payment_allocations
+        #        WHERE rent_payment_id IN (
+        #          SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+        #        )""",
+        #     """DELETE FROM rent_payment_attachments
+        #        WHERE rent_payment_id IN (
+        #          SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+        #        )""",
+
+        #     "DELETE FROM rent_payment_refunds WHERE guest_id = ?",
+        #     "DELETE FROM rent_payments WHERE guest_id = ?",
+
+        #     # Finance
+        #     "DELETE FROM dues WHERE guest_id = ?",
+        #     "DELETE FROM security_deposits WHERE guest_id = ?",
+        #     "DELETE FROM rent_change_events WHERE guest_id = ?",
+
+        #     # Guest
+        #     "DELETE FROM guests WHERE guest_id = ?"
+        # ]
+
+
         queries = [
             # Attendance
             "DELETE FROM attendance_alerts WHERE guest_id = ?",
             "DELETE FROM attendance WHERE guest_id = ?",
 
             # Auth
-            "DELETE FROM guest_sessions WHERE guest_id = ?",
-            "DELETE FROM guest_password_resets WHERE guest_id = ?",
-            "DELETE FROM guest_auth WHERE guest_id = ?",
+            # "DELETE FROM guest_sessions WHERE guest_id = ?",
+            # "DELETE FROM guest_password_resets WHERE guest_id = ?",
+            # "DELETE FROM guest_auth WHERE guest_id = ?",
 
             # Guest data
-            "DELETE FROM guest_faces WHERE guest_id = ?",
+            # "DELETE FROM guest_faces WHERE guest_id = ?",
             "DELETE FROM guest_metadata WHERE guest_id = ?",
-            "DELETE FROM guest_roles WHERE guest_id = ?",
+            # "DELETE FROM guest_roles WHERE guest_id = ?",
             "DELETE FROM guest_beds WHERE guest_id = ?",
 
             # Leaves
@@ -239,10 +292,12 @@ def delete_guest(guest_id: str):
             "DELETE FROM dues WHERE guest_id = ?",
             "DELETE FROM security_deposits WHERE guest_id = ?",
             "DELETE FROM rent_change_events WHERE guest_id = ?",
-
+            "UPDATE guests SET status = '_blank' WHERE guest_id = ?"
             # Guest
-            "DELETE FROM guests WHERE guest_id = ?"
+            # "DELETE FROM guests WHERE guest_id = ?"
+
         ]
+
 
         for q in queries:
             cur.execute(q, (guest_id,))

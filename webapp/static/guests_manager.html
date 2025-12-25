@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Bed ↔ Guest Assignments</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/style.css">
+	<!-- <link rel="stylesheet" href="./css/wizard.css">	 -->
+    <link  rel="stylesheet" href="./js/dist/jquery-steps.css">
+
+
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"></script>
+  <script src="./js/dist/jquery-steps.js"></script>
+	<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>	
+
+<style>
+.room-type-grid {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.room-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 6px 8px;
+    min-width: 100px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.room-card:hover {
+    border-color: #0d6efd;
+}
+
+.room-card input {
+    display: none;
+}
+
+.room-card.active {
+    border-color: #0d6efd;
+    background: #f1f7ff;
+}
+
+.room-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.room-rent {
+    color: #555;
+    font-size: 14px;
+}
+</style>
+
+		<style>
+			@media (max-width: 768px){.welcome-header-content{padding:0 1rem;flex-direction:column;align-items:stretch;gap:.75rem}.welcome-header h1{font-size:1.5rem}.welcome-header .user-info{font-size:.875rem}.logout-btn,.back-btn{padding:.5rem 1rem;font-size:.875rem}.header-actions{display:flex;gap:.5rem;flex-wrap:wrap;width:100%}.header-actions .back-btn,.header-actions .logout-btn{flex:1 1 48%;min-width:140px}.toolbar-actions{display:flex;gap:.5rem;flex-wrap:wrap}.toolbar-actions .btn{flex:1 1 48%;min-width:120px}}
+		
+		.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:999;}
+		.modal-overlay.active{display:flex;justify-content:center;align-items:center;}
+		.modal-card{background:white;border-radius:14px;width:90%;max-width:420px;overflow:hidden;}
+		.modal-header{background:#1f2937;color:white;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
+		.modal-header h3{margin:0;font-size:1.25rem;}
+		.modal-close{background:transparent;color:white;border:0;font-size:1.5rem;cursor:pointer;}
+		.modal-body{padding:1rem;}
+		
+		.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:9998;animation:fadeIn .3s ease}
+		.modal-overlay.active{display:flex;justify-content:center;align-items:center}
+		.modal-card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:600px;width:90%;max-height:80vh;overflow:hidden;animation:slideUp .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:9999}
+		@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+		@keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+		.modal-header{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
+		.modal-header h3{margin:0;font-size:1.5rem;font-weight:700}
+		.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s ease}
+		.modal-close:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
+		.modal-body{padding:1.5rem;max-height:calc(80vh - 120px);overflow-y:auto}
+		.inactive-guest-item{padding:1rem;border:2px solid #e5e7eb;border-radius:12px;margin-bottom:1rem;transition:.3s ease;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+		.inactive-guest-item:hover{border-color:#818cf8;background:rgba(129,140,248,.05);transform:translateX(5px)}
+		.guest-info h5{margin:0 0 .5rem 0;color:#1f2937;font-weight:600}
+		.guest-info p{margin:0;color:#6b7280;font-size:.875rem}
+		.assign-inactive-btn{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;border:none;padding:.5rem 1.25rem;border-radius:8px;font-weight:600;cursor:pointer;transition:.3s ease;white-space:nowrap}
+		.assign-inactive-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(129,140,248,.4)}
+		.no-inactive-guests{text-align:center;padding:3rem 1rem;color:#6b7280}
+		.no-inactive-guests i{font-size:3rem;margin-bottom:1rem;opacity:.5}
+		.snackbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:rgba(31,41,55,.95);color:#fff;padding:.75rem 1rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;align-items:center;gap:1rem;z-index:10000;animation:snackIn .2s ease forwards}
+		.snackbar.show{display:flex}
+		.snackbar-message{font-weight:500}
+		.snackbar button{background:transparent;border:0;color:#60a5fa;font-weight:700;cursor:pointer;padding:.25rem .5rem;border-radius:6px}
+		.snackbar button:hover{color:#93c5fd;text-decoration:underline}
+		@keyframes snackIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+		.is-invalid {
+		border-color: #dc3545;
+		}
+
+		</style>
+	<script>
+				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return window.location.origin;
+				})();
+				const CURRENT_USER = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+		async function ensureLoggedInOrRedirect() {
+			const token = localStorage.getItem('wh_token');
+			if (!token) {
+				window.location.href = 'login.html';
+				return null;
+			}
+			return token;
+		}
+		function loadGuestList() {
+			$.ajax({
+				url: `${API_BASE_URL}/guests/activeReviewers`,   // <-- change API endpoint here
+				method: "GET",
+				success: function (response) {
+					// response should be: [{ id: "...", name: "..." }, ...]
+					
+					let options = `<option value="">Select Guest</option>`;
+
+					response.forEach(item => {
+						options += `<option value="${item.id}">${item.name} (${item.id})</option>`;
+					});
+
+					$("#forwardSelect").html(options);
+				},
+				error: function () {
+					$("#forwardSelect").html(`<option value="">Failed to load</option>`);
+				}
+			});
+		}
+
+		function getUserInfo() {
+			try {
+				const userJson = localStorage.getItem('wh_user');
+				return userJson ? JSON.parse(userJson) : null;
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function displayWelcome() {
+			// const user = getUserInfo();
+			// const welcomeEl = document.getElementById('welcome-message');
+			// const userInfoEl = document.getElementById('user-info');
+			
+			// if (user && user.name) {
+			// 	welcomeEl.textContent = `Welcome back, ${user.name}!`;
+			// 	const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+			// 	userInfoEl.textContent = `${role} • ${user.email || ''}`;
+			// } else {
+			// 	welcomeEl.textContent = 'Welcome to Bed Management';
+			// 	userInfoEl.textContent = 'View and manage bed assignments';
+			// }
+		}
+
+
+
+		function handleBack() {
+			try {
+				// Prefer going back if we have a referrer/history
+				if (document.referrer && window.history.length > 1) {
+					window.history.back();
+					return;
+				}
+			} catch (e) { /* no-op */ }
+			// Fallback to home
+			window.location.href = 'index2.html';
+		}
+
+		function renderRows(items) {
+			console.log('Rendering rows:', items);
+			const tbody = document.getElementById('rows');
+			if (!Array.isArray(items) || items.length === 0) {
+				tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No data</td></tr>`;
+				return;
+			}
+			const html = items.map((r) => {
+				let guest;
+
+				if (r.guest_name && r.guest_id) {
+					// Make guest name a clickable link to their details page
+					guest = `<a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" style="color: #2563eb; text-decoration: underline; font-weight: 600; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.color='#1d4ed8';" onmouseout="this.style.color='#2563eb';">${r.guest_name}</a>`;
+				} else if (r.guest_name) {
+					guest = r.guest_name;
+				} else {
+					guest = '<span class="badge badge-unassigned">Unassigned</span>';
+				}
+				const assignDate = r.payment_date || '-';
+				const isJustRegistered = r.status === "_blank";
+				return `
+					   <tr>
+
+            <td>${r.s_no || "-"}</td>           
+            <td><a href="${API_BASE_URL}/static/historydetails.html?id=${r.guest_id}" target="_blank">${r.name}</a>(${r.face_count || "-"})</td>
+            <td style='max-width:280px;overflow:hidden;text-overflow:ellipsis;'>${r.email || "-"}</td>
+            <td>${r.bed_no || "-"}</td>
+            <td>${r.status || "-"}</td>
+
+							<td>
+								<button class="btn btn-sm btn-info me-1" 
+									onclick="openContactModal('${r.guest_id}', '${r.name}', '${r.status}', '${r.bed_no}')">
+									<i class="bi bi-telephone-plus"></i> Cont
+								</button>
+
+								<button class="btn btn-danger btn-sm" onclick="deleteGuest('${r.guest_id}')">
+									<i class="bi bi-trash"></i> Del
+								</button>
+								<button 
+            class="btn btn-success btn-sm paydue-btn ${isJustRegistered ? 'disabled' : ''}"
+            ${isJustRegistered ? 'disabled title="Payment disabled for blank status"' : ''}
+            data-info='${JSON.stringify({
+										guest_id: r.guest_id,
+										name: r.name,
+										bed_no: r.bed_no,
+										face_count: r.face_count,
+										email: r.email,
+										status: r.status
+									})}'
+								>
+									Payment
+								</button>
+								${isJustRegistered ? `<button class="btn btn-warning btn-sm action-btn" data-info='${JSON.stringify({
+										guest_id: r.guest_id,
+										name: r.name,
+										bed_no: r.bed_no,
+										face_count: r.face_count,
+										email: r.email,
+										status: r.status
+									})}'
+								>
+									Initate
+								</button>` : ''}
+
+								${!isJustRegistered ? `<button class="btn btn-dark btn-sm moveout-btn" data-info='${JSON.stringify({
+										guest_id: r.guest_id,
+										name: r.name,
+										bed_no: r.bed_no,
+										face_count: r.face_count,
+										email: r.email,
+										status: r.status
+									})}'
+								>
+									Moveout
+								</button>` : ''}							
+							
+							</td>
+					   </tr>
+				   `;
+			}).join('');
+			tbody.innerHTML = html;
+		}
+
+		   async function loadData() {
+			   const token = await ensureLoggedInOrRedirect();
+			   if (!token) return; // redirected
+			   const statusEl = document.getElementById('status');
+			   statusEl.textContent = 'Loading...';
+			   try {
+				//    const q = (document.getElementById('searchName')?.value || '').trim();
+				//    const st = (document.getElementById('filterStatus')?.value || '').trim();
+				//    const sharingTypeFilter = (document.getElementById('filterSharingType').value|| '').trim();
+				   const params = new URLSearchParams();
+				//    if (q) params.set('search', q);
+				//    if (st) params.set('status', st);
+				//    if (sharingTypeFilter) params.append("sharing_type", sharingTypeFilter);
+				   const url = `${API_BASE_URL}/guests?page=1&limit=100${params.toString() ? ('?' + params.toString()) : ''}`;
+				   const res = await fetch(url, {
+					   headers: { 'Authorization': `Bearer ${token}` }
+				   });
+				   if (!res.ok) {
+					   if (res.status === 401) {
+						   // session invalid/expired: take user to login
+						   window.location.href = 'login.html';
+						   return;
+					   }
+					   const err = await res.json().catch(() => ({}));
+					   throw new Error(err.detail || `Request failed (${res.status})`);
+				   }
+				   const data = await res.json();
+				   console.log('Loaded data:', data);
+				   renderRows(data.items || []);
+				   statusEl.textContent = '';
+				   // Attach event listeners to assign/unassign buttons
+				   setTimeout(() => {
+					   // Handle "Assigned" button clicks (unassign functionality)
+					   document.querySelectorAll('.assign-btn').forEach(btn => {
+						   btn.addEventListener('click', async function() {
+							   const guestId = this.getAttribute('data-guest-id');
+							   const guestName = this.getAttribute('data-guest-name') || 'Guest';
+							   if (!guestId) return;
+							   const row = this.closest('tr');
+							   const cells = row ? row.querySelectorAll('td') : null;
+							   this.disabled = true;
+							   this.textContent = 'Unassigning...';
+							   try {
+								   const token = localStorage.getItem('wh_token');
+								   // Call API to unassign guest
+								   const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
+									   method: 'POST',
+									   headers: {
+										   'Authorization': `Bearer ${token}`,
+										   'Content-Type': 'application/json'
+									   },
+									   body: JSON.stringify({ guest_id: guestId })
+								   });
+								   if (!res.ok) {
+									   const err = await res.json().catch(() => ({}));
+									   throw new Error(err.detail || `Unassign failed (${res.status})`);
+								   }
+								   // Optimistically update the row: Guest -> Unassigned, Date -> '-', Button -> Unassigned disabled
+								   if (cells && cells.length >= 5) {
+									   // cells: [0]=Bed, [1]=Desc, [2]=Guest, [3]=Date, [4]=Action
+									   cells[2].innerHTML = '<span class="badge badge-unassigned">Unassigned</span>';
+									   cells[3].textContent = '-';
+								   }
+								   this.classList.remove('btn-success');
+								   this.classList.add('btn-secondary');
+								   this.classList.remove('assign-btn');
+								   this.classList.add('unassign-btn');
+								   this.textContent = 'Unassigned';
+								   this.disabled = false;
+								   // Add click handler for the newly created unassign button
+								   const bedId = this.getAttribute('data-bed-id');
+								   this.onclick = () => showInactiveGuestsModal(bedId);
+								   // Show undo snackbar
+								   showUndoUnassign({ bedId, guestId, guestName });
+							   } catch (e) {
+								   alert(e.message || 'Failed to unassign');
+								   this.disabled = false;
+								   this.textContent = 'Assigned';
+							   }
+						   });
+					   });
+					   
+					   // Handle "Unassigned" button clicks (show inactive guests modal)
+					   document.querySelectorAll('.unassign-btn').forEach(btn => {
+						   btn.addEventListener('click', function() {
+							   const bedId = this.getAttribute('data-bed-id');
+							   showInactiveGuestsModal(bedId);
+						   });
+					   });
+				   }, 100);
+			   } catch (e) {
+				   console.error(e);
+				   statusEl.textContent = e.message || 'Failed to load';
+			   }
+		   }
+
+		document.addEventListener('DOMContentLoaded', () => {
+			displayWelcome();
+			loadData();
+			// If page refreshed, restore pending undo if still valid
+			restoreUndoFromStorage();
+			loadGuestList();
+
+			
+
+			// wire filters
+			const statusSel = document.getElementById('filterStatus');
+			if (statusSel) statusSel.addEventListener('change', () => loadData());
+			// wire filters
+			const sharingTypeSel = document.getElementById('filterSharingType');
+			if (sharingTypeSel) sharingTypeSel.addEventListener('change', () => loadData());
+
+			const searchEl = document.getElementById('searchName');
+			if (searchEl) {
+				let _t = null;
+				searchEl.addEventListener('input', () => {
+					if (_t) clearTimeout(_t);
+					_t = setTimeout(() => loadData(), 300);
+				});
+			}
+		});
+		
+		// Snackbar helpers
+		let _snackTimer = null;
+		function ensureSnackbar() {
+			let el = document.getElementById('snackbar');
+			if (!el) {
+				el = document.createElement('div');
+				el.id = 'snackbar';
+				el.className = 'snackbar';
+				document.body.appendChild(el);
+			}
+			return el;
+		}
+
+		function showSnackbar(message, actionLabel, onAction, timeoutMs = 6000) {
+			const bar = ensureSnackbar();
+			bar.innerHTML = `<span class="snackbar-message">${message}</span>` +
+				(actionLabel ? ` <button type="button" id="snackbar-action">${actionLabel}</button>` : '');
+			bar.classList.add('show');
+			if (_snackTimer) { clearTimeout(_snackTimer); _snackTimer = null; }
+			if (actionLabel && typeof onAction === 'function') {
+				const btn = document.getElementById('snackbar-action');
+				if (btn) {
+					btn.onclick = async () => {
+						try { await onAction(); } finally { hideSnackbar(); }
+					};
+				}
+			}
+			_snackTimer = setTimeout(hideSnackbar, timeoutMs);
+		}
+
+		function hideSnackbar() {
+			const bar = ensureSnackbar();
+			bar.classList.remove('show');
+		}
+
+		function showUndoUnassign({ bedId, guestId, guestName }) {
+			// Persist pending undo so a page refresh doesn't lose it
+			const payload = { bedId, guestId, guestName, createdAt: Date.now(), timeoutMs: 8000 };
+			localStorage.setItem('wh_pending_undo_unassign', JSON.stringify(payload));
+			showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+				const token = localStorage.getItem('wh_token');
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ id: bedId, guest_id: guestId })
+				});
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Undo failed (${res.status})`);
+				}
+				localStorage.removeItem('wh_pending_undo_unassign');
+				await loadData();
+			});
+		}
+
+		function restoreUndoFromStorage() {
+			try {
+				const raw = localStorage.getItem('wh_pending_undo_unassign');
+				if (!raw) return;
+				const data = JSON.parse(raw);
+				const { bedId, guestId, guestName, createdAt, timeoutMs = 8000 } = data || {};
+				if (!bedId || !guestId) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				const age = Date.now() - (createdAt || 0);
+				if (age > timeoutMs) { localStorage.removeItem('wh_pending_undo_unassign'); return; }
+				// Show remaining time
+				const remaining = Math.max(2000, timeoutMs - age);
+				showSnackbar(`${guestName || 'Guest'} unassigned`, 'Undo', async () => {
+					const token = localStorage.getItem('wh_token');
+					const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+						method: 'POST',
+						headers: {
+							'Authorization': `Bearer ${token}`,
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({ id: bedId, guest_id: guestId })
+					});
+					if (!res.ok) {
+						const err = await res.json().catch(() => ({}));
+						throw new Error(err.detail || `Undo failed (${res.status})`);
+					}
+					localStorage.removeItem('wh_pending_undo_unassign');
+					await loadData();
+				}, remaining);
+			} catch { /* ignore */ }
+		}
+
+		// Modal functions
+		async function showInactiveGuestsModal(bedId) {
+			const modal = document.getElementById('inactiveGuestsModal');
+			const modalBody = document.getElementById('inactiveGuestsBody');
+			
+			// Show loading state
+			modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading inactive guests...</p></div>';
+			modal.classList.add('active');
+			
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Fetch guests with inactive status - use max limit of 100
+				const res = await fetch(`${API_BASE_URL}/guests?page=1&limit=100&status=inactive`, {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				
+				if (!res.ok) {
+					if (res.status === 401) {
+						window.location.href = 'login.html';
+						return;
+					}
+					throw new Error(`Failed to fetch guests (${res.status})`);
+				}
+				
+				const data = await res.json();
+				const inactiveGuests = (data && Array.isArray(data.items)) ? data.items : [];
+				
+				if (inactiveGuests.length === 0) {
+					modalBody.innerHTML = `
+						<div class="no-inactive-guests">
+							<i class="bi bi-person-x"></i>
+							<h5>No Inactive Guests</h5>
+							<p>There are currently no guests with inactive status available for assignment.</p>
+						</div>
+					`;
+				} else {
+					const html = inactiveGuests.map(guest => `
+						<div class="inactive-guest-item" data-guest-id="${guest.guest_id}">
+							<div class="guest-info">
+								<h5>${guest.name}</h5>
+								<p>
+									<strong>ID:</strong> ${guest.guest_id} | 
+									<strong>Type:</strong> ${guest.guest_type || 'N/A'} | 
+									<strong>Status:</strong> <span style="color: #f59e0b; font-weight: 600;">Inactive</span>
+								</p>
+							</div>
+							<button class="assign-inactive-btn" onclick="assignGuestToBed('${bedId}', '${guest.guest_id}', '${guest.name.replace(/'/g, "\\'")}')">
+								Assign to Bed
+							</button>
+						</div>
+					`).join('');
+					modalBody.innerHTML = html;
+				}
+			} catch (e) {
+				console.error(e);
+				modalBody.innerHTML = `
+					<div class="no-inactive-guests">
+						<i class="bi bi-exclamation-triangle text-danger"></i>
+						<h5>Error Loading Guests</h5>
+						<p>${e.message || 'Failed to load inactive guests'}</p>
+					</div>
+				`;
+			}
+		}
+		
+		function closeModal() {
+			const modal = document.getElementById('inactiveGuestsModal');
+			modal.classList.remove('active');
+		}
+		
+		async function assignGuestToBed(bedId, guestId, guestName) {
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				
+				// Call API to assign guest to bed
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						id: bedId,
+						guest_id: guestId
+					})
+				});
+				
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Assignment failed (${res.status})`);
+				}
+				
+				// Close modal and reload data
+				closeModal();
+				alert(`Successfully assigned ${guestName} to bed!`);
+				await loadData();
+				
+			} catch (e) {
+				console.error(e);
+				alert(e.message || 'Failed to assign guest to bed');
+			}
+		}
+		
+		// Close modal when clicking outside
+		document.addEventListener('click', (e) => {
+			const modal = document.getElementById('inactiveGuestsModal');
+			if (e.target === modal) {
+				closeModal();
+			}
+		});
+	</script>
+
+</head>
+<body class="admin-bg">
+	<!-- Shared header will be loaded here -->
+
+	<div class="page-wrapper">
+
+
+			<div id="menu-container"></div>
+
+			<div class="page-header">
+				<div class="page-header-content">
+				<div>
+					<h1><i class="bi bi-people-fill"></i> Payments ↔ status</h1>
+				</div>
+				</div>
+			</div>
+
+
+
+			<div class="card shadow-sm">
+				<div class="card-body">
+					<div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap: .5rem;">
+
+					<div class="text-muted mb-2" id="status"></div>
+
+
+						
+
+
+
+					</div>
+					<div class="table-responsive">
+						<table class="table table-striped table-hover align-middle">
+							<thead class="table-dark">
+
+
+								<tr>
+									<th>S.no</th>									
+									<th>Name</th>
+									<th>Type</th>
+									<th>Room</th>
+									<th>Status</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody id="rows"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+	</div>
+
+		<!-- Inactive Guests Modal -->
+		<div class="modal-overlay" id="inactiveGuestsModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+					<button class="modal-close" onclick="closeModal()">×</button>
+				</div>
+				<div class="modal-body" id="inactiveGuestsBody">
+					<!-- Content will be dynamically loaded here -->
+				</div>
+			</div>
+		</div>
+
+
+ <!-- Initiate Wizard Modal -->
+<div class="modal fade" id="initiateModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="actionPaymentLabel">
+          <i class="bi bi-lightning-charge"></i> Initiate Process
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Confirmation Prompt  -->		
+			<div id="wizconfirmBar" class="alert alert-warning d-none"
+				style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+						z-index:1055; min-width:300px;">
+				<span id="wizconfirmText">Are you sure?</span>
+
+				<div class="float-end">
+					<button id="wizconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+					<button id="wizconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+				</div>
+			</div>
+        <!-- Wizard START -->
+        <div class="step-app" id="init_wizard">
+          <ul class="step-steps">
+            <li data-step-target="step1">Step 1</li>
+            <li data-step-target="step2">Step 2</li>
+            <li data-step-target="step3">Step 3</li>
+            <li data-step-target="step4">Step 4</li>
+            <li data-step-target="step5">Step 5</li>
+          </ul>
+
+		<div style="color:#000" class="step-content">
+			<div class="step-tab-panel" data-step="step1">
+				<div id="guestDetailsLoader" class="text-muted">Loading guest details...</div>
+
+				<table class="table table-sm table-bordered mt-3 d-none" id="guestDetailsTable">
+					<tbody>
+					<tr>
+						<th>Guest ID</th>
+						<td id="gd_guest_id"></td>
+					</tr>
+					<tr>
+						<th>Name</th>
+						<td id="gd_name"></td>
+					</tr>
+					<tr>
+						<th>Bed Number</th>
+						<td id="gd_bed"></td>
+					</tr>
+					<tr>
+						<th>Sharing Type</th>
+						<td id="gd_sharing"></td>
+					</tr>
+					<tr>
+						<th>Status</th>
+						<td id="gd_state"></td>
+					</tr>
+					<tr>
+						<th>Due Balance</th>
+						<td id="gd_amount"></td>
+					</tr>
+					<tr>
+						<th>Security Paid</th>
+						<td id="gd_security"></td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="step-tab-panel" data-step="step2">
+				<h3>Room details</h3>
+				
+				<form name="frmInfo" id="frmInfo">
+
+    Room type:<br>
+    <div id="roomTypeContainer" class="room-type-grid"></div>
+
+    <hr/>
+
+    <label class="form-label">Vacant Bed(s): OPTIONAL</label>
+    <input type="text" id="roomType" class="form-control" hidden>
+
+    <select id="vacantRoomSelect" name="bed_id" class="form-select">
+        <!-- options added by JS -->
+    </select>
+
+    <div class="text-danger small mt-1 d-none" id="bedSharingError">
+        Selected bed does not match room type
+    </div>
+
+    <!-- Assign bed + date (same row) -->
+    <div class="row align-items-center mt-3">
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="assignBedChk"
+                       disabled>
+                <label class="form-check-label" for="assignBedChk">
+                    Assign this bed
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <input type="date"
+                   id="assignDate"
+                   class="form-control"
+                   disabled>
+            <div class="text-danger small d-none" id="assignDateError">
+                Assign date is required
+            </div>
+        </div>
+    </div>
+
+</form>
+
+			</div>
+			<div class="step-tab-panel" data-step="step3">
+				<h3>Current month due</h3>
+
+				<form name="frmDue" id="frmDue">
+				Rent to be paid for remaining days<br>
+				Rent Due:<br>
+				<input type="text" name="rent_due" value="0" class="amount form-control" placeholder="Enter rent amount" required>
+				<!-- <input type="text" name="txtFirstName" class="amount" required> -->
+				<hr/>
+				Security deposit will be 5000/-
+				<br> Security:<br>
+				<input type="text" name="security_due" value="0" class="amount form-control" placeholder="Enter security amount" required>
+				<!-- <input type="text" name="txtLastName" class="amount" required> -->
+				</form>
+			</div>
+			<div class="step-tab-panel" data-step="step4">
+				<h3>Payment</h3>
+						<div class="row g-2">
+
+							<div class="col-md-6">
+								<form name="frmPayment" id="frmPayment">
+								<input type="text" name="pay-amount" class="form-control form-control-sm mb-2 pay-amount amount required"
+										value ='0' placeholder="Pay Rent" />
+								<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+										placeholder="Transaction ID" />
+								<input type="month"  class="form-control form-control-sm mb-2 payinitate-month-year"  min="1990-01" max="2030-12">
+								<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+								<select class="form-control mb-2 payment-mode required">
+									<option value="">Select</option>
+									<option value="DIGIT">Digital</option>
+									<option value="CASH">Cash</option>
+									<option value="UPI">UPI</option>
+									<option value="IMPS">IMPS</option>
+								</select>
+
+								<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+										placeholder="Made by guest name" />
+
+
+         <div class="form-check mt-2"> 
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="payApprovalChk"
+                   checked>
+            <label class="form-check-label" for="payApprovalChk">
+                Approve payment
+            </label>
+         </div> 
+									</form>
+							</div>
+							<div class="col-md-6">
+							<!-- <input type="text" class="form-control form-control-sm mb-2 security-due amount "
+									placeholder="Default security on bed" value='0' disabled/> -->
+
+
+								<div>
+									<h5>Description</h5>
+									<div id="dues-summary" class="mt-2"></div>
+								</div>	
+							</div>
+						</div>
+
+
+						
+				</form>
+			</div>
+<div class="step-tab-panel" data-step="step5">
+    <h3>Summary</h3>
+
+    <form name="frmSummary" id="frmSummary">
+
+        <table class="table table-bordered table-sm">
+            <tbody>
+                <tr>
+                    <th width="30%">Guest Name</th>
+                    <td id="sumGuestName"></td>
+                </tr>
+                <tr>
+                    <th>Room Type</th>
+                    <td id="sumRoomType"></td>
+                </tr>
+                <tr>
+                    <th>Bed Assigned</th>
+                    <td id="sumBed"></td>
+                </tr>
+                <tr>
+                    <th>Rent Due</th>
+                    <td id="sumDues"></td>
+                </tr>
+                <tr>
+                    <th>Payment Deposit</th>
+                    <td id="sumPayment"></td>
+                </tr>
+                <tr>
+                    <th>Balance</th>
+                    <td id="sumSecurity"></td>
+                </tr>				
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Final actions -->
+        <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="activateUserChk"
+                   checked disabled>
+            <label class="form-check-label" for="activateUserChk">
+                Activate user
+            </label>
+        </div>
+
+        <div class="form-check mt-2">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="emailUserChk"
+                   checked>
+            <label class="form-check-label" for="emailUserChk">
+                Intimate guest through e-mail
+            </label>
+        </div>
+
+    </form>
+</div>
+
+			</div>
+
+          <div class="step-footer">
+            <button data-step-action="prev" class="step-btn">Previous</button>
+            <button data-step-action="next" class="step-btn">Next</button>
+            <button data-step-action="finish" class="step-btn">Finish</button>
+          </div>
+        </div>
+        <!-- Wizard END -->
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+		<!-- ACTION MODAL (Initate and Moveout) -->
+		<div class="modal-overlay" id="actionModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3 id="actionPaymentLabel" >Move out action</h3>
+					<button class="modal-close" onclick="closeActionModal()">×</button>
+				</div>
+
+				<div class="modal-body">
+					<!-- <p id="actionPaymentLabel" style="font-weight:600;margin-bottom:1rem;"></p> -->
+					<!-- Confirmation Bar -->
+					<div id="confirmBar" class="alert alert-warning d-none"
+						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+								z-index:1055; min-width:300px;">
+						<span id="confirmText">Are you sure?</span>
+
+						<div class="float-end">
+							<button id="confirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+							<button id="confirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+						</div>
+					</div>
+					<div id="tabs">
+						<ul>
+							<li><a href="#tabs-1">Guest info</a></li>
+							<li><a href="#tabs-2">Move Out</a></li>
+
+						</ul>
+						<!-- jQuery UI will load the tab content here -->
+						<div id="tabs-1" class="refund-section guest-refund">
+
+
+							<strong>Guest Information</strong>
+
+							<div id="payment-dues-summary" class="border rounded p-2 mt-2 bg-light">
+								<div class="text-muted">Select tab to load dues...</div>
+							</div>
+						
+						</div>
+
+						
+
+
+						<div id="tabs-2" class="refund-section owner-refund">
+
+						
+
+						<div class="row g-2">
+							
+							<div class="col-md-6">
+							<strong>Guest final payment</strong>
+							<input type="text" class="form-control form-control-sm mb-2 security-paid amount"
+									placeholder="Security Paid" disabled/>
+
+							<input type="text" class="form-control form-control-sm mb-2 rent-paid amount"
+									placeholder="Rent Paid" disabled/>
+							<hr/>
+								<div>
+									<h5>Description2</h5>
+									Bring paid security and amount from DB
+									Securty paid<br>
+									Amount pending<br>
+									and<br>
+									Refund at right portion
+								</div>
+							</div>
+							
+							<div class="col-md-6">
+							<strong>Owner Refund</strong>
+							<input type="text" class="form-control form-control-sm mb-2 refund-security amount required"
+									placeholder="Refund Security" />
+
+							<!-- <input type="text" class="form-control form-control-sm mb-2 refund-rent amount required"
+									placeholder="Refund Rent" /> -->
+							<hr/>
+							<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+									placeholder="Transaction ID" />
+							<input type="month"  class="form-control form-control-sm mb-2 paymoveout-month-year"  min="1990-01" max="2030-12">
+							<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+							<select class="form-control mb-2 payment-mode required">
+								<option value="">Select</option>
+								<option value="DIGIT">Digital</option>
+								<option value="CASH">Cash</option>
+								<option value="UPI">UPI</option>
+								<option value="IMPS">IMPS</option>
+							</select>
+
+							<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+									placeholder="Made by owner name" />
+							</div>
+						</div>
+
+						<div class="mt-2 text-end">
+							<button class="btn btn-sm btn-outline-secondary confirm-action "
+									data-action="moveout_ok" disabled>
+							OK
+							</button>
+						</div>
+						</div>
+
+						
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Contact Modal -->
+		<div class="modal fade" id="contactModal" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+			
+			<div class="modal-header">
+				<h5 class="modal-title">Update Contact</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+			</div>
+
+			<div class="modal-body">
+				<input type="hidden" id="contact_guest_id">
+
+				<label class="form-label">Contact Name</label>
+				<input type="text" id="contact_name" class="form-control">
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn btn-primary" onclick="applyContact()">Apply</button>
+			</div>
+
+			</div>
+		</div>
+		</div>
+
+
+		<!-- Pay Due MODAL -->
+		<div class="modal-overlay" id="paydueModal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3 id="payduePaymentLabel" >Payment Paydues</h3>
+					<button class="modal-close" onclick="closepaydueModal()">×</button>
+				</div>
+
+				<div class="modal-body">
+					<div id="pdconfirmBar" class="alert alert-warning d-none"
+						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+								z-index:1055; min-width:300px;">
+						<span id="pdconfirmText">Are you sure?</span>
+
+						<div class="float-end">
+							<button id="pdconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+							<button id="pdconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+						</div>
+					</div>
+					<div id="pdtabs">
+						<ul>
+							<li><a href="#pdtabs-1">Payment</a></li>
+							<li><a href="#pdtabs-2">Dues</a></li>
+
+						</ul>
+						<!-- jQuery UI will load the tab content here -->
+						<div id="pdtabs-1" class="refund-section guest-refund">
+
+							<strong>Payment collection</strong>
+
+							<div class="row g-2">
+								<div class="col-md-12">
+
+								<input type="text" class="form-control form-control-sm mb-2 pay-rent amount required"
+										placeholder="Pay Rent" />
+
+								<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+										placeholder="Transection amount ID" />
+								<input type="month"  class="form-control form-control-sm mb-2 pay-month-year"  min="1990-01" max="2030-12">
+								<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+								<select class="form-control mb-2 payment-mode required">
+									<option value="">Select</option>
+									<option value="DIGIT">Digital</option>
+									<option value="CASH">Cash</option>
+									<option value="UPI">UPI</option>
+									<option value="IMPS">IMPS</option>
+								</select>
+
+								<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+										placeholder="Made by guest name" />
+								</div>
+							</div>
+
+							<div class="mt-2 text-end">
+								<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+										data-Paydue="payment_ok" disabled>
+								OK
+								</button>
+							</div>
+						</div>
+
+						
+
+
+						<div id="pdtabs-2" class="refund-section owner-refund">
+
+							<div class="row g-2">
+
+								<!-- 🔹 LEFT COLUMN (EXISTING FORM – unchanged) -->
+								<div class="col-md-6">
+
+									<strong>Add dues</strong>
+
+									<select class="form-control mb-2 dues-type required">
+										<option value="">Select</option>
+										<option value="RENT">Monthly Rent</option>
+										<option value="ADVANCE">Advance Payment</option>
+										<option value="SECURITY">Security Deposit</option>
+										<option value="MAINT">Maintenance</option>
+										<option value="ELEC">Electricity</option>
+										<option value="FOOD">Food</option>
+										<option value="REG">Registration</option>
+										<option value="FINE">Fine</option>
+										<option value="OTHER">Other</option>
+									</select>
+
+									<input type="text" class="form-control form-control-sm mb-2 dues-amount amount"
+											placeholder="Amount" />
+
+									<input type="month" class="form-control form-control-sm mb-2 due-month-year"
+											min="1990-01" max="2030-12">
+
+									<input type="date" class="form-control form-control-sm mb-2 due-date required" />
+
+									<div class="mt-2 text-end">
+										<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+												data-paydue="dues_ok" disabled>
+										OK
+										</button>
+									</div>
+
+								</div>
+
+								<!-- 🔹 RIGHT COLUMN (DYNAMIC DUES SUMMARY) -->
+								<div class="col-md-6">
+
+								<strong>Current dues summary</strong>
+
+									<div id="pd-dues-summary" class="border rounded p-2 mt-2 bg-light">
+										<div class="text-muted">Select tab to load dues...</div>
+									</div>
+
+								</div>
+
+							</div>
+						</div>
+
+
+						
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		
+
+
+	</div>
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Manual Rent Payment/Raise(DUE) payment --> 
+<script>	
+		
+		let pdtabsInput;
+		let infoFromBaseRow
+		// open modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("paydue-btn")) {
+					let info = JSON.parse(e.target.dataset.info);
+					infoFromBaseRow=info;
+					let url = "/rentalmonth/onloadaction";   // change to actual API later
+					let data = {
+						guest_id: info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							if (!dataout.records || dataout.records.length === 0) {
+								return;
+							}
+							pdtabsInput = dataout.records[0];
+							
+							const section2 = $("#pdtabs-2");
+							$("#pdtabs").tabs("option", "active", 1);
+							section2.find(".due-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section2.find(".dues-type").val('RENT').trigger("input");
+							section2.find(".dues-amount").val(0).trigger("input");
+							section2.find(".due-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+							const section1 = $("#pdtabs-1");
+							$("#pdtabs").tabs("option", "active", 0);
+							section1.find(".pay-rent").val(pdtabsInput.amount).trigger("input");
+							section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section1.find(".paid-by").val(pdtabsInput.name).trigger("input");
+							section1.find(".payment-mode").val("UPI").trigger("change");
+							section1.find(".trx-id").val('').trigger("input");
+							section2.find(".pay-month-year").val(getCurrentYearMonth()).trigger("change");
+					
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "paydue failed");
+						}
+					});					
+					document.getElementById("payduePaymentLabel").textContent =
+						info.name +'-'+info.guest_id ;
+					document.getElementById("paydueModal").classList.add("active");
+					// let html = `
+					// 	<table class="table table-bordered table-sm mt-2">
+					// 		<tr>
+					// 			<td><strong>Bed</strong><br/>${info.bed_no || '-'}</td>
+					// 			<td><strong>status</strong><br/>${info.status || '-'}</td>
+					// 			<td><strong>Email</strong><br/>${info.email || '-'}</td>
+					// 		</tr>
+
+					// 	</table>
+					// `;
+					let html = '';
+					// Put same content in both pdtabs
+					$("#tab1-info").html(html);
+					$("#tab2-info").html(html);
+
+			}
+		});
+		function getCurrentYearMonth() {
+			const d = new Date();
+			const year = d.getFullYear();
+			const month = String(d.getMonth() + 1).padStart(2, "0");
+			return `${year}-${month}`;
+		}
+		// close modal
+		function closepaydueModal() {
+			document.getElementById("paydueModal").classList.remove("active");
+		}
+
+		// paydue handler
+		function dopaydue(type) {
+			console.log("paydue:", type, "for payment:", currentPayment);
+
+			// You can plug API later
+			alert(`paydue: ${type}\nPayment ID: ${currentPayment}`);
+
+			closepaydueModal();
+		}
+
+		$(function () {
+
+			// Initialize pdtabs with AJAX loading
+			$("#pdtabs").tabs({
+			activate: function (event, ui) {
+				const tabId = ui.newPanel.attr("id");
+
+				if (tabId === "pdtabs-2") {
+				loadPayDueSummary();
+				}
+			}
+			});
+
+		});
+
+		let pendingpaydue = null;
+		let allDuesofAGuest = null;
+		async function loadPayDueSummary() {
+			allDuesofAGuest=null
+			$("#pd-dues-summary").html("<div>Loading...</div>");
+
+		try {
+			const params = new URLSearchParams({
+			guest_id: infoFromBaseRow.guest_id, 
+			year: new Date().getFullYear(),
+			month: new Date().getMonth() + 1
+			});
+
+			const response = await fetch(
+			`${API_BASE_URL}/rentalmonth/dues-of-guest?${params}`,
+			{ method: "GET", headers: { "Accept": "application/json" } }
+			);
+
+			if (!response.ok) throw new Error("Failed to load dues");
+
+			const data = await response.json();
+			allDuesofAGuest=data.data;
+			renderPayDueSummary(data);
+
+		} catch (err) {
+			$("#pd-dues-summary").html(
+			`<div class="text-danger">${err.message}</div>`
+			);
+		}
+		}
+
+
+		function renderPayDueSummary(data) {
+		const _data=data.data;
+		const _summary=data.summary;
+		
+		if (!_data  || _data.length === 0) {
+			$("#dues-summary").html("<p>No dues found.</p>");
+			return;
+		}
+
+		const d = _summary;
+		const html = `
+			<table class="table table-sm table-bordered mb-0">
+			<tr>
+				<th>Total Due</th>
+				<td>₹ ${d.total_due_amount}</td>
+			</tr>
+			<tr>
+				<th>Total Paid</th>
+				<td>₹ ${d.total_amount_paid}</td>
+			</tr>
+			<tr>
+				<th>Balance</th>
+				<td class="${d.total_balance > 0 ? 'text-danger' : 'text-success'}">
+				₹ ${d.total_balance}
+				</td>
+			</tr>
+			<tr>
+				<th>Security</th>
+				<td>₹ ${d.total_security_paid}</td>
+			</tr>
+			</table>
+		`;
+
+		$("#pd-dues-summary").html(html);
+		}
+
+		function validateSection(section) {
+			let valid = true;
+
+			section.find(".required").each(function () {
+			const value = $(this).val().trim();
+
+			if (!value) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".amount").each(function () {
+			const value = parseFloat($(this).val());
+
+			if ($(this).val() && (isNaN(value) || value <= 0)) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".pdconfirm-paydue").prop("disabled", !valid);
+			return valid;
+		}
+		function checkDuplicateDue(section, data) {
+			const dueTypeId = section.find(".dues-type")[0].selectedIndex;
+			const dueMonthYear = section.find(".due-month-year").val(); // "2025-01"
+			const amountToAdd = parseFloat(section.find(".dues-amount").val() || 0);
+
+			if (!dueTypeId || !dueMonthYear) return true;
+
+			const [year, month] = dueMonthYear.split("-").map(Number);
+
+			for (let i = 0; i < data.length; i++) {
+				const d = data[i];
+
+				if (
+					d.due_type_id === dueTypeId &&
+					d.year === year &&
+					d.month === month
+				) {
+					const msg =
+						`This due already exists for ${year}-${month}.\n\n` +
+						`Existing Due: ₹${d.due_amount}\n` +
+						`Do you want to increase it by ₹${amountToAdd}?`;
+
+					if (confirm(msg)) {
+						// ✔ Allow increase
+						return true;
+					} else {
+						// ❌ Stop process
+						return false;
+					}
+				}
+			}
+
+			// ✔ No duplicate found
+			return true;
+		}
+
+		// Live validation on input/change
+		$(document).on("input change", ".refund-section input, .refund-section select", function () {
+			const section = $(this).closest(".refund-section");
+			validateSection(section);
+		});
+
+		
+		$(document).on("click", ".pdconfirm-paydue", function () {
+			pendingpaydue = $(this).data("paydue");
+			pendingBtn = this;
+
+			const section = $(this).closest(".refund-section");
+
+			if (!validateSection(section)) {
+			alert("⚠️ Please fill all required fields with valid values");
+			section.find(".is-invalid").first().focus();
+			return;
+			}	
+			if (pendingpaydue=="dues_ok")
+			{
+				if (!checkDuplicateDue(section, allDuesofAGuest)) {
+					return; // STOP execution
+				}
+			}
+
+			const messages = {
+				payment_ok: "Initialize guest with this payment?",
+				dues_ok: "Add new dues to account?"
+			};
+
+			$("#pdconfirmText").text(messages[pendingpaydue] || "Are you sure?");
+			$("#pdconfirmBar").removeClass("d-none");
+		});
+
+		$("#pdconfirmNo").on("click", function () {
+			$("#pdconfirmBar").addClass("d-none");
+			pendingpaydue = null;
+			pendingBtn = null;
+		});
+
+		$("#pdconfirmYes").on("click", function () {
+			$("#pdconfirmBar").addClass("d-none");
+
+			if (!pendingpaydue || !pendingBtn) return;
+			
+			handleRefundpaydue(pendingpaydue, pendingBtn);
+
+			pendingpaydue = null;
+			pendingBtn = null;
+		});
+
+		function handleRefundpaydue(paydue, btn) {
+			const section = $(btn).closest(".refund-section");
+			//const rentPaymentId = currentPayment;   // already global
+			const approver = CURRENT_USER;           // already global
+			
+			let url = "";
+			let data = {
+				guest_id: infoFromBaseRow.guest_id,
+				created_by: CURRENT_USER
+
+			};
+
+			switch (paydue) {
+
+				case "payment_ok":
+					url = "/rentalmonth/payrent";
+					data.pay_rent      = section.find(".pay-rent").val();
+					data.trx_id        = section.find(".trx-id").val();
+					data.pay_month_year = section.find(".pay-month-year").val();
+					data.pay_date      = section.find(".pay-date").val();
+					data.payment_mode  = section.find(".payment-mode").val();
+					data.paid_by       = section.find(".paid-by").val();
+					break;
+
+				case "dues_ok":
+					url = "/rentalmonth/adddues";
+					data.dues_amount = section.find(".dues-amount").val();
+					data.dues_type = section.find(".dues-type").val();
+					data.due_month_year = section.find(".due-month-year").val();
+					data.due_date    = section.find(".due-date").val();
+					break;
+
+				default:
+					console.error("Unknown paydue:", paydue);
+					return;
+			}
+
+			console.log("Submitting:", data);
+			
+			$.ajax({
+				url: API_BASE_URL + url,
+				method: "POST",   // change to POST later
+				data: data,
+				success: function () {
+					alert("paydue completed successfully");
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "paydue failed");
+				}
+			});
+		}
+		
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Contact: Contact Model -->
+<script>
+
+      // ------------------- Delete Guest -------------------
+      function deleteGuest(id) {
+        if (confirm("Delete this guest?")) {
+          $.ajax({
+            url: `${API_BASE_URL}/guests/${id}`,
+            type: "DELETE",
+            success: function () {
+              loadData();
+            },
+            error: function (xhr) {
+              alert(
+                "Error deleting guest: " +
+                  (xhr.responseJSON?.detail || "Unknown error")
+              );
+            },
+          });
+        }
+      }
+
+      // ------------------- Active/Inactive Guest -------------------
+    //   function toggleGuestStatus(guest_id) {
+    //     $.ajax({
+    //       url: `${API_BASE_URL}/guests/${guest_id}/toggle`,
+    //       type: "PUT",
+    //       success: function (res) {
+    //         alert(`Guest is now ${res.active ? "Active" : "Inactive"}`);
+    //         loadData();
+    //       },
+    //       error: function (xhr) {
+    //         alert(xhr.responseJSON?.detail || "Error toggling guest status");
+    //       },
+    //     });
+    //   }
+
+      // ------------------- Open Modal -------------------
+      function openContactModal(guest_id, name, status, bed_no) {
+
+        // Prepare default contact text
+        let contactText = "";
+        if (status && status.toLowerCase() === "closed") {
+          contactText = `CL.${name}`;
+        } else {
+          contactText = `AV.${name} ${bed_no || ""}`.trim();
+        }
+
+        // Set modal values
+        $("#contact_guest_id").val(guest_id);
+        $("#contact_name").val(contactText);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById("contactModal"));
+        modal.show();
+      }
+
+      // ------------------- Apply Contact Update -------------------
+      function applyContact() {
+        const guest_id = $("#contact_guest_id").val();
+        const contact_name = $("#contact_name").val();
+
+        const formData = new FormData();
+        formData.append("guest_id", guest_id);
+        formData.append("contact_name", contact_name);
+        $.ajax({
+          url: `${API_BASE_URL}/guests/addupdatecontact`,
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+
+          success: function () {
+            alert("Contact updated successfully");
+            loadGuests(currentPage);
+            bootstrap.Modal.getInstance(document.getElementById("contactModal")).hide();
+          },
+
+          error: function (xhr) {
+            alert(xhr.responseJSON?.detail || "Error updating contact");
+          }
+        });
+      }
+
+
+
+
+
+</script>
+
+
+<!-- Wizard: Next Previous  -->
+ <script>
+    var frmInfo = $('#frmInfo');
+    var frmInfoValidator = frmInfo.validate();
+
+    var frmDue = $('#frmDue');
+    var frmDueValidator = frmDue.validate();
+
+    var frmPayment = $('#frmPayment');
+    var frmPaymentValidator = frmPayment.validate();
+
+    var frmSummary = $('#frmSummary');
+    var frmSummaryValidator = frmSummary.validate();
+
+    $('#init_wizard').steps({
+      onChange: function (currentIndex, newIndex, stepDirection) {
+		// step2
+        if (currentIndex === 1) {
+
+          if (stepDirection === 'forward') {
+            if (!frmInfo.valid()) return false;
+        	// 2️⃣ Room type ↔ bed sharing match
+        	if (!validateRoomAndBedMatch()) return false;
+
+			// 3️⃣ Assign date mandatory if checkbox checked
+			const assignChk = document.getElementById("assignBedChk");
+			const assignDate = document.getElementById("assignDate");
+			const assignDateError = $("#assignDateError");
+
+			if (assignChk.checked && !assignDate.value) {
+				assignDateError.removeClass("d-none");
+				assignDate.focus();
+				return false;
+			}
+
+			assignDateError.addClass("d-none");
+			return true;
+          }
+          if (stepDirection === 'backward') {
+            frmInfoValidator.resetForm();
+          }
+        }
+		// step3
+        if (currentIndex === 2) {
+
+          if (stepDirection === 'forward') {
+            if (!frmDue.valid()) return false;
+			if (!validateSection($("#frmDue"))) {return false; }// stop wizard }
+        	return true;
+          }
+          if (stepDirection === 'backward') {
+            frmDueValidator.resetForm();
+          }
+        }		
+        // step4
+        if (currentIndex === 3) {
+          if (stepDirection === 'forward') {
+            if (!frmPayment.valid()) return false;
+			if (!validateSection($("#frmPayment"))) {return false; }// stop wizard }
+        	return true;			
+
+          }
+          if (stepDirection === 'backward') {
+            frmPaymentValidator.resetForm();
+          }
+        }
+        // step5
+        if (currentIndex === 4) {
+		  populateSummary();
+          if (stepDirection === 'forward') {
+            return frmSummary.valid();
+          }
+          if (stepDirection === 'backward') {
+            frmSummaryValidator.resetForm();
+          }
+        }
+        return true;
+      },
+      onFinish: function () {
+		    const payload = {
+			activate_user: $("#activateUserChk").is(":checked"),
+			send_email: $("#emailUserChk").is(":checked")
+    		};
+		const bedOpt = $("#vacantRoomSelect option:selected");
+		// Extract bed number like 002/1/1
+		let bedText = bedOpt.text();
+		let bedNumber = /^\d+\/\d+\/\d+/.test(bedText)
+			? bedText.split(" ")[0]
+			: "";
+
+		const section = $("#frmPayment");
+
+		const summary = {
+			activate_user: $("#activateUserChk").is(":checked"),
+			send_email: $("#emailUserChk").is(":checked"),
+			created_by: CURRENT_USER,
+			guest_id: action_dataset_info.guest_id,			
+			rent_dueable  : $("#frmDue input[name='rent_due']").val() || "0",
+			security_due : $("#frmDue input[name='security_due']").val() || "0",			
+			pay_security  : section.find(".pay-security").val()|| "0",
+			pay_rent      : $("#frmPayment input[name='pay-amount']").val()|| "0",
+			trx_id        : section.find(".trx-id").val(),
+			pay_month_year : section.find(".payinitate-month-year").val(),					
+			pay_date      : section.find(".pay-date").val(),
+			payment_mode  : section.find(".payment-mode").val(),
+			paid_by       : section.find(".paid-by").val(),
+			approved_payment : $("#payApprovalChk").is(":checked"),
+     		roomType : $("#roomTypeContainer .room-card.active .room-title").text() || "-",
+    		roomBed: $("#sumBed").text(),
+			bedNumber: bedNumber,
+			roomAssignedAt: $("#assignDate").val() || "-",
+			bdasign:$("#vacantRoomSelect option:selected").val() ? $("#vacantRoomSelect option:selected").text() : "Not assigned",
+ 		};
+		console.log(summary);
+		// Store summary temporarily
+		$("#wizconfirmBar").data("summary", summary);
+
+		// Build confirmation message
+		$("#wizconfirmText").html(`
+			<strong>Confirm Submission</strong><br>
+			Activate User: <b>${summary.activate_user ? "Yes" : "No"}</b><br>
+			Send Email: <b>${summary.send_email ? "Yes" : "No"}</b><br>
+			Rent Due: ₹${summary.rent_due}<br>
+			Security Due: ₹${summary.security_due}
+		`);
+
+		// Show dialog
+		$("#wizconfirmBar").removeClass("d-none");
+
+
+        // alert('Wizard Completed');
+      }
+    });
+  
+ 
+ 	function validateRoomAndBedMatch() {
+    const errorDiv = $("#bedSharingError");
+    errorDiv.addClass("d-none");
+
+    // selected room type (from cards)
+    const selectedRoom = $("#roomTypeContainer .room-card.active .room-title").text().trim();
+
+    // selected bed sharing type
+    const bedSelect = document.getElementById("vacantRoomSelect");
+    const opt = bedSelect.options[bedSelect.selectedIndex];
+
+    // if bed not selected → no error
+    if (!opt || !opt.value) return true;
+
+    const bedSharing = opt.dataset.sharing;
+
+    if (selectedRoom !== bedSharing) {
+        errorDiv.removeClass("d-none");
+        return false;
+    }
+
+    return true;
+}
+
+function validateSection(section) {
+    let valid = true;
+
+    // 🔹 1. REQUIRED FIELDS
+    section.find(".required").each(function () {
+        const val = $(this).val()?.trim();
+
+        if (!val) {
+            $(this).addClass("is-invalid");
+            valid = false;
+        } else {
+            $(this).removeClass("is-invalid");
+        }
+    });
+
+    // 🔹 2. AMOUNT FIELDS (INTEGER >= 0)
+    section.find(".amount").each(function () {
+        const raw = $(this).val().trim();
+
+        // empty allowed here
+        if (raw === "") {
+            $(this).removeClass("is-invalid");
+            return;
+        }
+
+        // only digits allowed
+        const intRegex = /^\d+$/;
+
+        if (!intRegex.test(raw)) {
+            $(this).addClass("is-invalid");
+            valid = false;
+            return;
+        }
+
+        const value = parseInt(raw, 10);
+        if (value < 0) {
+            $(this).addClass("is-invalid");
+            valid = false;
+        } else {
+            $(this).removeClass("is-invalid");
+        }
+    });
+
+    return valid;
+}
+
+
+function populateSummary() {
+
+    // STEP-1 (example – adjust IDs if needed)
+    $("#sumGuestName").text($("#gd_name").text() || "-");
+    $("#sumEmail").text($("#email").val() || "-");
+
+    // STEP-2
+    const roomType =
+        $("#roomTypeContainer .room-card.active .room-title").text() || "-";
+    $("#sumRoomType").text(roomType);
+
+    const bedOpt = $("#vacantRoomSelect option:selected");
+    $("#sumBed").text((bedOpt.val() ? bedOpt.text() : "Not assigned")+' - Date:'+$("#assignDate").val() || "-");
+    // STEP-3 (Due form)
+    const rentDue = parseInt($("#frmDue input[name='rent_due']").val(), 10) || 0;
+	const securityDue = parseInt($("#frmDue input[name='security_due']").val(), 10) || 0;
+	const payAmount = parseInt($("#frmPayment input[name='pay-amount']").val(), 10) || 0;
+	const totalDues = rentDue + securityDue;
+	
+	$("#sumDues").text(rentDue+' + '+securityDue +' = '+ totalDues  +' : Rent + Security');
+	$("#sumPayment").text(payAmount);
+
+    $("#sumSecurity").text(totalDues-payAmount );
+
+
+
+
+
+
+}
+
+ </script>
+
+
+<!-- Popup: Confirmation -->
+<script>
+	$("#wizconfirmYes").on("click", function () {
+
+		const summary = $("#wizconfirmBar").data("summary");
+
+		console.log("Final Payload:", summary);
+		url="/rentalmonth/payInitialrent"
+		$.ajax({
+			url: API_BASE_URL + url,
+			method: "POST",
+			contentType: "application/json",
+			data: JSON.stringify(summary),
+			success: function (res) {
+				$("#wizconfirmBar").addClass("d-none");
+				alert("Wizard completed successfully");
+			},
+			error: function (err) {
+				alert("Something went wrong");
+			}
+		});
+	});
+	$("#wizconfirmNo").on("click", function () {
+		$("#wizconfirmBar").addClass("d-none");
+	});
+
+</script>
+
+<!-- Wizard: ON Load + Bind Event changes -->
+  <script>
+		let tabsInput;
+		let action_dataset_info;
+		// open Initate-Moveout modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("action-btn")) {
+					action_dataset_info=[];
+					tabsInput=[];
+					action_dataset_info = JSON.parse(e.target.dataset.info);
+					assignDate.value = new Date().toISOString().split("T")[0];
+					let url = "/rentalmonth/onloadaction";   // change to actual API later
+					let data = {
+						guest_id: action_dataset_info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							if (!dataout.records ) {
+								return;
+							}
+							tabsInput = dataout.records[0];
+							roomData = dataout.step2.sharing_type;
+							vacantRooms= dataout.step2.vacant_beds;
+
+							const section = $("#frmPayment");
+							section.find(".pay-amount").val(0).trigger("input");
+							section.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							section.find(".paid-by").val(action_dataset_info.name).trigger("input");
+							section.find(".payment-mode").val("UPI").trigger("change");
+							section.find(".trx-id").val('').trigger("input");
+							section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+							// Fill table
+								$("#gd_guest_id").text(action_dataset_info.guest_id || "-");
+								$("#gd_name").text(action_dataset_info.name || "-");
+								$("#gd_bed").text(action_dataset_info.bed_no || "-");
+								$("#gd_state").html(`<span class="badge bg-success">${action_dataset_info.state}</span>`);
+								$("#gd_sharing").text(tabsInput?.sharing_type || "-");
+								$("#gd_amount").html(`₹ ${tabsInput?.amount}`);
+								$("#gd_security").html(`₹ ${tabsInput?.security_amount}`);
+
+								$("#guestDetailsLoader").addClass("d-none");
+								$("#guestDetailsTable").removeClass("d-none");
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+								document.getElementById("roomTypeContainer").innerHTML = "";
+								const container = document.getElementById("roomTypeContainer");
+
+								roomData.forEach((r, i) => {
+									const div = document.createElement("label");
+									div.className = "room-card";
+
+									div.innerHTML = `
+										<input type="radio" name="room_type" value="${r.sharing_type}" data-rent="${r.monthly_rent}" required>
+										<div class="room-title">${r.sharing_type}</div>
+										<div class="room-rent">₹ ${r.monthly_rent}</div>
+									`;
+									// mark first as active
+									if (i === 0) div.classList.add("active");
+									div.addEventListener("click", () => {
+										document
+											.querySelectorAll(".room-card")
+											.forEach(c => c.classList.remove("active"));
+										div.classList.add("active");
+									});
+
+									container.appendChild(div);
+								});
+							// const selected = document.querySelector('input[name="room_type"]:checked');
+
+							// if (selected) {
+							//     console.log("Room:", selected.value);
+							//     console.log("Rent:", selected.dataset.rent);
+							// }
+////////////////////////////////////////////////////////////////////////////////	
+
+							const select = document.getElementById("vacantRoomSelect");
+							const roomTypeInput = document.getElementById("roomType");
+							const assignChk = document.getElementById("assignBedChk");
+
+							/* 1️⃣ Placeholder */
+							const placeholder = document.createElement("option");
+							placeholder.value = "";
+							placeholder.textContent = "Select bed";
+							placeholder.selected = true;
+							select.appendChild(placeholder);
+
+							/* 2️⃣ Populate beds */
+							vacantRooms.forEach(r => {
+								const opt = document.createElement("option");
+								opt.value = r.bed_id;
+								opt.textContent = `${r.bed_id} (${r.sharing_type})`;
+								opt.dataset.sharing = r.sharing_type;
+								select.appendChild(opt);
+							});
+
+							/* 3️⃣ Change handler */
+							select.addEventListener("change", function () {
+								const selected = this.options[this.selectedIndex];
+
+								// No bed selected
+								if (!selected.value) {
+									roomTypeInput.value = "";
+									assignChk.checked = false;
+									assignChk.disabled = true;
+									return;
+								}
+
+								// Bed selected → checkbox mandatory
+								roomTypeInput.value = selected.dataset.sharing;
+								assignChk.disabled = false;
+								assignChk.checked = true;
+							});
+
+
+							
+
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "Action failed");
+						}
+					});					
+					document.getElementById("actionPaymentLabel").textContent =
+					action_dataset_info.name +'-'+action_dataset_info.guest_id ;
+					// document.getElementById("actionModal").classList.add("active");
+					// Fill table
+					// Fill table
+					$("#gd_guest_id").text(action_dataset_info.guest_id || "-");
+					$("#gd_name").text(action_dataset_info.name || "-");
+					$("#gd_bed").text(action_dataset_info.bed_no || "-");
+					$("#gd_state").html(`<span class="badge bg-success">${action_dataset_info.state}</span>`);					
+
+					$("#gd_sharing").text(tabsInput?.sharing_type || "-");
+					$("#gd_amount").html(`₹ ${tabsInput?.amount}`);
+					$("#gd_security").html(`₹ ${tabsInput?.security_amount}`);
+
+					$("#guestDetailsLoader").addClass("d-none");
+					$("#guestDetailsTable").removeClass("d-none");
+
+			}
+		});
+
+  
+		const bedSelect = document.getElementById("vacantRoomSelect");
+		const assignChk = document.getElementById("assignBedChk");
+		const assignDate = document.getElementById("assignDate");
+		const assignDateError = $("#assignDateError");
+
+		/* Bed selection logic */
+		bedSelect.addEventListener("change", function () {
+			if (!this.value) {
+				assignChk.checked = false;
+				assignChk.disabled = true;
+				assignDate.value = "";
+				assignDate.disabled = true;
+				assignDateError.addClass("d-none");
+				return;
+			}
+
+			// bed selected
+			assignChk.disabled = false;
+			assignChk.checked = true;
+			assignDate.disabled = false;
+		});
+
+		/* Checkbox toggle */
+		assignChk.addEventListener("change", function () {
+			if (!this.checked) {
+				assignDate.value = "";
+				assignDate.disabled = true;
+				assignDateError.addClass("d-none");
+			} else {
+				assignDate.disabled = false;
+			}
+		});
+
+ 
+ 
+ </script>
+
+
+<!-- Wizard: Lounch and Validate -->
+<script>
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".action-btn")) {
+
+    const btn = e.target.closest(".action-btn");
+    const info = JSON.parse(btn.getAttribute("data-info"));
+
+    // OPTIONAL: store selected guest info
+    window.currentInitiateGuest = info;
+
+    // Open modal
+    const modal = new bootstrap.Modal(
+      document.getElementById("initiateModal")
+    );
+	resetWizard();
+    modal.show();
+
+    // Reset wizard to step 1
+    $('#init_wizard').steps('reset');
+  }
+});
+
+
+function validateRoomAndBedMatch() {
+    const errorDiv = $("#bedSharingError");
+    errorDiv.addClass("d-none");
+
+    // selected room type (from cards)
+    const selectedRoom = $("#roomTypeContainer .room-card.active .room-title").text().trim();
+
+    // selected bed sharing type
+    const bedSelect = document.getElementById("vacantRoomSelect");
+    const opt = bedSelect.options[bedSelect.selectedIndex];
+
+    // if bed not selected → no error
+    if (!opt || !opt.value) return true;
+
+    const bedSharing = opt.dataset.sharing;
+
+    if (selectedRoom !== bedSharing) {
+        errorDiv.removeClass("d-none");
+        return false;
+    }
+
+    return true;
+}
+function getCurrentYearMonth() {
+			const d = new Date();
+			const year = d.getFullYear();
+			const month = String(d.getMonth() + 1).padStart(2, "0");
+			return `${year}-${month}`;
+		}
+
+function resetWizard() {
+
+    /* ===============================
+       1. Reset ALL forms inside wizard
+       =============================== */
+    document.querySelectorAll(".step-tab-panel form").forEach(form => {
+        form.reset();
+    });
+
+    /* ===============================
+       2. Clear dynamically generated HTML
+       =============================== */
+    document.getElementById("roomTypeContainer")?.replaceChildren();
+    document.getElementById("vacantRoomSelect")?.replaceChildren();
+    document.getElementById("bedContainer")?.replaceChildren();
+
+    /* ===============================
+       3. Reset dropdowns manually
+       =============================== */
+    $("select").each(function () {
+        this.selectedIndex = 0;
+    });
+
+    /* ===============================
+       4. Clear summary section
+       =============================== */
+    //$("#frmSummary").html("");
+    $("#sumGuestName, #sumRoomType, #sumBed, #sumDues, #sumPayment, #sumSecurity")
+        .text("");
+    $("#sumDues").text("0");
+
+    /* ===============================
+       5. Reset checkboxes
+       =============================== */
+    $("#activateUserChk").prop("checked", true);
+    $("#emailUserChk").prop("checked", false);
+    $("#payApprovalChk").prop("checked", false);
+
+
+    /* ===============================
+       6. Clear inline validation errors
+       =============================== */
+    $(".is-invalid").removeClass("is-invalid");
+    $(".invalid-feedback").remove();
+
+    /* ===============================
+       7. Hide confirmation dialog
+       =============================== */
+    $("#wizconfirmBar").addClass("d-none").removeData("summary");
+
+    /* ===============================
+       8. Reset wizard to FIRST step
+       =============================== */
+    if ($("#wizard").data("smartWizard")) {
+        $("#wizard").smartWizard("reset");
+    }
+
+    console.log("Wizard fully reset");
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+<!-- ACTION: Initate-Payment/Refund(Moveout) -->
+<script>	
+		
+		let im_tabsInput;
+		let im_action_dataset_info;
+		// open Initate-Moveout modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("moveout-btn")) {
+					im_action_dataset_info = JSON.parse(e.target.dataset.info);
+					let url = "/rentalmonth/onloadaction";   // change to actual API later
+					let data = {
+						guest_id: im_action_dataset_info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							if (!dataout.records || dataout.records.length === 0) {
+								return;
+							}
+							im_tabsInput = dataout.records[0];
+							const section1 = $("#tabs-2");
+							$("#tabs").tabs("option", "active", 1);
+							section1.find(".security-paid").val(im_tabsInput.security_amount).trigger("input");
+							section1.find(".rent-paid").val(im_tabsInput.amount).trigger("input");
+
+
+							section1.find(".refund-security").val(0).trigger("input");
+							section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							// section1.find(".refund-rent").val(0).trigger("input");
+							section1.find(".paid-by").val(im_action_dataset_info.name).trigger("input");
+							section1.find(".payment-mode").val("UPI").trigger("change");
+							section1.find(".trx-id").val('').trigger("input");
+							section1.find(".paymoveout-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+							$("#tabs").tabs("option", "active", 0);
+							const section = $("#tabs-1");
+							// section.find(".pay-rent").val(0).trigger("input");
+							// section.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							// section.find(".paid-by").val(im_action_dataset_info.name).trigger("input");
+							// section.find(".payment-mode").val("UPI").trigger("change");
+							// section.find(".trx-id").val('').trigger("input");
+							// section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
+
+							handleTabsByStatus(im_action_dataset_info.status);		
+
+
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "Action failed");
+						}
+					});					
+					document.getElementById("actionPaymentLabel").textContent =
+						im_action_dataset_info.name +'-'+im_action_dataset_info.guest_id ;
+					document.getElementById("actionModal").classList.add("active");
+					const section1 = $("#tabs-2");
+					$("#tabs").tabs("option", "active", 1);
+					section1.find(".refund-security").val(0).trigger("input");
+					section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+					// section1.find(".refund-rent").val(0).trigger("input");
+					section1.find(".paid-by").val(im_action_dataset_info.name).trigger("input");
+					section1.find(".payment-mode").val("UPI").trigger("change");
+					section1.find(".trx-id").val('').trigger("input");
+					section1.find(".paymoveout-month-year").val(getCurrentYearMonth()).trigger("change");
+
+
+					$("#tabs").tabs("option", "active", 0);
+					const section = $("#tabs-1");
+					// section.find(".pay-rent").val(0).trigger("input");
+					// section.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+					// section.find(".paid-by").val(im_action_dataset_info.name).trigger("input");
+					// section.find(".payment-mode").val("UPI").trigger("change");
+					// section.find(".trx-id").val('').trigger("input");
+					// section.find(".payinitate-month-year").val(getCurrentYearMonth()).trigger("change");
+
+					handleTabsByStatus(im_action_dataset_info.status);						
+
+
+
+					let html = '';
+					// Put same content in both tabs
+					$("#tab1-info").html(html);
+					$("#tab2-info").html(html);
+
+			}
+		});
+
+		// close Initate-Moveout modal
+		function closeActionModal() {
+			document.getElementById("actionModal").classList.remove("active");
+		}
+
+		// action handler
+		function doAction(type) {
+			console.log("Action:", type, "for payment:", currentPayment);
+
+			// You can plug API later
+			alert(`Action: ${type}\nPayment ID: ${currentPayment}`);
+
+			closeActionModal();
+		}
+
+		$(function () {
+
+			// Initialize tabs with AJAX loading
+				$("#tabs").tabs({
+					activate: function (event, ui) {
+						const tabId = ui.newPanel.attr("id");
+
+						// ✅ Run only for specific tab
+						if (tabId === "tabs-1") {
+
+							fetchDues({
+								guest_id: im_action_dataset_info.guest_id,
+								year: new Date().getFullYear(),
+								month: new Date().getMonth() + 1,
+								due_type_id: 1
+							})
+							.then(data => {
+								renderDuesSummary(data);
+							})
+							.catch(err => {
+								$("#payment-dues-summary").html(
+									`<div class="text-danger">${err.message}</div>`
+								);
+							});
+						}
+					}
+				});
+			
+		});
+
+		let pendingAction = null;
+		let pendingBtn = null;
+		function renderDuesSummary(data) {
+			const _data=data.data;
+			const _summary=data.summary;
+			if (!_data  || _data.length === 0) {
+				$("#payment-dues-summary").html("<p>No dues found.</p>");
+				return;
+			}
+
+			const d = _summary;
+
+		const html = `
+			<table class="table table-sm table-bordered mb-0">
+			<tr>
+				<th>Guest</th>
+				<td> ${im_action_dataset_info.name},${im_action_dataset_info.guest_id}</td>
+			</tr>
+			<tr>
+				<th>Total Due</th>
+				<td>₹ ${d.total_due_amount}</td>
+			</tr>
+			<tr>
+				<th>Total Paid</th>
+				<td>₹ ${d.total_amount_paid}</td>
+			</tr>
+			<tr>
+				<th>Balance</th>
+				<td class="${d.total_balance > 0 ? 'text-danger' : 'text-success'}">
+				₹ ${d.total_balance}
+				</td>
+			</tr>
+			<tr>
+				<th>Security</th>
+				<td>₹ ${d.total_security_paid}</td>
+			</tr>
+			</table>
+		`;
+
+
+			$("#payment-dues-summary").html(html);
+		}
+
+		function validateSectionAction(section) {
+			let valid = true;
+
+			// 🔹 1. REQUIRED FIELDS
+			section.find(".required").each(function () {
+				const val = $(this).val()?.trim();
+
+				if (!val) {
+					$(this).addClass("is-invalid");
+					valid = false;
+				} else {
+					$(this).removeClass("is-invalid");
+				}
+			});
+
+			// 🔹 2. AMOUNT FIELDS (>= 0 allowed)
+			section.find(".amount").each(function () {
+				const raw = $(this).val();
+				const value = parseFloat(raw);
+
+				if (raw !== "" && (isNaN(value) || value < 0)) {
+					$(this).addClass("is-invalid");
+					valid = false;
+				} else {
+					$(this).removeClass("is-invalid");
+				}
+			});
+
+			// 🔹 3. BUSINESS RULE:
+			// At least ONE of pay-rent or pay-security must be > 0
+			// const payRentEl = section.find(".pay-rent");
+			// const paySecurityEl = section.find(".pay-security");
+
+			// if (payRentEl.length && paySecurityEl.length) {
+			// 	const rent = parseFloat(payRentEl.val()) || 0;
+			// 	const security = parseFloat(paySecurityEl.val()) || 0;
+
+			// 	if (rent <= 0 && security <= 0) {
+			// 		payRentEl.addClass("is-invalid");
+			// 		paySecurityEl.addClass("is-invalid");
+			// 		valid = false;
+			// 	} else {
+			// 		payRentEl.removeClass("is-invalid");
+			// 		paySecurityEl.removeClass("is-invalid");
+			// 	}
+			// }
+
+			// 🔹 4. Enable / Disable OK button
+			section.find(".confirm-action").prop("disabled", !valid);
+
+			return valid;
+		}
+
+		// Live validation on input/change
+
+		$(document).on(
+			"input change",
+			".refund-section input, .refund-section  select",
+			function () {
+				const section = $(this).closest(".refund-section");
+				validateSectionAction(section);
+			}
+		)
+		
+		$(document).on("click", ".confirm-action", function () {
+			
+			pendingAction = $(this).data("action");
+			pendingBtn = this;
+			const section = $(this).closest(".refund-section");
+
+			if (!validateSectionAction(section)) {
+			alert("⚠️ Please fill all required fields with valid values");
+			section.find(".is-invalid").first().focus();
+			return;
+			}			
+			const messages = {
+				initiate_ok: "Initialize guest with this payment?",
+				moveout_ok: "Clear and close account?"
+			};
+
+			$("#confirmText").text(messages[pendingAction] || "Are you sure?");
+			$("#confirmBar").removeClass("d-none");
+		});
+
+		$("#confirmNo").on("click", function () {
+			$("#confirmBar").addClass("d-none");
+			pendingAction = null;
+			pendingBtn = null;
+		});
+
+		$("#confirmYes").on("click", function () {
+			$("#confirmBar").addClass("d-none");
+
+			if (!pendingAction || !pendingBtn) return;
+			handleActionButton(pendingAction, pendingBtn);
+
+			pendingAction = null;
+			pendingBtn = null;
+		});
+		function handleTabsByStatus(status) {
+			if (status === "active" || status === "inactive") {
+ 				// $('#tabs ul li:has(a[href="#tabs-1"])').hide();
+				$("#tabs").tabs("option", "active", 1);
+				// // remove Initiate tab
+				// $('#tabs ul li[data-tab="initiate"]').remove();
+
+				// // remove Initiate content
+				// $('#tabs-1').remove();
+
+				// // refresh jQuery UI tabs
+				// $("#tabs").tabs("refresh");
+
+				// // make sure Move Out is active
+				// $("#tabs").tabs("option", "active", 1);
+			}
+			else
+			{
+				$('#tabs ul li:has(a[href="#tabs-1"])').show();
+			}
+		}
+
+		function handleActionButton(action, btn) {
+			const section = $(btn).closest(".refund-section");
+			//const rentPaymentId = currentPayment;   // already global
+			const approver = CURRENT_USER;           // already global
+			let url = "";
+			let data = {
+				created_by: CURRENT_USER,
+				guest_id: im_action_dataset_info.guest_id,
+			};
+			switch (action) {
+
+				case "initiate_ok":
+					url = "/rentalmonth/payInitialrent";
+
+//					data.security_due  = section.find(".security-due").val();
+					// data.rent_dueable  = section.find(".rent-due").val();
+					// data.pay_security  = section.find(".pay-security").val();
+					// data.pay_rent      = section.find(".pay-rent").val();
+					// data.trx_id        = section.find(".trx-id").val();
+					// data.pay_month_year = section.find(".payinitate-month-year").val();					
+					// data.pay_date      = section.find(".pay-date").val();
+					// data.payment_mode  = section.find(".payment-mode").val();
+					// data.paid_by       = section.find(".paid-by").val();
+					break;
+
+				case "moveout_ok":
+					url = "/rentalmonth/clear_moveout";
+					// data.security_paid   = section.find(".security-paid").val();
+					// data.refund_amount   = section.find(".rent-paid").val();
+					// data.refund_security = section.find(".refund-security").val();
+					// data.refund_rent     = section.find(".refund-rent").val();
+					// data.trx_id          = section.find(".trx-id").val();
+					// data.pay_month_year = section.find(".paymoveout-month-year").val();					
+					// data.pay_date        = section.find(".pay-date").val();
+					// data.payment_mode    = section.find(".payment-mode").val();
+					// data.paid_by         = section.find(".paid-by").val();
+					data.refund_amount = section.find(".refund-security").val();
+					data.trx_id          = section.find(".trx-id").val();
+					data.pay_month_year = section.find(".paymoveout-month-year").val();					
+					data.pay_date        = section.find(".pay-date").val();
+					data.payment_mode    = section.find(".payment-mode").val();
+					data.paid_by         = section.find(".paid-by").val();					
+					
+					break;
+
+				default:
+					console.error("Unknown action:", action);
+					return;
+			}
+
+			console.log("Submitting:", data);
+
+			$.ajax({
+				url: API_BASE_URL + url,
+				method: "POST",   // change to POST later
+				data: data,
+				success: function () {
+					alert("Action completed successfully");
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "Action failed");
+				}
+			});
+		}
+		
+
+		async function fetchDues(filters) {
+			const params = new URLSearchParams(filters).toString();
+			const response = await fetch(
+				`${API_BASE_URL}/rentalmonth/dues-of-guest?${params}`,
+				{
+					method: "GET",
+					headers: {
+						"Accept": "application/json"
+					}
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch dues");
+			}
+
+			return await response.json();
+		}
+
+		// // ✅ Example usage
+		// fetchDues({
+		// 	guest_id: "20251128171314",
+		// 	year: 2024,
+		// 	month: 1,
+		// 	due_type_id: 1
+		// })
+		// .then(data => console.log("Dues:", data))
+		// .catch(err => console.error("Error:", err));
+
+</script>
+
+
+
+ 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

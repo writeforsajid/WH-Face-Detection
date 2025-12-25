@@ -301,7 +301,19 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS email_logs (
 
 
 
-
+#-- 5) Trigger: When a leave is APPROVED -> populate leave_calendar_cache (expand dates)
+#--    and when a leave is changed to non-approved (rejected/cancelled) remove those cache rows.
+#-- Note: Uses WITH RECURSIVE to generate date range.
+cursor.execute('''
+CREATE TRIGGER limit_guest_faces
+BEFORE INSERT ON guest_faces
+WHEN (
+    SELECT COUNT(*) FROM guest_faces WHERE guest_id = NEW.guest_id
+) >= 3
+BEGIN
+    SELECT RAISE(ABORT, 'Maximum 3 encodings allowed per guest');
+END;
+''')
 
 
 
