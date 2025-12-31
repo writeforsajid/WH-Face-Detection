@@ -236,8 +236,8 @@
           processData: false,
           contentType: false,
 
-          success: function () {
-            alert("Contact updated successfully");
+          success: function (data) {
+            alert(" updated successfully");
             loadGuests(currentPage);
             bootstrap.Modal.getInstance(document.getElementById("contactModal")).hide();
           },

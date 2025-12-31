@@ -1,6 +1,6 @@
 from db.database import get_connection
 import json
-
+from datetime import datetime
 
 # def search( start_date, end_date, name=None, text=None):
 #         if not start_date or not end_date:
@@ -106,6 +106,44 @@ def search(startDate, endDate, guest_id=None, name=None, text=None, page=1, page
             "total": total,
             "data": data
         }
+
+    finally:
+        conn.close()
+
+def normalize_timestamp(ts: str | None):
+    try:
+        return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S") \
+                        .strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def add_guest_metadata(meta: dict):
+    guest_id = meta.get("guest_id")
+    name = meta.get("name")
+    description = meta.get("description")
+    timestamp = meta.get("timestamp")
+
+    if not guest_id or not name:
+        raise ValueError("guest_id and name are required.")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    timestamp = normalize_timestamp(timestamp)
+    try:
+        cur.execute(
+            """
+            INSERT INTO guest_metadata (guest_id, name, description, timestamp)
+            VALUES (?, ?, ?, ?)
+            """,
+            (guest_id, name, description, timestamp),
+        )
+        conn.commit()
+        return{
+                    "lastrowid": cur.lastrowid,
+                    "status": 'success'
+                }
 
     finally:
         conn.close()

@@ -161,6 +161,21 @@ def add_update_contact(
         raise HTTPException(status_code=404, detail="User data not found")
     return result
 
+
+@router.post("/harddelete")
+def hard_delete_guest(
+    guest_id: str = Form(...)
+):
+    try:
+        deleted = guest_service.hard_delete_guest(guest_id)
+
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Guest not found")
+        return {"status": "success", "message": "Guest deleted successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/history")
 def get_history_records(
     
@@ -214,6 +229,8 @@ def update_guest(meta: dict, authorization: str = Header(None)):
 
 
 
+
+
 @router.get("/validateemail")
 def get_guest_details(guest_email: str):
 
@@ -224,6 +241,9 @@ def get_guest_details(guest_email: str):
     
     
     return result
+
+
+
 
 @router.post("/{guest_id}/change_password")
 async def change_password(guest_id: str,

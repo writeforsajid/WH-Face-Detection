@@ -30,6 +30,7 @@ from fastapi import APIRouter
 class PayInitialRentRequest(BaseModel):
     created_by: str
     guest_id: str
+    guest_name: str
 
     rent_dueable: float
     security_due: float

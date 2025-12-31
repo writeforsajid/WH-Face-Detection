@@ -216,12 +216,15 @@
 							<td>
 								<button class="btn btn-sm btn-info me-1" 
 									onclick="openContactModal('${r.guest_id}', '${r.name}', '${r.status}', '${r.bed_no}')">
-									<i class="bi bi-telephone-plus"></i> Cont
+									<i class="bi bi-telephone-plus"></i> C
 								</button>
 
-								<button class="btn btn-danger btn-sm" onclick="deleteGuest('${r.guest_id}')">
-									<i class="bi bi-trash"></i> Del
+								<button class="btn btn-warning btn-sm" onclick="deleteGuest('${r.guest_id}')">
+									<i class="bi bi-trash"></i> D
 								</button>
+								<button class="btn btn-danger btn-sm" onclick="harddeleteguest('${r.guest_id}')">
+									<i class="bi bi-trash"></i> _D
+								</button>								
 								<button 
             class="btn btn-success btn-sm paydue-btn ${isJustRegistered ? 'disabled' : ''}"
             ${isJustRegistered ? 'disabled title="Payment disabled for blank status"' : ''}
@@ -234,7 +237,7 @@
 										status: r.status
 									})}'
 								>
-									Payment
+									Pay
 								</button>
 								${isJustRegistered ? `<button class="btn btn-warning btn-sm action-btn" data-info='${JSON.stringify({
 										guest_id: r.guest_id,
@@ -245,7 +248,7 @@
 										status: r.status
 									})}'
 								>
-									Initate
+									Init
 								</button>` : ''}
 
 								${!isJustRegistered ? `<button class="btn btn-dark btn-sm moveout-btn" data-info='${JSON.stringify({
@@ -257,7 +260,7 @@
 										status: r.status
 									})}'
 								>
-									Moveout
+									M-out
 								</button>` : ''}							
 							
 							</td>
@@ -1092,7 +1095,7 @@
 
 						</ul>
 						<!-- jQuery UI will load the tab content here -->
-						<div id="pdtabs-1" class="refund-section guest-refund">
+						<div id="pdtabs-1" class="pd-refund-section pd-guest-refund">
 
 							<strong>Payment collection</strong>
 
@@ -1104,7 +1107,7 @@
 
 								<input type="text" class="form-control form-control-sm mb-2 trx-id required"
 										placeholder="Transection amount ID" />
-								<input type="month"  class="form-control form-control-sm mb-2 pay-month-year"  min="1990-01" max="2030-12">
+								<input type="month"  class="form-control form-control-sm mb-2 pay-month-year required"  min="1990-01" max="2030-12" >
 								<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
 
 								<select class="form-control mb-2 payment-mode required">
@@ -1131,7 +1134,7 @@
 						
 
 
-						<div id="pdtabs-2" class="refund-section owner-refund">
+						<div id="pdtabs-2" class="pd-refund-section pd-owner-refund">
 
 							<div class="row g-2">
 
@@ -1153,10 +1156,10 @@
 										<option value="OTHER">Other</option>
 									</select>
 
-									<input type="text" class="form-control form-control-sm mb-2 dues-amount amount"
+									<input type="text" class="form-control form-control-sm mb-2 dues-amount required amount"
 											placeholder="Amount" />
 
-									<input type="month" class="form-control form-control-sm mb-2 due-month-year"
+									<input type="month" class="form-control form-control-sm mb-2 required due-month-year"
 											min="1990-01" max="2030-12">
 
 									<input type="date" class="form-control form-control-sm mb-2 due-date required" />
@@ -1390,9 +1393,8 @@
 		$("#pd-dues-summary").html(html);
 		}
 
-		function validateSection(section) {
+		function pdvalidateSection(section) {
 			let valid = true;
-
 			section.find(".required").each(function () {
 			const value = $(this).val().trim();
 
@@ -1453,19 +1455,20 @@
 		}
 
 		// Live validation on input/change
-		$(document).on("input change", ".refund-section input, .refund-section select", function () {
-			const section = $(this).closest(".refund-section");
-			validateSection(section);
+		$(document).on("input change", ".pd-refund-section input, .pd-refund-section select", function () {
+			const section = $(this).closest(".pd-refund-section");
+			
+			pdvalidateSection(section);
 		});
 
 		
 		$(document).on("click", ".pdconfirm-paydue", function () {
 			pendingpaydue = $(this).data("paydue");
 			pendingBtn = this;
+			debugger;
+			const section = $(this).closest(".pd-refund-section");
 
-			const section = $(this).closest(".refund-section");
-
-			if (!validateSection(section)) {
+			if (!pdvalidateSection(section)) {
 			alert("⚠️ Please fill all required fields with valid values");
 			section.find(".is-invalid").first().focus();
 			return;
@@ -1478,8 +1481,8 @@
 			}
 
 			const messages = {
-				payment_ok: "Initialize guest with this payment?",
-				dues_ok: "Add new dues to account?"
+				payment_ok: "Pay rent of guest '"+infoFromBaseRow.name +"''.?",
+				dues_ok: "Add new dues to account of '"+infoFromBaseRow.name +"''.?"
 			};
 
 			$("#pdconfirmText").text(messages[pendingpaydue] || "Are you sure?");
@@ -1504,7 +1507,7 @@
 		});
 
 		function handleRefundpaydue(paydue, btn) {
-			const section = $(btn).closest(".refund-section");
+			const section = $(btn).closest(".pd-refund-section");
 			//const rentPaymentId = currentPayment;   // already global
 			const approver = CURRENT_USER;           // already global
 			
@@ -1602,7 +1605,33 @@
         }
       }
 
-      // ------------------- Active/Inactive Guest -------------------
+  
+	function harddeleteguest(id) {
+        if (confirm("Delete this guest?")) {
+
+			const formData = new FormData();
+			formData.append("guest_id", id);
+
+			$.ajax({
+            url: `${API_BASE_URL}/guests/harddelete`,
+            type: "POST",
+			data: formData,
+			processData: false,   // 🔴 required
+			contentType: false,   // 🔴 required			
+            success: function () {
+              loadData();
+            },
+            error: function (xhr) {
+              alert(
+                "Error deleting guest: " +
+                  (xhr.responseJSON?.detail || "Unknown error")
+              );
+            },
+          });
+        }
+      }
+
+	  // ------------------- Active/Inactive Guest -------------------
     //   function toggleGuestStatus(guest_id) {
     //     $.ajax({
     //       url: `${API_BASE_URL}/guests/${guest_id}/toggle`,
@@ -1767,7 +1796,8 @@
 			activate_user: $("#activateUserChk").is(":checked"),
 			send_email: $("#emailUserChk").is(":checked"),
 			created_by: CURRENT_USER,
-			guest_id: action_dataset_info.guest_id,			
+			guest_id: action_dataset_info.guest_id,	
+			guest_name: action_dataset_info.name,		
 			rent_dueable  : $("#frmDue input[name='rent_due']").val() || "0",
 			security_due : $("#frmDue input[name='security_due']").val() || "0",			
 			pay_security  : section.find(".pay-security").val()|| "0",

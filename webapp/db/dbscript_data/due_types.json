@@ -34,5 +34,9 @@
   {
     "code": "OTHER",
     "name": "Other"
+  },
+  {
+    "code": "ADJUSTED",
+    "name": "Full and Final"
   }
 ]

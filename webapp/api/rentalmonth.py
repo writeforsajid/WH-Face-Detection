@@ -345,3 +345,66 @@ def duesofguest(
 
 
 
+@router.get("/list_guest_payments")
+def list_guest_payments(
+    guest_id: str = Query(...)
+):
+   
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+
+    try:
+
+        # start_date = datetime.fromisoformat(start_date).date()
+        # end_date = datetime.fromisoformat(end_date).date()
+        return rentalmonth_service.list_guest_payments( 
+        guest_id
+    )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not result:
+        raise HTTPException(status_code=404, detail="Attendance data not found")
+    return result
+
+
+
+
+@router.get("/rent_receipt")
+def rent_receipt(
+    rent_payment_id: str = Query(...)
+):
+    """
+    Fetch attendance records between given dates with pagination.
+    """
+
+    try:
+        return rentalmonth_service.get_rent_receipt(rent_payment_id) 
+        # start_date = datetime.fromisoformat(start_date).date()
+        # end_date = datetime.fromisoformat(end_date).date()
+        return  {
+  "rent_payment_id": 1134,
+  "amount": 12000,
+  "tenant_name": "Rahul Sharma",
+  "address": "B-23A, Noor Nagar Ext, Jamia Nagar, Okhla",
+  "payment_date": "2025-09-01",
+  "landlord_name": "Sajida",
+  "dues": [
+    {
+      "due_type": "Monthly Rent",
+      "period_from": "01-08-2025",
+      "period_to": "31-08-2025",
+      "settled_amount": 6000
+    },
+    {
+      "due_type": "Monthly Rent",
+      "period_from": "01-09-2025",
+      "period_to": "30-09-2025",
+      "settled_amount": 6000
+    }
+  ]
+}
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

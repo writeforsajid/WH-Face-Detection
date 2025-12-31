@@ -26,7 +26,7 @@ from utilities.crypto_manager import crypto
 
 class PrecessingStrategy(ABC):
     @abstractmethod
-    def execute(self, array):
+    def execute(self, context):
         pass
 
 class PrecessingContext:
@@ -266,100 +266,100 @@ class RegisterUserInDataBase(PrecessingStrategy):
     # ------------------------------------------------------------
     # MAIN EXECUTE() METHOD
     # ------------------------------------------------------------
-def execute(self, context):
-    print("[START] Register user in DB...")
+    def execute(self, context):
+        print("[START] Register user in DB...")
 
-    data = context.data
+        data = context.data
 
-    # ----------------------------
-    # Validation
-    # ----------------------------
-    if not data.get("confirmed"):
-        print("[SKIP] Guest not confirmed.")
-        return
-
-    encodings = data.get("face_encodings", [])
-    if not encodings or len(encodings) < 2:
-        print("[SKIP] Need at least 2 face encodings.")
-        return
-
-    valid_encodings = [e for e in encodings if isinstance(e, list) and len(e) > 0]
-    if len(valid_encodings) < 2:
-        print("[SKIP] Not enough valid encodings.")
-        return
-
-    # 🔒 Enforce MAX 3 encodings
-    valid_encodings = valid_encodings[:3]
-
-    # ----------------------------
-    # STEP 6 (MOVED FIRST): Cleanup JSON + folder
-    # ❗ If cleanup fails → STOP execution
-    # ----------------------------
-    try:
-        if os.path.exists(context.json_filepath):
-            os.remove(context.json_filepath)
-
-        output_folder = os.path.join(context.base_path, context.code)
-        if os.path.exists(output_folder):
-            shutil.rmtree(output_folder)
-
-        print(f"[CLEANUP] Deleted JSON & folder successfully")
-
-    except Exception as e:
-        print(f"[ABORT] Cleanup failed. DB insert skipped → {e}")
-        return   # ⛔ DO NOT TOUCH DB
-
-    # ----------------------------
-    # DB Setup (only after cleanup success)
-    # ----------------------------
-    DB_PATH = os.getenv("DB_PATH") or "./../data/WhiteHouse.db"
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    try:
         # ----------------------------
-        # BEGIN ATOMIC TRANSACTION
+        # Validation
         # ----------------------------
-        cursor.execute("BEGIN")
+        if not data.get("confirmed"):
+            print("[SKIP] Guest not confirmed.")
+            return
 
-        # Step 3: Insert Guest
-        new_guest_id = datetime.now().strftime("%Y%m%d%H%M%S")
+        encodings = data.get("face_encodings", [])
+        if not encodings or len(encodings) < 2:
+            print("[SKIP] Need at least 2 face encodings.")
+            return
 
-        guest_id = self._insert_guest(
-            cursor,
-            new_guest_id,
-            data.get("guest_name") or "Unknown",
-            data.get("guest_type") or "Unknown",
-            data.get("comment") or "N/A",
-            data.get("email") or "N/A",
-            data.get("phone") or "N/A"
-        )
+        valid_encodings = [e for e in encodings if isinstance(e, list) and len(e) > 0]
+        if len(valid_encodings) < 2:
+            print("[SKIP] Not enough valid encodings.")
+            return
 
-        # Step 4: Insert Face Encodings (MAX 3)
-        for enc in valid_encodings:
-            enc_json = json.dumps(enc)
-            cursor.execute("""
-                INSERT INTO guest_faces (guest_id, encoding)
-                VALUES (?, ?)
-            """, (guest_id, enc_json))
+        # 🔒 Enforce MAX 3 encodings
+        valid_encodings = valid_encodings[:3]
 
-        conn.commit()
+        # ----------------------------
+        # STEP 6 (MOVED FIRST): Cleanup JSON + folder
+        # ❗ If cleanup fails → STOP execution
+        # ----------------------------
+        try:
+            if os.path.exists(context.json_filepath):
+                os.remove(context.json_filepath)
 
-        # Step 5: Reload memory
-        face_recognition_worker.load_known_faces()
+            output_folder = os.path.join(context.base_path, context.code)
+            if os.path.exists(output_folder):
+                shutil.rmtree(output_folder)
 
-        print(f"[SUCCESS] Registered guest: {guest_id}")
-        print(f"[SUCCESS] Inserted {len(valid_encodings)} encodings.")
+            print(f"[CLEANUP] Deleted JSON & folder successfully")
 
-    except sqlite3.IntegrityError as e:
-        conn.rollback()
-        print(f"[ERROR] Encoding limit violated: {e}")
+        except Exception as e:
+            print(f"[ABORT] Cleanup failed. DB insert skipped → {e}")
+            return   # ⛔ DO NOT TOUCH DB
 
-    except Exception as e:
-        conn.rollback()
-        print(f"[ERROR] Failed to register guest: {e}")
+        # ----------------------------
+        # DB Setup (only after cleanup success)
+        # ----------------------------
+        DB_PATH = os.getenv("DB_PATH") or "./../data/WhiteHouse.db"
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
 
-    finally:
-        conn.close()
+        try:
+            # ----------------------------
+            # BEGIN ATOMIC TRANSACTION
+            # ----------------------------
+            cursor.execute("BEGIN")
 
-    print("[DONE] Register user in DB.")
+            # Step 3: Insert Guest
+            new_guest_id = datetime.now().strftime("%Y%m%d%H%M%S")
+
+            guest_id = self._insert_guest(
+                cursor,
+                new_guest_id,
+                data.get("guest_name") or "Unknown",
+                data.get("guest_type") or "Unknown",
+                data.get("comment") or "N/A",
+                data.get("email") or "N/A",
+                data.get("phone") or "N/A"
+            )
+
+            # Step 4: Insert Face Encodings (MAX 3)
+            for enc in valid_encodings:
+                enc_json = json.dumps(enc)
+                cursor.execute("""
+                    INSERT INTO guest_faces (guest_id, encoding)
+                    VALUES (?, ?)
+                """, (guest_id, enc_json))
+
+            conn.commit()
+
+            # Step 5: Reload memory
+            face_recognition_worker.load_known_faces()
+
+            print(f"[SUCCESS] Registered guest: {guest_id}")
+            print(f"[SUCCESS] Inserted {len(valid_encodings)} encodings.")
+
+        except sqlite3.IntegrityError as e:
+            conn.rollback()
+            print(f"[ERROR] Encoding limit violated: {e}")
+
+        except Exception as e:
+            conn.rollback()
+            print(f"[ERROR] Failed to register guest: {e}")
+
+        finally:
+            conn.close()
+
+        print("[DONE] Register user in DB.")

@@ -1,4 +1,5 @@
 from Designs.Chain_of_Responsibility import Task 
+from services.google_contact_service import add_or_edit_contact
 from services.Biz_Log import PaymentActionService as pas 
 from datetime import datetime
 from fastapi import  HTTPException
@@ -208,7 +209,21 @@ class AssignBed(Task):
             "INSERT INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
             (guest_id, bed_id, assign_date)
         )
-        
+        cur.execute(
+            """
+            INSERT INTO guest_metadata (guest_id, name, description, timestamp)
+            VALUES (?, ?, ?, ?)
+            """,
+            (guest_id, 'registered', bed_id + ' is registered', assign_date)
+        )
+        cur.execute(
+            """
+            INSERT INTO guest_metadata (guest_id, name, description, timestamp)
+            VALUES (?, ?, ?, ?)
+            """,
+            (guest_id, 'bed assigned', bed_id + ' is assigned', assign_date)
+        )
+               
         # Update guest status to 'active' since they're being assigned to a bed
         cur.execute(
             "UPDATE guests SET status = 'active' WHERE guest_id = ?",
@@ -231,6 +246,24 @@ class ApprovePayment(Task):
         rent_payment_id= ctx.get("rent_payment_id")
         approver= ctx.get("created_by")
         pas.PaymentActionService.approve(cur,rent_payment_id,approver)
+
+
+class AddEditPhoneNoToContact(Task):
+    
+    def validate(self, ctx):
+       return ctx.get("guest_id") and ctx.get("guest_name")  
+
+
+    def process(self, ctx):
+        cur = ctx.get("cur")
+        guest_id = ctx.get("guest_id")
+        guest_name = ctx.get("guest_name")
+        bedNumber= ctx.get("bedNumber")
+        guest_name ="AV. "  + guest_name + " "+ bedNumber
+        add_or_edit_contact(guest_id, guest_name)
+
+
+
 
 
 

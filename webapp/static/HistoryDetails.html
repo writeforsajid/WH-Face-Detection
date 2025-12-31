@@ -29,6 +29,13 @@
 			if (window.location.port === '8000') return window.location.origin;
 			return window.location.origin;
 		})();
+		const QUERY_GUEST_ID = (function(){
+			const urlParams = new URLSearchParams(window.location.search);
+			return urlParams.get('id') || (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+			
+		})();
+
+
     	const PAGE_LIMIT = 50;   // fixed server-side page size per your request
 		let g_payload = {};
 		let g_events = [];
@@ -448,59 +455,15 @@
 								<h3>379</h3>
 								</div>
 							</div>
-							<div
+							<div 
 								class="action-card green"
-								onclick="window.location.href='/static/faq_section.html'"
+								onclick="window.location.href=`/static/rent_payment_guest.html?id=${QUERY_GUEST_ID}`"
 								style="cursor: pointer"
 							>
 								<i class="fas fa-thumbs-up"></i>
 								<div class="text">
-								<p>FAQ</p>
-								<h3>178</h3>
-								</div>
-							</div>
-							<div
-								class="action-card pink"
-								onclick="window.location.href='/static/things_to_remember.html'"
-								style="cursor: pointer"
-							>
-								<i class="fas fa-list-check"></i>
-								<div class="text">
-								<p>Remember</p>
-								<h3>22</h3>
-								</div>
-							</div>
-							<div
-								class="action-card orange"
-								onclick="window.location.href='/static/attendancedetails.html'"
-								style="cursor: pointer"
-							>
-								<i class="fas fa-user-plus"></i>
-								<div class="text">
-								<p>Attendance</p>
-								<h3>1010</h3>
-								</div>
-							</div>
-							<div
-								class="action-card cyan"
-								onclick="window.location.href='/static/logdetails.html'"
-								style="cursor: pointer"
-							>
-								<i class="fas fa-hand-pointer"></i>
-								<div class="text">
-								<p>MY LOG</p>
-								<h3>379</h3>
-								</div>
-							</div>
-							<div
-								class="action-card green"
-								onclick="window.location.href='/static/faq_section.html'"
-								style="cursor: pointer"
-							>
-								<i class="fas fa-thumbs-up"></i>
-								<div class="text">
-								<p>FAQ</p>
-								<h3>178</h3>
+								<p>Payments</p>
+								<h3>Details</h3>
 								</div>
 							</div>
 							<div

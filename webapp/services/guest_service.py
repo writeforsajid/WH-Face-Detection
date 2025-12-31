@@ -322,6 +322,100 @@ def delete_guest(guest_id: str):
 
 
 
+def hard_delete_guest(guest_id: str):
+    """
+    Deletes a guest and all associated face records from the database.
+    
+    Args:
+        guest_id (str): The unique ID of the guest to delete.
+    
+    Returns:
+        bool: True if the guest was deleted successfully, False otherwise.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # 🧹 Step 1: Delete associated face encodings first (to maintain referential integrity)
+        conn.execute("BEGIN")
+        conn.execute("PRAGMA foreign_keys = OFF")
+
+        queries = [
+            # Attendance
+            "DELETE FROM attendance_alerts WHERE guest_id = ?",
+            "DELETE FROM attendance WHERE guest_id = ?",
+
+            # Auth
+            "DELETE FROM guest_sessions WHERE guest_id = ?",
+            "DELETE FROM guest_password_resets WHERE guest_id = ?",
+            "DELETE FROM guest_auth WHERE guest_id = ?",
+
+            # Guest data
+            "DELETE FROM guest_faces WHERE guest_id = ?",
+            "DELETE FROM guest_metadata WHERE guest_id = ?",
+            "DELETE FROM guest_roles WHERE guest_id = ?",
+            "DELETE FROM guest_beds WHERE guest_id = ?",
+
+            # Leaves
+            "DELETE FROM leave_calendar_cache WHERE guest_id = ?",
+            "DELETE FROM leave_requests WHERE guest_id = ?",
+
+            "DELETE FROM email_logs WHERE guest_id = ?",
+       
+            # Rent payment chain
+            """DELETE FROM rent_approval_history
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_forward_history
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_payment_allocations
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+            """DELETE FROM rent_payment_attachments
+               WHERE rent_payment_id IN (
+                 SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
+               )""",
+
+            "DELETE FROM rent_payment_refunds WHERE guest_id = ?",
+            "DELETE FROM rent_payments WHERE guest_id = ?",
+
+            # Finance
+            "DELETE FROM dues WHERE guest_id = ?",
+            "DELETE FROM security_deposits WHERE guest_id = ?",
+            "DELETE FROM rent_change_events WHERE guest_id = ?",
+
+            # Guest
+            "DELETE FROM guests WHERE guest_id = ?"
+        ]
+
+
+
+
+        for q in queries:
+            cur.execute(q, (guest_id,))
+
+        conn.commit()
+        deleted = True
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Error deleting guest {guest_id}: {e}")
+        deleted = False
+
+
+        # 🧾 Step 3: Check if any guest record was deleted
+        deleted = cur.rowcount > 0
+
+
+    finally:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.close()
+
+    return deleted
+
+
 def toggle_guest_status(guest_id: str):
     conn = get_connection()
     cur = conn.cursor()

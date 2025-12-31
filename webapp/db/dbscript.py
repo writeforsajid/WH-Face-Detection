@@ -415,7 +415,10 @@ cursor.execute("""
     INSERT INTO appconfig (name, description)
     VALUES (?, ?)
 """, ("LOG_ITEMS", description_json))
-
+cursor.execute("""
+    INSERT INTO appconfig (name, description)
+    VALUES (?, ?)
+""", ("EMAIL_NOTIFICATION", 'on'))
 
 
 

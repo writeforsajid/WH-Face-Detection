@@ -2,6 +2,8 @@ from datetime import date
 from db.database import get_connection
 from utilities.email_service import send_email
 import asyncio
+from services.log_service import add_guest_metadata
+from datetime import datetime
 
 class RentDueEmailService:
 
@@ -13,6 +15,16 @@ class RentDueEmailService:
         cur = conn.cursor()
 
         try:
+            cur.execute(
+                "SELECT description FROM appconfig WHERE name = ?",
+                ("EMAIL_NOTIFICATION",)
+            )
+            row = cur.fetchone()
+            conn.close()
+            email_enabled==True
+            if row:
+                email_enabled = row and row[0].lower() == "on"
+
             cur.execute("""
             SELECT 
                 g.guest_id,
@@ -85,22 +97,29 @@ class RentDueEmailService:
 
             today = date.today()
 
-            for guest_id, name, email, amount in cur.fetchall():
+            for guest_id, name, email, due_amount in cur.fetchall():
                 if not email:
                     continue
 
-                await send_email(
-                    to=[email],
-                    subject=f"Rent Due till– {today.strftime('%B %Y')}",
-                    template_name="rent_due.html",
-                    template_data={
-                        "name": name,
-                        "amount": amount,
-                        "month": today.strftime('%B %Y'),
-                        "company_name": "White House residence"
-                    },
-                    guest_id=guest_id
-                )
+                if email_enabled and email:
+                    await send_email(
+                        to=[email],
+                        subject="Test Email: Please ignore", ####f"Rent Due till– {today.strftime('%B %Y')}",
+                        template_name="rent_due.html",
+                        template_data={
+                            "name": name,
+                            "amount": due_amount,
+                            "month": today.strftime('%B %Y'),
+                            "company_name": "White House residence"
+                        },
+                        guest_id=guest_id
+                    )
+                meta = {}                       # declare
+                meta["guest_id"] = guest_id
+                meta["name"] = "email_rent_due"
+                meta["description"] = "rent due for the month of " +today.strftime('%B %Y')
+                meta["timestamp"] =  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                add_guest_metadata(meta)
                 await asyncio.sleep(0.5)
 
         finally:

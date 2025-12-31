@@ -322,3 +322,5 @@ LEFT JOIN (
 ]
     }
 #b.sharing_type,b.bed_id,brp.monthly_rent,(sd.amount-sd.refunded_amount) security,(d.due_amount-d.amount_paid) balance, a.status
+
+

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rent Receipt</title>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- html2canvas & jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body { font-family: Arial, sans-serif; background: #f4f6f8; padding: 20px; }
+
+.receipt-container { width: 800px; margin: auto; background: #fff; border: 6px solid #4CAF50; padding: 30px; }
+
+h1 { color: #4CAF50; margin-bottom: 20px; }
+
+.row { font-size: 18px; line-height: 1.8; }
+
+.label { font-weight: bold; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+
+table th { background: #f0f0f0; }
+
+.footer { margin-top: 40px; display: flex; justify-content: space-between; }
+
+.signature { text-align: right; }
+
+button { margin: 20px 10px; padding: 10px 25px; font-size: 16px; background: #4CAF50; color: #fff; border: none; cursor: pointer; }
+
+button.back { background: #555; }
+
+button:hover { opacity: 0.9; }
+
+</style>
+</head>
+
+<body>
+
+<button class="back" onclick="history.back()">⬅ Back</button>
+
+<div id="receipt" class="receipt-container">
+    <h1>RENT RECEIPT</h1>
+
+    <div class="row">
+        Received a sum of <b>₹ <span id="amount"></span></b> from
+        <b><span id="tenant"></span></b> towards rent of property.
+    </div>
+
+    <div class="row">
+        <span class="label">Address:</span> <span id="address"></span>
+    </div>
+
+    <div class="row">
+        <span class="label">Payment ID:</span> <span id="paymentId"></span>
+    </div>
+
+    <!-- DUES TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Due Type</th>
+                <th>Period</th>
+                <th>Settled Amount</th>
+            </tr>
+        </thead>
+        <tbody id="duesTable"></tbody>
+    </table>
+
+    <div class="footer">
+        <div>
+            <span class="label">Payment Date:</span>
+            <span id="date"></span>
+        </div>
+
+        <div class="signature">
+            <div class="label">Signature (Landlord)</div>
+            <div id="landlord"></div>
+        </div>
+    </div>
+</div>
+
+<button id="downloadPdf">Download PDF</button>
+
+<script>
+    // Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+const API_BASE_URL = (function(){
+    const saved = localStorage.getItem('wh_api_base');
+    if (saved) return saved;
+    if (window.location.port === '8000') return window.location.origin;
+    return window.location.origin;
+})();
+/* ============================
+   FETCH RECEIPT FROM API
+============================ */
+function getQueryParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
+
+const rentPaymentId = getQueryParam("id");
+
+$(document).ready(function () {
+    if (!rentPaymentId) {
+        alert("Payment ID missing");
+        return;
+    }
+
+    $.getJSON(`${API_BASE_URL}/rentalmonth/rent_receipt?rent_payment_id=${rentPaymentId}`, function (data) {
+
+        $("#amount").text(data.amount);
+        $("#tenant").text(data.tenant_name);
+        $("#address").text(data.address);
+        $("#paymentId").text(data.rent_payment_id);
+        $("#date").text(data.payment_date);
+        $("#landlord").text(data.landlord_name);
+
+        let rows = "";
+        data.dues.forEach(d => {
+            rows += `
+                <tr>
+                    <td>${d.due_type}</td>
+                    <td>${d.period_from} to ${d.period_to}</td>
+                    <td>₹ ${d.settled_amount}</td>
+                </tr>
+            `;
+        });
+
+        $("#duesTable").html(rows);
+    });
+});
+
+/* ============================
+   PDF DOWNLOAD
+============================ */
+$("#downloadPdf").click(function () {
+    const { jsPDF } = window.jspdf;
+
+    html2canvas(document.querySelector("#receipt")).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const imgWidth = 190;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+        pdf.save("Rent_Receipt.pdf");
+    });
+});
+</script>
+
+</body>
+</html>

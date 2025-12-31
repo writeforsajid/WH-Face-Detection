@@ -3,6 +3,7 @@ import smtplib
 from email.message import EmailMessage
 from jinja2 import Environment, FileSystemLoader
 from utilities.environment_variables import load_environment
+
 load_environment("./../data/.env.webapp")
 EMAIL_TEMPLATES_PATH=os.getenv("EMAIL_TEMPLATES_PATH")
 if EMAIL_TEMPLATES_PATH is None: EMAIL_TEMPLATES_PATH = "./e-templates"
@@ -45,6 +46,7 @@ def send_email(
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login(EMAIL_USER, EMAIL_PASS)
             smtp.send_message(msg, to_addrs=recipients)
+            
 
         print("[EMAIL] Sent successfully")
 

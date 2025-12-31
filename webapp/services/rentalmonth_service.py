@@ -1069,6 +1069,7 @@ payload: rsm.PayInitialRentRequest
     ctx = TaskContext(
         created_by=payload.created_by,
         guest_id=payload.guest_id,
+        guest_name=payload.guest_name,
         rent_dueable=payload.rent_dueable,
         security_due=payload.security_due,
         pay_security=payload.pay_security,
@@ -1099,7 +1100,9 @@ payload: rsm.PayInitialRentRequest
                     rpir.SecurityDueTask(                   # Add/Update SECURITY DUES
                             rpir.RentPaymentTask(
                                 rpir.AssignBed(
-                                  rpir.ApprovePayment()
+                                  rpir.ApprovePayment(
+                                      rpir.AddEditPhoneNoToContact()
+                                  )
                             )
                          )
                     )
@@ -1134,258 +1137,7 @@ payload: rsm.PayInitialRentRequest
     finally:
         conn.close()
 
-    conn = get_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute("BEGIN")
-        # 1️⃣ Extract year & month
-        try:
-            year, month = map(int, pay_month_year.split("-"))
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid pay_month_year format (expected YYYY-MM)"
-            )
-
-        # 2️⃣ Validate payment mode
-        if payment_mode not in ("UPI", "CASH", "IMPS", "DD"):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid payment mode"
-            )
-
-        # 3️⃣ Get due_type_ids
-        rent_due_type_id = get_due_type_id(cur, "RENT")
-        security_due_type_id = get_due_type_id(cur, "SECURITY")
-
-        cur.execute("""
-            UPDATE guests
-            SET status = 'active'
-            WHERE guest_id = ?
-        """, (guest_id,))
-
-
-
-
-
-        # 4️⃣ INSERT DUES (idempotent)
-        # ----------------------------------
-        # Check if due already exists
-        # ----------------------------------
-        cur.execute("""
-            SELECT id, due_amount
-            FROM dues
-            WHERE guest_id = ?
-              AND due_type_id = ?
-              AND year = ?
-              AND month = ?
-        """, (guest_id, rent_due_type_id, year, month))
-
-
-
-        existing = cur.fetchone()
-        if rent_dueable and float(rent_dueable) > 0:
-            if existing:
-                # ----------------------------------
-                # UPDATE → increase due amount
-                # ----------------------------------
-                due_id, old_amount = existing
-                new_amount = old_amount + rent_dueable
-
-                cur.execute("""
-                    UPDATE dues
-                    SET due_amount = ?,
-                        created_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (new_amount, due_id))
-
-                action = "updated"
-
-            else:
-                # ----------------------------------
-                # INSERT new due
-                # ----------------------------------
-                cur.execute("""
-                    INSERT INTO dues (
-                        guest_id,
-                        due_type_id,
-                        year,
-                        month,
-                        due_amount,
-                        amount_paid,
-                        status,
-                        created_at
-                    ) VALUES (?, ?, ?, ?, ?, 0, 'open', CURRENT_TIMESTAMP)
-                """, (
-                    guest_id,
-                    rent_due_type_id,
-                    year,
-                    month,
-                    rent_dueable
-                ))
-
-
-
-
-
-
-        # 4️⃣ INSERT DUES Security(idempotent)
-        # ----------------------------------
-        # Check if due already exists
-        # ----------------------------------
-        cur.execute("""
-            SELECT id, due_amount
-            FROM dues
-            WHERE guest_id = ?
-              AND due_type_id = ?
-              AND year = ?
-              AND month = ?
-        """, (guest_id, security_due_type_id, year, month))
-
-
-
-        existing = cur.fetchone()
-        if pay_security  and float(pay_security) > 0:
-            if existing:
-                # ----------------------------------
-                # UPDATE → increase due amount
-                # ----------------------------------
-                due_id, old_amount = existing
-                new_amount = old_amount + pay_security
-
-                cur.execute("""
-                    UPDATE dues
-                    SET due_amount = ?,
-                        created_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (new_amount, due_id))
-
-                action = "updated"
-
-            else:
-                # ----------------------------------
-                # INSERT new due
-                # ----------------------------------
-                cur.execute("""
-                    INSERT INTO dues (
-                        guest_id,
-                        due_type_id,
-                        year,
-                        month,
-                        due_amount,
-                        amount_paid,
-                        status,
-                        created_at
-                    ) VALUES (?, ?, ?, ?, ?, 0, 'open', CURRENT_TIMESTAMP)
-                """, (
-                    guest_id,
-                    security_due_type_id,
-                    year,
-                    month,
-                    pay_security
-                ))
-
-
-
-        # if rent_dueable and float(rent_dueable) > 0:
-        #     cur.execute("""
-        #         INSERT OR IGNORE INTO dues (
-        #             guest_id,
-        #             due_type_id,
-        #             year,
-        #             month,
-        #             due_amount
-        #         )
-        #         VALUES (?, ?, ?, ?, ?)
-        #     """, (
-        #         guest_id,
-        #         rent_due_type_id,
-        #         year,
-        #         month,
-        #         rent_dueable
-        #     ))
-
-        # if pay_security  and float(pay_security) > 0:
-        #     cur.execute("""
-        #         INSERT OR IGNORE INTO dues (
-        #             guest_id,
-        #             due_type_id,
-        #             year,
-        #             month,
-        #             due_amount
-        #         )
-        #         VALUES (?, ?, ?, ?, ?)
-        #     """, (
-        #         guest_id,
-        #         security_due_type_id,
-        #         year,
-        #         month,
-        #         pay_security
-        #     ))
-
-        # 5️⃣ UPSERT SECURITY DEPOSIT
-        cur.execute("""
-            SELECT id FROM security_deposits WHERE guest_id = ?
-        """, (guest_id,))
-        row = cur.fetchone()
-
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        if pay_security and float(pay_security) > 0:
-            if row:
-                cur.execute("""
-                    UPDATE security_deposits
-                    SET amount = amount + ?, collected_on = ?
-                    WHERE guest_id = ?
-                """, (pay_security, now, guest_id))
-            else:
-                cur.execute("""
-                    INSERT INTO security_deposits (
-                        guest_id, amount, collected_on
-                    )
-                    VALUES (?, ?, ?)
-                """, (guest_id, pay_security, now))
-
-        # 6️⃣ INSERT RENT PAYMENT
-        if pay_rent and float(pay_rent) > 0:
-            cur.execute("""
-                INSERT INTO rent_payments (
-                    created_by,
-                    guest_id,
-                    year,
-                    month,
-                    amount,
-                    mode,
-                    reference,
-                    description,
-                    status,
-                    created_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'submitted', datetime('now'))
-            """, (
-                created_by,
-                guest_id,
-                year,
-                month,
-                pay_rent+pay_security,
-                payment_mode,
-                trx_id,
-                paid_by
-            ))
-
-        conn.commit()
-
-        return {
-            "success": True,
-            "message": "Initial rent & security processed successfully"
-        }
-
-    except Exception:
-        conn.rollback()
-        raise
-
-    finally:
-        conn.close()
+    
 
 
 
@@ -1409,7 +1161,6 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
     cur = conn.cursor()
 
     try:
-
         # 1️⃣ Extract year & month
         try:
             year, month = map(int, pay_month_year.split("-"))
@@ -1437,50 +1188,38 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
         # --------------------------------------------------
         settlement = GuestDueSettlement(conn)
         settlement.settle_all_dues(guest_id)
-
+        # --------------------------------------------------
+        # 4️⃣ Final balance check
+        # --------------------------------------------------
+        cur.execute("""
+            SELECT COALESCE(SUM(due_amount - amount_paid), 0)
+            FROM dues
+            WHERE guest_id = ?
+        """, (guest_id,))
+        final_balance = cur.fetchone()[0]
         # --------------------------------------------------
         # 2️⃣ Insert SECURITY REFUND DUE (negative)
         # --------------------------------------------------
-        cur.execute("""
-            INSERT INTO dues (
+        if (final_balance > 0) :
+            cur.execute("""
+                INSERT OR IGNORE INTO dues ( guest_id,due_type_id,year,month,due_amount,amount_paid,status)
+                VALUES (?, 10, ?,?,?, 0, 'adjusted')
+            """, (
                 guest_id,
-                due_type_id,
                 year,
                 month,
-                due_amount,
-                amount_paid,
-                status
-            )
-            VALUES (?, 3, ?,?,?, ?, 'paid')
-        """, (
-            guest_id,
-            year,
-            month,
-            -refund_amount,
-            -refund_amount
-        ))
-
-
-        cur.execute("""
-            INSERT INTO dues (guest_id, year, month, due_type_id, due_amount,amount_paid)
-            SELECT ?, ?, ?, 3, ?,?
-            WHERE NOT EXISTS (
-                SELECT 1 FROM dues
-                WHERE guest_id = ?
-                AND year = ?
-                AND month = ?
-                AND due_type_id = 3
-            )
-        """, (
-            guest_id,
-            year,
-            month,
-            -refund_amount,
-            -refund_amount,            
-            guest_id,
-            year,
-            month
-        ))
+                -final_balance
+            ))
+        if (final_balance <= 0) :
+            cur.execute("""
+                INSERT OR IGNORE INTO dues ( guest_id,due_type_id,year,month,due_amount,amount_paid,status)
+                VALUES (?, 10, ?,?,0, ?, 'adjusted')
+            """, (
+                guest_id,
+                year,
+                month,
+                final_balance
+            ))
 
         refund_due_id = cur.lastrowid  # ✅ now valid
 
@@ -1506,6 +1245,7 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
             trx_id,
             pay_date
         ))
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cur.execute("""
             UPDATE security_deposits
@@ -1808,3 +1548,227 @@ def duesofguest( guest_id,year,month,due_type_id):
     },
     "data": data
     }
+
+
+# def list_guest_payments(guest_id):
+#     conn = get_connection()
+#     cur = conn.cursor()
+
+#     cur.execute("""
+#         WITH dues_with_cumulative AS (
+#             SELECT
+#                 d.id AS due_id,
+#                 d.due_type_id,
+#                 d.year,
+#                 d.month,
+#                 d.due_amount,
+#                 d.amount_paid,
+#                 (d.due_amount - d.amount_paid) AS bal,
+#                 SUM(d.due_amount - d.amount_paid) OVER (
+#                     ORDER BY d.year, d.month ASC
+#                     ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+#                 ) AS cumulative_bal
+#             FROM dues d
+#             WHERE d.guest_id = ?
+#         )
+#         SELECT
+#             dwc.*,
+#             COALESCE(rpa.rent_payment_id, 0)    AS rent_payment_id,
+#             COALESCE(rpa.allocated_amount, 0)   AS allocated_amount,
+#             COALESCE(rp.amount, 0)              AS payment_amount,
+#             COALESCE(rp.status, 'unpaid')       AS payment_status,
+#             COALESCE(rp.created_at, '')         AS payment_date
+#         FROM dues_with_cumulative dwc
+#         LEFT JOIN rent_payment_allocations rpa
+#             ON rpa.due_id = dwc.due_id
+#         LEFT JOIN rent_payments rp
+#             ON rp.rent_payment_id = rpa.rent_payment_id
+#         ORDER BY dwc.year, dwc.month ASC, rent_payment_id DESC
+#     """, (guest_id,))
+
+#     rows = cur.fetchall()
+#     if not rows:
+#         raise HTTPException(status_code=404, detail="Payments + Dues not found")
+
+#     # ================================
+#     # 🔥 GROUPING LOGIC (KEY PART)
+#     # ================================
+#     grouped = []
+
+#     payment_map = {}
+
+#     for r in rows:
+#         r = dict(r)
+#         pid = r["rent_payment_id"]
+
+#         # create parent only once
+#         if pid not in payment_map:
+#             payment_map[pid] = {
+#                 "rent_payment_id": pid,
+#                 "payment_amount": r["payment_amount"],
+#                 "payment_status": r["payment_status"],
+#                 "payment_date": r["payment_date"],
+#                 "total_allocated": 0,
+#                 "cumulative_bal": r["cumulative_bal"],
+#                 "dues": []
+#             }
+#             grouped.append(payment_map[pid])
+
+#         payment_map[pid]["total_allocated"] += r["allocated_amount"]
+
+#         # append due under payment
+#         payment_map[pid]["dues"].append({
+#             "due_id": r["due_id"],
+#             "due_type_id": r["due_type_id"],
+#             "year": r["year"],
+#             "month": r["month"],
+#             "due_amount": r["due_amount"],
+#             "amount_paid": r["amount_paid"],
+#             "bal": r["bal"]
+#         })
+
+#     conn.close()
+#     return grouped
+
+
+def list_guest_payments(guest_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        WITH dues_with_cumulative AS (
+            SELECT
+                d.id AS due_id,
+                d.due_type_id,
+                d.year,
+                d.month,
+                d.due_amount,
+                d.amount_paid,
+                (d.due_amount - d.amount_paid) AS bal,
+                SUM(d.due_amount - d.amount_paid) OVER (
+                    ORDER BY d.year, d.month ASC
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS cumulative_bal
+            FROM dues d
+            WHERE d.guest_id = ?
+        )
+        SELECT
+            dwc.*,
+            COALESCE(rpa.rent_payment_id, 0)    AS rent_payment_id,
+            COALESCE(rpa.allocated_amount, 0)   AS allocated_amount,
+            COALESCE(rp.amount, 0)              AS payment_amount,
+            COALESCE(rp.status, 'unpaid')       AS payment_status,
+            COALESCE(rp.created_at, '')         AS payment_date
+        FROM dues_with_cumulative dwc
+        LEFT JOIN rent_payment_allocations rpa
+            ON rpa.due_id = dwc.due_id
+        LEFT JOIN rent_approval_history rah
+            ON rah.rent_payment_id = rpa.rent_payment_id
+            AND rah.action = 'approved'
+        LEFT JOIN rent_payments rp
+            ON rp.rent_payment_id = rpa.rent_payment_id 
+        ORDER BY dwc.year, dwc.month ASC, rent_payment_id DESC
+    """, (guest_id,))
+
+    rows = cur.fetchall()
+    if not rows:
+        raise HTTPException(status_code=404, detail="Payments + Dues not found")
+
+    # ================================
+    # 1️⃣ GROUP DATA
+    # ================================
+    payment_map = {}
+    grouped = []
+
+    for r in rows:
+        r = dict(r)
+        pid = r["rent_payment_id"]
+
+        if pid not in payment_map:
+            payment_map[pid] = {
+                "rent_payment_id": pid,
+                "payment_amount": r["payment_amount"],
+                "payment_status": r["payment_status"],
+                "payment_date": r["payment_date"],
+                "total_allocated": 0,
+                "cumulative_bal": r["cumulative_bal"],
+                "dues": []
+            }
+            grouped.append(payment_map[pid])
+
+        payment_map[pid]["total_allocated"] += r["allocated_amount"]
+        payment_map[pid]["dues"].append({
+            "due_id": r["due_id"],
+            "due_type_id": r["due_type_id"],
+            "year": r["year"],
+            "month": r["month"],
+            "due_amount": r["due_amount"],
+            "amount_paid": r["amount_paid"],
+            "bal": r["bal"]
+        })
+
+    # ================================
+    # 2️⃣ CUSTOM SORT (KEY REQUIREMENT)
+    # ================================
+    grouped.sort(
+        key=lambda x: (x["rent_payment_id"] != 0, -x["rent_payment_id"])
+    )
+
+    conn.close()
+    return grouped
+
+
+def get_rent_receipt(rent_payment_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    SQL_QUERY="""
+        SELECT
+            rp.rent_payment_id,
+            rp.amount              AS payment_amount,
+            rp.created_at          AS payment_date,
+            g.name                 AS tenant_name,
+            d.id                   AS due_id,
+            dt.name                AS due_type,
+            printf('%02d-%02d-%04d', 1, d.month, d.year)  AS period_from,
+            date(
+                printf('%04d-%02d-01', d.year, d.month),
+                '+1 month', '-1 day'
+            ) AS period_to,
+            rpa.allocated_amount   AS settled_amount
+        FROM rent_payments rp
+        JOIN rent_payment_allocations rpa
+            ON rpa.rent_payment_id = rp.rent_payment_id
+        JOIN dues d
+            ON d.id = rpa.due_id
+        LEFT JOIN due_types dt
+            ON dt.id = d.due_type_id
+        LEFT JOIN guests g
+            ON g.guest_id = rp.guest_id
+        WHERE rp.rent_payment_id = ?
+        ORDER BY d.year, d.month;
+"""
+    cur.execute(SQL_QUERY, (rent_payment_id,))
+    rows = cur.fetchall()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    header = {
+        "rent_payment_id": rows[0]["rent_payment_id"],
+        "amount": rows[0]["payment_amount"],
+        "address": "B-23A, Noor Nagar Ext, Jamia Nagar, Okhla",
+        "landlord_name": "Sajida",
+        "payment_date": rows[0]["payment_date"],
+        "tenant_name": rows[0]["tenant_name"],
+        "dues": []
+    }
+
+    for r in rows:
+        header["dues"].append({
+            "due_type": r["due_type"],
+            "period_from": r["period_from"],
+            "period_to": r["period_to"],
+            "settled_amount": r["settled_amount"]
+        })
+
+    conn.close()
+    return header

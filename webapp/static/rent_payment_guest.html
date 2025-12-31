@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guest Profile - Elegant Details</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <style>
+  </style>
+
+<style>
+  tr.parent { cursor:pointer; background:#eef5ff; }
+  tr.child-row { display:none; background:#f9fafb; }
+  body { font-family: Arial, sans-serif; background: #f4f6f8; }
+  .payment-card { background: #fff; border-radius: 6px; margin-bottom: 16px; padding: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .payment-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; padding: 8px; border-radius: 4px; background: #eef2f7; }
+  .unpaid-card { border-left: 5px solid #dc3545; }
+  .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; color: white; }
+  .badge-paid { background: #28a745; }
+  .badge-unpaid { background: #dc3545; }
+  .dues-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .dues-table th { background: #dfe6ed; padding: 7px; font-size: 13px; border: 1px solid #ccc; }
+  .dues-table td { padding: 7px; font-size: 13px; border: 1px solid #ddd; text-align: center; }
+  .dues-table tbody tr { background: #f9fbfd; }
+  .payment-link { color: #0d6efd; text-decoration: none; }
+  .payment-link:hover { text-decoration: underline; }
+  #paymentContainer {color:#000}
+</style>
+<script>
+				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return window.location.origin;
+				})();
+				let CURRENT_USER = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+				const userrole = JSON.parse(localStorage.getItem('wh_user') || '{}').role || '';
+        let guestId = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+				if (userrole === 'employee' || userrole === 'owner')
+				{
+					const urlParams = new URLSearchParams(window.location.search);
+					CURRENT_USER = urlParams.get('id') || (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+				}
+
+</script>
+<script>
+  function monthYear(m, y) {
+      const month = new Date(2000, m - 1).toLocaleString('default', { month: 'short' });
+      return `${month}-${y}`;
+  }
+</script>
+</head>
+<body class="admin-bg">
+<!-- Page JS -->
+
+
+      <!-- Page Header (Full Width) -->
+
+
+
+
+  <div class="page-wrapper">
+    <div id="menu-container"></div>
+
+    
+    <div class="page-header">
+      <div class="page-header-content">
+        <div>
+          <h1><i class="bi bi-people-fill"></i> Guests — Payment</h1>
+        </div>
+      </div>
+    </div>
+
+
+<div id="paymentContainer"></div>
+<div id="pagination" style="text-align:center; margin:20px 0;"></div>
+<script>
+const PAGE_SIZE = 20;
+let currentPage = 1;
+let fullData = [];
+
+function monthYear(m, y) {
+    const month = new Date(2000, m - 1).toLocaleString('default', { month: 'short' });
+    return `${month}-${y}`;
+}
+function renderPayments(data) {
+    fullData = data;
+    currentPage = 1;
+    renderPage();
+}
+// function renderPayments(data) {
+//     const container = $("#paymentContainer");
+//     container.empty();
+
+//     if (!data || data.length === 0) {
+//         container.html("<p>No payment data available</p>");
+//         return;
+//     }
+
+//     data.forEach(p => {
+//         const isUnpaid = p.rent_payment_id === 0;
+
+//         let duesRows = "";
+//         p.dues.forEach(d => {
+//             duesRows += `
+//                 <tr>
+//                     <td>${monthYear(d.month, d.year)}</td>
+//                     <td>₹ ${d.due_amount}</td>
+//                     <td>₹ ${d.amount_paid}</td>
+//                     <td>₹ ${d.bal}</td>
+//                 </tr>
+//             `;
+//         });
+
+//         const paymentTitle = isUnpaid
+//             ? "UNPAID DUES"
+//             : `<a href="/static/rent-receipt.html?id=${p.rent_payment_id}" 
+//                    class="payment-link">
+//                    Payment ID: ${p.rent_payment_id}
+//                </a>`;
+
+//         const card = `
+//             <div class="payment-card ${isUnpaid ? 'unpaid-card' : ''}">
+                
+//                 <div class="payment-header">
+//                     <div>${paymentTitle}</div>
+//                     <div>
+//                         <span class="badge ${isUnpaid ? 'badge-unpaid' : 'badge-paid'}">
+//                             ${isUnpaid ? "UNPAID" : "APPROVED"}
+//                         </span>
+//                     </div>
+//                 </div>
+
+//                 <div>
+//                     ${!isUnpaid ? `
+//                         <div><strong>Payment Amount:</strong> ₹ ${p.payment_amount}</div>
+//                         <div><strong>Payment Date:</strong> ${p.payment_date}</div>
+//                         <div><strong>Total Allocated:</strong> ₹ ${p.total_allocated}</div>
+//                     ` : `
+//                         <div><strong>Total Due:</strong> ₹ ${p.cumulative_bal}</div>
+//                     `}
+//                 </div>
+
+//                 <table class="dues-table">
+//                     <thead>
+//                         <tr>
+//                             <th>Month</th>
+//                             <th>Due Amount</th>
+//                             <th>Paid</th>
+//                             <th>Balance</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         ${duesRows}
+//                     </tbody>
+//                 </table>
+
+//             </div>
+//         `;
+
+//         container.append(card);
+//     });
+// }
+
+
+function renderPage() {
+    const container = $("#paymentContainer");
+    container.empty();
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    const pageData = fullData.slice(start, end);
+
+    if (pageData.length === 0) {
+        container.html("<p>No records</p>");
+        return;
+    }
+
+    pageData.forEach(p => {
+        const isUnpaid = p.rent_payment_id === 0;
+
+        let duesRows = "";
+        p.dues.forEach(d => {
+            duesRows += `
+                <tr>
+                    <td>${monthYear(d.month, d.year)}</td>
+                    <td>₹ ${d.due_amount}</td>
+                    <td>₹ ${d.amount_paid}</td>
+                    <td>₹ ${d.bal}</td>
+                </tr>
+            `;
+        });
+
+        const paymentTitle = isUnpaid
+            ? "UNPAID DUES"
+            : `<a href="/static/rent-receipt.html?id=${p.rent_payment_id}" class="payment-link">
+                    Payment ID: ${p.rent_payment_id}
+               </a>`;
+
+        container.append(`
+            <div class="payment-card ${isUnpaid ? 'unpaid-card' : ''}">
+                <div class="payment-header">
+                    <div>${paymentTitle}</div>
+                    <span class="badge ${isUnpaid ? 'badge-unpaid' : 'badge-paid'}">
+                        ${isUnpaid ? "UNPAID" : "APPROVED"}
+                    </span>
+                </div>
+
+                ${!isUnpaid ? `
+                    <div><strong>Amount:</strong> ₹ ${p.payment_amount}</div>
+                    <div><strong>Date:</strong> ${p.payment_date}</div>
+                ` : `
+                    <div><strong>Total Due:</strong> ₹ ${p.cumulative_bal}</div>
+                `}
+
+                <table class="dues-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Due</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>${duesRows}</tbody>
+                </table>
+            </div>
+        `);
+    });
+
+    renderPaginationControls();
+}
+
+
+function loadPayments() {
+    $.ajax({
+        url: `${API_BASE_URL}/rentalmonth/list_guest_payments?guest_id=${CURRENT_USER}`,
+        method: "GET",
+        success: renderPayments,
+        error: () => $("#paymentContainer").html("<p>Error loading data</p>")
+    });
+}
+
+$(document).ready(loadPayments);
+</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+
+  
+
+	<script src="./js/main.js"></script>
+	<script>
+		$(document).ready(function(){
+	
+			//const username = sessionStorage.getItem("username");
+			const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+			if (!username) window.location.href = "login.html";
+			$("#username").text(username);
+		});
+	</script>
+
+<!-- <script>
+/* ===============================
+   CONFIG
+================================*/
+const API_URL = "/rentalmonth/list_guest_payments";
+const GUEST_ID = CURRENT_USER; // change dynamically if needed
+
+/* ===============================
+   HELPERS
+================================*/
+function formatDate(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt.replace(" ", "T"));
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
+}
+
+/* ===============================
+   FETCH + RENDER
+================================*/
+$(async function () {
+  try {
+    const res = await fetch(`${API_URL}?guest_id=${GUEST_ID}`);
+    if (!res.ok) throw new Error("Failed to load payments");
+
+    const payments = await res.json();
+    const tbody = $("#paymentBody");
+    tbody.empty();
+
+    if (!payments.length) {
+      tbody.html(`<tr><td colspan="7" class="text-center">No records found</td></tr>`);
+      return;
+    }
+
+    payments.forEach((p, i) => {
+      const pid = `pay${i}`;
+
+      /* ---------- Parent Row ---------- */
+      tbody.append(`
+        <tr class="parent" id="${pid}">
+          <td class="text-center"><i class="bi bi-chevron-right"></i></td>
+          <td>${p.rent_payment_id || "UNPAID"}</td>
+          <td>₹ ${p.total_allocated}</td>
+          <td>₹ ${p.payment_amount}</td>
+          <td>
+            <span class="badge ${p.payment_status === "unpaid" ? "bg-danger" : "bg-success"}">
+              ${p.payment_status}
+            </span>
+          </td>
+          <td>${formatDate(p.payment_date)}</td>
+          <td>₹ ${p.cumulative_bal}</td>
+        </tr>
+      `);
+
+      /* ---------- Child Rows ---------- */
+      let childHtml = `
+        <tr class="child-row child-${pid}">
+          <td colspan="7">
+            <table class="table table-sm table-striped mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Due ID</th>
+                  <th>Year</th>
+                  <th>Month</th>
+                  <th>Due Amount</th>
+                  <th>Paid</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      p.dues.forEach(d => {
+        childHtml += `
+          <tr>
+            <td>${d.due_id}</td>
+            <td>${d.year}</td>
+            <td>${d.month}</td>
+            <td>₹ ${d.due_amount}</td>
+            <td>₹ ${d.amount_paid}</td>
+            <td>₹ ${d.bal}</td>
+          </tr>
+        `;
+      });
+
+      childHtml += `
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      `;
+
+      tbody.append(childHtml);
+    });
+
+    /* ---------- Toggle ---------- */
+    $("tr.parent").on("click", function () {
+      const icon = $(this).find("i");
+      $(".child-" + this.id).toggle();
+      icon.toggleClass("bi-chevron-right bi-chevron-down");
+    });
+
+  } catch (err) {
+    $("#paymentBody").html(`
+      <tr>
+        <td colspan="7" class="text-danger text-center">
+          Failed to load payment details
+        </td>
+      </tr>
+    `);
+    console.error(err);
+  }
+});
+</script>
+
+
+ -->
+
+
+<!--PAGINATION-->
+<script>
+function renderPaginationControls() {
+    const totalPages = Math.ceil(fullData.length / PAGE_SIZE);
+
+    $("#pagination").html(`
+        <button onclick="prevPage()" ${currentPage === 1 ? "disabled" : ""}>
+            ◀ Prev
+        </button>
+
+        <span style="margin:0 10px;">
+            Page ${currentPage} of ${totalPages}
+        </span>
+
+        <button onclick="nextPage()" ${currentPage === totalPages ? "disabled" : ""}>
+            Next ▶
+        </button>
+    `);
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(fullData.length / PAGE_SIZE);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+    }
+}
+
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
