@@ -237,7 +237,6 @@ def delete_guest(guest_id: str):
 
         #     # Finance
         #     "DELETE FROM dues WHERE guest_id = ?",
-        #     "DELETE FROM security_deposits WHERE guest_id = ?",
         #     "DELETE FROM rent_change_events WHERE guest_id = ?",
 
         #     # Guest
@@ -290,7 +289,11 @@ def delete_guest(guest_id: str):
 
             # Finance
             "DELETE FROM dues WHERE guest_id = ?",
-            "DELETE FROM security_deposits WHERE guest_id = ?",
+            """DELETE FROM security_transactions
+               WHERE security_id IN (
+                 SELECT id FROM security_accounts WHERE guest_id = ?
+               )""",
+            "DELETE FROM security_accounts WHERE guest_id = ?",
             "DELETE FROM rent_change_events WHERE guest_id = ?",
             "UPDATE guests SET status = '_blank' WHERE guest_id = ?"
             # Guest
@@ -378,13 +381,16 @@ def hard_delete_guest(guest_id: str):
                WHERE rent_payment_id IN (
                  SELECT rent_payment_id FROM rent_payments WHERE guest_id = ?
                )""",
-
+            """DELETE FROM security_transactions
+                WHERE security_id IN (
+                    SELECT id FROM security_accounts WHERE guest_id = ?
+                )""",
+            "DELETE FROM security_accounts WHERE guest_id = ?",
             "DELETE FROM rent_payment_refunds WHERE guest_id = ?",
             "DELETE FROM rent_payments WHERE guest_id = ?",
 
             # Finance
             "DELETE FROM dues WHERE guest_id = ?",
-            "DELETE FROM security_deposits WHERE guest_id = ?",
             "DELETE FROM rent_change_events WHERE guest_id = ?",
 
             # Guest
@@ -618,12 +624,40 @@ def get_history_records(guest_id, start_date, end_date, page, limit):
 
     # Get guest details
     cur.execute("""
-        SELECT g.*, ga.bed_id, ga.assign_date,(sd.amount-sd.refunded_amount) guest_security
+        SELECT
+            g.*,
+            ga.bed_id,
+            ga.assign_date,
+
+            /* Security balance */
+            COALESCE(sec.security_balance, 0) AS guest_security
+
         FROM guests g
-        LEFT JOIN guest_beds ga ON g.guest_id = ga.guest_id
-        Left join security_deposits as sd ON sd.guest_id= g.guest_id
+
+        LEFT JOIN guest_beds ga
+            ON g.guest_id = ga.guest_id
+
+        /* Security balance derived from transactions */
+        LEFT JOIN (
+            SELECT
+                sa.guest_id,
+                SUM(
+                    CASE
+                        WHEN st.txn_type = 'received' THEN st.amount
+                        WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                        ELSE 0
+                    END
+                ) AS security_balance
+            FROM security_accounts sa
+            LEFT JOIN security_transactions st
+                ON st.security_id = sa.id
+            GROUP BY sa.guest_id
+        ) sec
+            ON sec.guest_id = g.guest_id
+
         WHERE g.guest_id = ?
     """, (guest_id,))
+
     
     guest = cur.fetchone()
     if not guest:

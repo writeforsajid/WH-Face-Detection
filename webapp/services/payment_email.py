@@ -11,7 +11,7 @@ class PaymentEmailService:
             ("EMAIL_NOTIFICATION",)
         )
         row = cur.fetchone()
-        email_enabled==True
+        email_enabled=True
         if row:
             email_enabled = row and row[0].lower() == "on"
 
@@ -30,7 +30,7 @@ class PaymentEmailService:
             if email_enabled:
                 await send_email(
                     to=[guest[1]],
-                    subject="Test Email: Please ignore", #"Payment Received",
+                    subject="Payment Received",
                     template_name="payment_received.html",
                     template_data={
                         "name": guest[0],

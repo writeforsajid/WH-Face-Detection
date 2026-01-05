@@ -67,7 +67,7 @@ def guests_stats(
         
         
         attendance = int(cur.fetchone()[0] or 0)
-
+        #---- Done -----#
         cur.execute(f""" 
         SELECT 
             (SUM(due_amount) - SUM(amount_paid)) AS balance

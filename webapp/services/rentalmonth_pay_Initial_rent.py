@@ -76,67 +76,76 @@ class RentDueTask(Task):
 
 class SecurityDueTask(Task):
     def validate(self, ctx):
-        return ctx.get("security_due") and float(ctx.get("security_due")) > 0
+        return ctx.get("pay_security") and float(ctx.get("pay_security")) > 0
 
-    def get_due_type_id(self, cur, code):
-        cur.execute("SELECT id FROM due_types WHERE code=?", (code,))
-        row = cur.fetchone()
-        if not row:
-            return None
-        return row["id"]
+
 
     def process(self, ctx):
         cur = ctx.get("cur")
         guest_id = ctx.get("guest_id")
-        year, month = ctx.get("year"), ctx.get("month")
-        amount = float(ctx.get("security_due"))
+        pay_security = float(ctx.get("pay_security"))
+        rent_payment_id=int(ctx.get("rent_payment_id"))
+        payment_mode=ctx.get("payment_mode")
+        # Ensure security account exists
+        sec = cur.execute("""
+            SELECT id FROM security_accounts
+            WHERE guest_id = ?
+        """, (guest_id,)).fetchone()
 
-        due_type_id = self.get_due_type_id(cur, "SECURITY")
-        if not due_type_id:
-            return
+        if not sec:
+            cur.execute("""
+                INSERT INTO security_accounts (guest_id, created_on)
+                VALUES (?, datetime('now'))
+            """, (guest_id,))
+            security_id = cur.lastrowid
+        else:
+            security_id = sec["id"]
 
         cur.execute("""
-            SELECT id, due_amount FROM dues
-            WHERE guest_id=? AND due_type_id=? AND year=? AND month=?
-        """, (guest_id, due_type_id, year, month))
-
-        row = cur.fetchone()
-        if row:
-            cur.execute("""
-                UPDATE dues SET due_amount=?, created_at=CURRENT_TIMESTAMP
-                WHERE id=?
-            """, (row["due_amount"] + amount, row["id"]))
-        else:
-            cur.execute("""
-                INSERT INTO dues
-                (guest_id,due_type_id,year,month,due_amount,amount_paid,status,created_at)
-                VALUES (?,?,?,?,?,0,'open',CURRENT_TIMESTAMP)
-            """, (guest_id, due_type_id, year, month, amount))
+            INSERT INTO security_transactions
+            (security_id, amount, txn_type, payment_mode, reference_id, created_at, remarks)
+            VALUES (?, ?, 'received', ?, ?, datetime('now'), 'Collected with rent payment')
+        """, (
+            security_id,
+            pay_security,
+            payment_mode,
+            rent_payment_id
+        ))
 
 
-# class SecurityDepositTask(Task):
-#     def validate(self, ctx):
-#         return ctx.get("pay_security") and float(ctx.get("pay_security")) > 0
 
-#     def process(self, ctx):
-#         cur = ctx.get("cur")
-#         guest_id = ctx.get("guest_id")
-#         amount = float(ctx.get("pay_security"))
 
-#         cur.execute("SELECT id FROM security_deposits WHERE guest_id=?", (guest_id,))
-#         row = cur.fetchone()
+class AdvanceDueTask(Task):
+    def validate(self, ctx):
+        return ctx.get("pay_advance") and float(ctx.get("pay_advance")) > 0
 
-#         if row:
-#             cur.execute("""
-#                 UPDATE security_deposits
-#                 SET amount = amount + ?, collected_on = CURRENT_TIMESTAMP
-#                 WHERE guest_id=?
-#             """, (amount, guest_id))
-#         else:
-#             cur.execute("""
-#                 INSERT INTO security_deposits (guest_id,amount,collected_on)
-#                 VALUES (?,?,CURRENT_TIMESTAMP)
-#             """, (guest_id, amount))
+
+    def process(self, ctx):
+        cur = ctx.get("cur")
+        guest_id = ctx.get("guest_id")
+        pay_advance = float(ctx.get("pay_advance"))
+        rent_payment_id=int(ctx.get("rent_payment_id"))
+ 
+
+        # ============================
+        # 3️⃣ ADVANCE PAYMENT (WALLET)
+        # ============================
+
+        cur.execute("""
+            INSERT INTO wallet_transactions (
+                guest_id, amount, reason,
+                reference_id, created_at, remarks
+            )
+            VALUES (?, ?, 'ADVANCE_RECEIVED', ?, datetime('now'), ?)
+        """, (
+            guest_id,
+            pay_advance,
+            rent_payment_id,
+            "Advance received"
+        ))
+
+
+
 
 
 class RentPaymentTask(Task):

@@ -70,7 +70,7 @@ def update_contact(service, resource_name, etag, new_name):
 def is_docker():
     return os.path.exists("/.dockerenv")
 
-def add_or_edit_contact(guest_id,name):
+def _add_or_edit_contact_sync(guest_id,name):
     if not  is_docker():
         return{
             "status": 'failed - not in docker'
@@ -102,3 +102,12 @@ def add_or_edit_contact(guest_id,name):
     return{
             "status": 'success'
             }
+
+
+# ---------- ASYNC WRAPPER ----------
+async def add_or_edit_contact(guest_id, name):
+    return await asyncio.to_thread(
+        _add_or_edit_contact_sync,
+        guest_id,
+        name
+    )

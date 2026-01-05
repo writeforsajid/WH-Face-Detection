@@ -248,62 +248,121 @@ def get_monthly_rents(guest_id, startDate, endDate, page, pageSize):
 
     # 1) Count total
     cur.execute(f"""
-        SELECT COUNT(*) FROM guests as a
-        JOIN guest_roles AS g ON a.guest_id = g.guest_id
-        Left join roles as r ON r.role_id = g.role_id
-        Left join guest_beds as gb ON gb.guest_id = g.guest_id
-        Left join beds as b ON b.bed_id= gb.bed_id
-        Left join bed_rent_plan as brp ON brp.sharing_type = b.sharing_type
-        Left join security_deposits as sd ON sd.guest_id= a.guest_id
-        Left join (
+        SELECT COUNT(*) 
+        FROM guests AS a
+        JOIN guest_roles AS g
+            ON a.guest_id = g.guest_id
+
+        LEFT JOIN roles AS r
+            ON r.role_id = g.role_id
+
+        LEFT JOIN guest_beds AS gb
+            ON gb.guest_id = g.guest_id
+
+        LEFT JOIN beds AS b
+            ON b.bed_id = gb.bed_id
+
+        LEFT JOIN bed_rent_plan AS brp
+            ON brp.sharing_type = b.sharing_type
+
+        /* 🔐 Security balance calculation */
+        LEFT JOIN (
+            SELECT
+                sa.guest_id,
+                SUM(
+                    CASE
+                        WHEN st.txn_type = 'received' THEN st.amount
+                        WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                        ELSE 0
+                    END
+                ) AS security_balance
+            FROM security_accounts sa
+            LEFT JOIN security_transactions st
+                ON st.security_id = sa.id
+            GROUP BY sa.guest_id
+        ) sec
+            ON sec.guest_id = a.guest_id
+
+        /* 💰 Dues balance */
+        LEFT JOIN (
             SELECT
                 guest_id,
                 SUM(due_amount) AS total_due,
                 SUM(amount_paid) AS total_paid
             FROM dues
             GROUP BY guest_id
-        ) d ON d.guest_id = a.guest_id
-        WHERE {where_clause}
+        ) d
+            ON d.guest_id = a.guest_id
+        WHERE   {where_clause}
     """, params)
 
     total = cur.fetchone()[0]
 
     # 2) Fetch paginated list
     cur.execute(f"""
-SELECT
-    g.guest_id,
-    a.name,
-    b.sharing_type,
-    b.bed_id,
-    brp.monthly_rent,
-    (sd.amount - sd.refunded_amount) AS security,
-    COALESCE(d.total_due - d.total_paid, 0) AS balance,
-    a.status
-FROM guests AS a
-JOIN guest_roles AS g 
-    ON a.guest_id = g.guest_id
-LEFT JOIN roles AS r 
-    ON r.role_id = g.role_id
-LEFT JOIN guest_beds AS gb 
-    ON gb.guest_id = g.guest_id
-LEFT JOIN beds AS b 
-    ON b.bed_id = gb.bed_id
-LEFT JOIN bed_rent_plan AS brp 
-    ON brp.sharing_type = b.sharing_type
-LEFT JOIN security_deposits AS sd 
-    ON sd.guest_id = a.guest_id
-LEFT JOIN (
-    SELECT
-        guest_id,
-        SUM(due_amount) AS total_due,
-        SUM(amount_paid) AS total_paid
-    FROM dues
-    GROUP BY guest_id
-) d 
-    ON d.guest_id = a.guest_id
-        WHERE {where_clause}
-        ORDER BY b.bed_id ASC
-        LIMIT ? OFFSET ?
+        SELECT
+            g.guest_id,
+            a.name,
+            b.sharing_type,
+            b.bed_id,
+            brp.monthly_rent,
+
+            /* Security balance from transactions */
+            COALESCE(sec.security_balance, 0) AS security,
+
+            /* Due balance */
+            COALESCE(d.total_due - d.total_paid, 0) AS balance,
+
+            a.status
+
+        FROM guests AS a
+
+        JOIN guest_roles AS g
+            ON a.guest_id = g.guest_id
+
+        LEFT JOIN roles AS r
+            ON r.role_id = g.role_id
+
+        LEFT JOIN guest_beds AS gb
+            ON gb.guest_id = g.guest_id
+
+        LEFT JOIN beds AS b
+            ON b.bed_id = gb.bed_id
+
+        LEFT JOIN bed_rent_plan AS brp
+            ON brp.sharing_type = b.sharing_type
+
+        /* 🔐 Security balance calculation */
+        LEFT JOIN (
+            SELECT
+                sa.guest_id,
+                SUM(
+                    CASE
+                        WHEN st.txn_type = 'received' THEN st.amount
+                        WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                        ELSE 0
+                    END
+                ) AS security_balance
+            FROM security_accounts sa
+            LEFT JOIN security_transactions st
+                ON st.security_id = sa.id
+            GROUP BY sa.guest_id
+        ) sec
+            ON sec.guest_id = a.guest_id
+
+        /* 💰 Dues balance */
+        LEFT JOIN (
+            SELECT
+                guest_id,
+                SUM(due_amount) AS total_due,
+                SUM(amount_paid) AS total_paid
+            FROM dues
+            GROUP BY guest_id
+        ) d
+            ON d.guest_id = a.guest_id
+                WHERE  {where_clause}
+                ORDER BY b.bed_id ASC
+                LIMIT ? OFFSET ?
     """, params + [pageSize, offset])
 
     rows = cur.fetchall()

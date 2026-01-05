@@ -21,7 +21,7 @@ class WelcomeEmailService:
         )
         row = cur.fetchone()
         conn.close()
-        email_enabled==True
+        email_enabled=True
         if row:
             email_enabled = row and row[0].lower() == "on"
         

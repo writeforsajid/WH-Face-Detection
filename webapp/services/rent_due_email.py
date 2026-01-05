@@ -21,75 +21,85 @@ class RentDueEmailService:
             )
             row = cur.fetchone()
             conn.close()
-            email_enabled==True
+            email_enabled=True
             if row:
                 email_enabled = row and row[0].lower() == "on"
 
             cur.execute("""
-            SELECT 
-                g.guest_id,
-                g.name,
-                g.email,
-                b.bed_id AS bed_number,
-                b.bed_id AS title,
-                bed.sharing_type,
-                'active' as state,
-                balances.id,
-                balances.balance AS due_amount,
-                COALESCE(sec_paid.security_paid, 0) AS security_amount
+SELECT 
+    g.guest_id,
+    g.name,
+    g.email,
 
-            FROM guests g
+    b.bed_id AS bed_number,
+    b.bed_id AS title,
+    bed.sharing_type,
 
-            JOIN (
-                SELECT 
-                    guest_id,
-                    MIN(id) AS id,   -- Single ID reference
-                    SUM(due_amount - amount_paid) AS balance
-                FROM dues
-                GROUP BY guest_id
-                HAVING balance > 0
-            ) balances ON balances.guest_id = g.guest_id
+    'active' AS state,
 
+    balances.id,
+    balances.balance AS due_amount,
 
-            LEFT JOIN (
-                SELECT 
-                    gb.guest_id,
-                    gb.bed_id
-                FROM guest_beds gb
-                JOIN (
-                    SELECT guest_id, MAX(assign_date) AS max_date
-                    FROM guest_beds
-                    GROUP BY guest_id
-                ) last_bed
-                    ON gb.guest_id = last_bed.guest_id
-                AND gb.assign_date = last_bed.max_date
-            ) b ON g.guest_id = b.guest_id
+    /* ✅ Security actually paid & remaining */
+    COALESCE(sec.security_balance, 0) AS security_amount
+
+FROM guests g
+
+/* 🔴 Only guests with outstanding dues */
+JOIN (
+    SELECT 
+        guest_id,
+        MIN(id) AS id,
+        SUM(due_amount - amount_paid) AS balance
+    FROM dues
+    GROUP BY guest_id
+    HAVING balance > 0
+) balances 
+    ON balances.guest_id = g.guest_id
 
 
-            LEFT JOIN beds bed 
-                ON bed.bed_id = b.bed_id
+/* 🛏 Latest assigned bed */
+LEFT JOIN (
+    SELECT 
+        gb.guest_id,
+        gb.bed_id
+    FROM guest_beds gb
+    JOIN (
+        SELECT guest_id, MAX(assign_date) AS max_date
+        FROM guest_beds
+        GROUP BY guest_id
+    ) last_bed
+        ON gb.guest_id = last_bed.guest_id
+       AND gb.assign_date = last_bed.max_date
+) b 
+    ON g.guest_id = b.guest_id
 
 
-            LEFT JOIN (
-                SELECT 
-                    d.guest_id,
-                    SUM(d.due_amount) AS security_expected
-                FROM dues d
-                JOIN due_types dt ON d.due_type_id = dt.id
-                WHERE dt.code = 'SECURITY'
-                GROUP BY d.guest_id
-            ) sec_due ON g.guest_id = sec_due.guest_id
+LEFT JOIN beds bed 
+    ON bed.bed_id = b.bed_id
 
 
-            LEFT JOIN (
-                SELECT 
-                    guest_id,
-                    SUM(amount - refunded_amount) AS security_paid
-                FROM security_deposits
-                GROUP BY guest_id
-            ) sec_paid ON g.guest_id = sec_paid.guest_id
-            where g.status <>'closed'
-            ORDER BY b.bed_id ASC;
+/* 🔐 Security balance from transactions */
+LEFT JOIN (
+    SELECT
+        sa.guest_id,
+        SUM(
+            CASE
+                WHEN st.txn_type = 'received' THEN st.amount
+                WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                ELSE 0
+            END
+        ) AS security_balance
+    FROM security_accounts sa
+    LEFT JOIN security_transactions st
+        ON st.security_id = sa.id
+    GROUP BY sa.guest_id
+) sec
+    ON sec.guest_id = g.guest_id
+
+
+WHERE g.status <> 'closed'
+ORDER BY b.bed_id ASC;
 
 
 

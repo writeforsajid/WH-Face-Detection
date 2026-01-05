@@ -87,69 +87,93 @@ def get_rent_tillmonth(year: int, month: int) -> Dict:
 
     # 2) Fetch paginated list
         cur.execute(f"""
-            SELECT 
-                g.guest_id,
-                g.name,
-                b.bed_id AS bed_number,
-                b.bed_id AS title,
-                bed.sharing_type,
-                'active' as state,
-                balances.id,
-                balances.balance AS amount,
-                COALESCE(sec_paid.security_paid, 0) AS security_amount
+ SELECT 
+    g.guest_id,
+    g.name,
 
-            FROM guests g
+    b.bed_id AS bed_number,
+    b.bed_id AS title,
+    bed.sharing_type,
 
-            JOIN (
-                SELECT 
-                    guest_id,
-                    MIN(id) AS id,   -- Single ID reference
-                    SUM(due_amount - amount_paid) AS balance
-                FROM dues
-                GROUP BY guest_id
-                HAVING balance > 0
-            ) balances ON balances.guest_id = g.guest_id
+    'active' AS state,
 
+    balances.reference_due_id,
+    balances.balance AS amount,
 
-            LEFT JOIN (
-                SELECT 
-                    gb.guest_id,
-                    gb.bed_id
-                FROM guest_beds gb
-                JOIN (
-                    SELECT guest_id, MAX(assign_date) AS max_date
-                    FROM guest_beds
-                    GROUP BY guest_id
-                ) last_bed
-                    ON gb.guest_id = last_bed.guest_id
-                AND gb.assign_date = last_bed.max_date
-            ) b ON g.guest_id = b.guest_id
+    /* 🔐 Net security paid (received - adjusted - refunded) */
+    COALESCE(sec_paid.security_paid, 0) AS security_amount
+
+FROM guests g
+
+/* 💰 Outstanding dues */
+JOIN (
+    SELECT 
+        guest_id,
+        MIN(id) AS reference_due_id,
+        SUM(due_amount - amount_paid) AS balance
+    FROM dues
+    GROUP BY guest_id
+    HAVING balance > 0
+) balances 
+    ON balances.guest_id = g.guest_id
 
 
-            LEFT JOIN beds bed 
-                ON bed.bed_id = b.bed_id
+/* 🛏 Latest bed assignment */
+LEFT JOIN (
+    SELECT 
+        gb.guest_id,
+        gb.bed_id
+    FROM guest_beds gb
+    JOIN (
+        SELECT guest_id, MAX(assign_date) AS max_date
+        FROM guest_beds
+        GROUP BY guest_id
+    ) last_bed
+        ON gb.guest_id = last_bed.guest_id
+       AND gb.assign_date = last_bed.max_date
+) b 
+    ON g.guest_id = b.guest_id
 
 
-            LEFT JOIN (
-                SELECT 
-                    d.guest_id,
-                    SUM(d.due_amount) AS security_expected
-                FROM dues d
-                JOIN due_types dt ON d.due_type_id = dt.id
-                WHERE dt.code = 'SECURITY'
-                GROUP BY d.guest_id
-            ) sec_due ON g.guest_id = sec_due.guest_id
+LEFT JOIN beds bed 
+    ON bed.bed_id = b.bed_id
 
 
-            LEFT JOIN (
-                SELECT 
-                    guest_id,
-                    SUM(amount - refunded_amount) AS security_paid
-                FROM security_deposits
-                GROUP BY guest_id
-            ) sec_paid ON g.guest_id = sec_paid.guest_id
+/* 📌 OPTIONAL: expected security from legacy SECURITY dues */
+LEFT JOIN (
+    SELECT 
+        d.guest_id,
+        SUM(d.due_amount) AS security_expected
+    FROM dues d
+    JOIN due_types dt 
+        ON d.due_type_id = dt.id
+    WHERE dt.code = 'SECURITY'
+    GROUP BY d.guest_id
+) sec_due 
+    ON g.guest_id = sec_due.guest_id
 
-            ORDER BY b.bed_id ASC;
+
+/* 🔐 Security actually paid (correct model) */
+LEFT JOIN (
+    SELECT
+        sa.guest_id,
+        SUM(
+            CASE
+                WHEN st.txn_type = 'received' THEN st.amount
+                WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                ELSE 0
+            END
+        ) AS security_paid
+    FROM security_accounts sa
+    LEFT JOIN security_transactions st
+        ON st.security_id = sa.id
+    GROUP BY sa.guest_id
+) sec_paid 
+    ON g.guest_id = sec_paid.guest_id
+
+
+ORDER BY b.bed_id ASC;
+
         """)
         rows = cur.fetchall()
         result = []
@@ -794,69 +818,77 @@ def get_onloadaction(guest_id: str)  -> Dict[str, Any]:
     try:
         # Fetch approval history
         cur.execute("""
-            SELECT 
-                g.guest_id,
-                g.name,
-                b.bed_id AS bed_number,
-                b.bed_id AS title,
-                bed.sharing_type,
-                'active' as state,
-                balances.id,
-                balances.balance AS amount,
-                COALESCE(sec_paid.security_paid, 0) AS security_amount
+SELECT 
+    g.guest_id,
+    g.name,
 
-            FROM guests g
+    b.bed_id AS bed_number,
+    b.bed_id AS title,
+    bed.sharing_type,
 
-            JOIN (
-                SELECT 
-                    guest_id,
-                    MIN(id) AS id,   -- Single ID reference
-                    SUM(due_amount - amount_paid) AS balance
-                FROM dues
-                GROUP BY guest_id
-                HAVING balance > 0
-            ) balances ON balances.guest_id = g.guest_id
+    'active' AS state,
 
+    balances.id,
+    balances.balance AS amount,
 
-            LEFT JOIN (
-                SELECT 
-                    gb.guest_id,
-                    gb.bed_id
-                FROM guest_beds gb
-                JOIN (
-                    SELECT guest_id, MAX(assign_date) AS max_date
-                    FROM guest_beds
-                    GROUP BY guest_id
-                ) last_bed
-                    ON gb.guest_id = last_bed.guest_id
-                AND gb.assign_date = last_bed.max_date
-            ) b ON g.guest_id = b.guest_id
+    COALESCE(sec_paid.security_paid, 0) AS security_amount
+
+FROM guests g
+
+/* 🔴 Outstanding dues */
+JOIN (
+    SELECT 
+        guest_id,
+        MIN(id) AS id,
+        SUM(due_amount - amount_paid) AS balance
+    FROM dues
+    GROUP BY guest_id
+    HAVING SUM(due_amount - amount_paid) > 0
+) balances 
+    ON balances.guest_id = g.guest_id
 
 
-            LEFT JOIN beds bed 
-                ON bed.bed_id = b.bed_id
+/* 🛏 Latest bed assignment */
+LEFT JOIN (
+    SELECT 
+        gb.guest_id,
+        gb.bed_id
+    FROM guest_beds gb
+    JOIN (
+        SELECT guest_id, MAX(assign_date) AS max_date
+        FROM guest_beds
+        GROUP BY guest_id
+    ) last_bed
+        ON gb.guest_id = last_bed.guest_id
+       AND gb.assign_date = last_bed.max_date
+) b 
+    ON g.guest_id = b.guest_id
+
+LEFT JOIN beds bed 
+    ON bed.bed_id = b.bed_id
 
 
-            LEFT JOIN (
-                SELECT 
-                    d.guest_id,
-                    SUM(d.due_amount) AS security_expected
-                FROM dues d
-                JOIN due_types dt ON d.due_type_id = dt.id
-                WHERE dt.code = 'SECURITY'
-                GROUP BY d.guest_id
-            ) sec_due ON g.guest_id = sec_due.guest_id
+/* 🔐 Actual security paid (NEW STRUCTURE) */
+LEFT JOIN (
+    SELECT
+        sa.guest_id,
+        SUM(
+            CASE
+                WHEN st.txn_type = 'received' THEN st.amount
+                WHEN st.txn_type IN ('adjusted','refunded') THEN -st.amount
+                ELSE 0
+            END
+        ) AS security_paid
+    FROM security_accounts sa
+    LEFT JOIN security_transactions st
+        ON st.security_id = sa.id
+    GROUP BY sa.guest_id
+) sec_paid 
+    ON g.guest_id = sec_paid.guest_id
 
-
-            LEFT JOIN (
-                SELECT 
-                    guest_id,
-                    SUM(amount - refunded_amount) AS security_paid
-                FROM security_deposits
-                GROUP BY guest_id
-            ) sec_paid ON g.guest_id = sec_paid.guest_id
-            where g.guest_id=?
+WHERE g.guest_id = ?;
         """, (guest_id,))
+
         outdata = [dict(r) for r in cur.fetchall()]
         # ----------------------------------
         # Get due_type_id
@@ -1088,6 +1120,10 @@ payload: rsm.PayInitialRentRequest
         rent_payment_id=0,
         approved_payment=payload.approved_payment,
         bedNumber=payload.bedNumber,
+        admission_date= payload.admission_date,
+        pay_advance=payload.pay_advance,
+        total_payment= payload.total_payment,
+        rent_start_date= payload.rent_start_date,
         conn=conn,
         cur=cur
     )
@@ -1096,15 +1132,17 @@ payload: rsm.PayInitialRentRequest
     workflow = rpir.ParseMonthTask(                         # Split Month/Year
         rpir.ValidatePaymentModeTask(                       # in ("UPI", "CASH", "IMPS", "DD"):
             rpir.ActivateGuestTask(                         # UPDATE guests SET status='active'
-                rpir.RentDueTask(                           # Add/Update RENT DUES
+                rpir.RentPaymentTask(                           # Add/Update RENT DUES
                     rpir.SecurityDueTask(                   # Add/Update SECURITY DUES
-                            rpir.RentPaymentTask(
+                        rpir.AdvanceDueTask( 
+                            rpir.RentDueTask(
                                 rpir.AssignBed(
-                                  rpir.ApprovePayment(
-                                      rpir.AddEditPhoneNoToContact()
-                                  )
+                                    rpir.ApprovePayment(
+                                            rpir.AddEditPhoneNoToContact()
+                                    )
+                                )
                             )
-                         )
+                        )
                     )
                 )
             )
@@ -1247,6 +1285,7 @@ def clear_moveout_rent(guest_id,refund_amount,trx_id,pay_month_year,pay_date,pay
         ))
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        #----Fix later
         cur.execute("""
             UPDATE security_deposits
             SET refunded_amount = refunded_amount + ?, refunded_on = ?

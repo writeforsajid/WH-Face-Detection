@@ -4,14 +4,6 @@
     "name": "Monthly Rent"
   },
   {
-    "code": "ADVANCE",
-    "name": "Advance Payment"
-  },
-  {
-    "code": "SECURITY",
-    "name": "Security Deposit"
-  },
-  {
     "code": "MAINT",
     "name": "Maintenance"
   },

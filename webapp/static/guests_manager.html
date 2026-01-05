@@ -83,8 +83,8 @@
 		.modal-card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:600px;width:90%;max-height:80vh;overflow:hidden;animation:slideUp .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:9999}
 		@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 		@keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
-		.modal-header{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;padding:1.5rem;display:flex;justify-content:space-between;align-items:center}
-		.modal-header h3{margin:0;font-size:1.5rem;font-weight:700}
+		.modal-header{background:linear-gradient(135deg,#818cf8 0%,#a78bfa 100%);color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center}
+		.modal-header h3{margin:0;font-size:1rem;font-weight:700}
 		.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:1.5rem;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s ease}
 		.modal-close:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
 		.modal-body{padding:1.5rem;max-height:calc(80vh - 120px);overflow-y:auto}
@@ -102,11 +102,8 @@
 		.snackbar button{background:transparent;border:0;color:#60a5fa;font-weight:700;cursor:pointer;padding:.25rem .5rem;border-radius:6px}
 		.snackbar button:hover{color:#93c5fd;text-decoration:underline}
 		@keyframes snackIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-		.is-invalid {
-		border-color: #dc3545;
-		}
-
+		.is-invalid { border-color: #dc3545; }
+		.error {color:#dc3545;font-weight:700;border-color: #dc3545;}
 		</style>
 	<script>
 				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
@@ -788,73 +785,149 @@
 </form>
 
 			</div>
-			<div class="step-tab-panel" data-step="step3">
-				<h3>Current month due</h3>
+				<div class="step-tab-panel" data-step="step3">
+					<h3>Admission Details</h3>
 
-				<form name="frmDue" id="frmDue">
-				Rent to be paid for remaining days<br>
-				Rent Due:<br>
-				<input type="text" name="rent_due" value="0" class="amount form-control" placeholder="Enter rent amount" required>
-				<!-- <input type="text" name="txtFirstName" class="amount" required> -->
-				<hr/>
-				Security deposit will be 5000/-
-				<br> Security:<br>
-				<input type="text" name="security_due" value="0" class="amount form-control" placeholder="Enter security amount" required>
-				<!-- <input type="text" name="txtLastName" class="amount" required> -->
-				</form>
-			</div>
-			<div class="step-tab-panel" data-step="step4">
-				<h3>Payment</h3>
+					<form name="frmDue"class="frmDue-section"  id="frmDue">
+
+						<!-- ========================= -->
+						<!-- 📅 Admission FACTS -->
+						<!-- ========================= -->
 						<div class="row g-2">
-
 							<div class="col-md-6">
-								<form name="frmPayment" id="frmPayment">
-								<input type="text" name="pay-amount" class="form-control form-control-sm mb-2 pay-amount amount required"
-										value ='0' placeholder="Pay Rent" />
-								<input type="text" class="form-control form-control-sm mb-2 trx-id required"
-										placeholder="Transaction ID" />
-								<input type="month"  class="form-control form-control-sm mb-2 payinitate-month-year"  min="1990-01" max="2030-12">
-								<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
-
-								<select class="form-control mb-2 payment-mode required">
-									<option value="">Select</option>
-									<option value="DIGIT">Digital</option>
-									<option value="CASH">Cash</option>
-									<option value="UPI">UPI</option>
-									<option value="IMPS">IMPS</option>
-								</select>
-
-								<input type="text" class="form-control form-control-sm mb-2 paid-by required"
-										placeholder="Made by guest name" />
-
-
-         <div class="form-check mt-2"> 
-            <input class="form-check-input"
-                   type="checkbox"
-                   id="payApprovalChk"
-                   checked>
-            <label class="form-check-label" for="payApprovalChk">
-                Approve payment
-            </label>
-         </div> 
-									</form>
+								<label>Admission Date</label>
+								<input type="date"
+									name="admission_date"
+									class="form-control form-control-sm mb-2 admission_date  required"
+									required>
 							</div>
+
 							<div class="col-md-6">
-							<!-- <input type="text" class="form-control form-control-sm mb-2 security-due amount "
-									placeholder="Default security on bed" value='0' disabled/> -->
+								<label>Rent Start Date</label>
+								<input type="date"
+									name="rent_start_date"
+									class="form-control  form-control-sm mb-2 rent_start_date  required"
+									required>
+ 
+								</div>
+						</div>
 
+						<div class="row g-2 mt-2">
+							<div class="col-md-6">
+								<label>Billing Cycle</label>
+								<select id ="billing_cycle" name="billing_cycle" class="form-control">
+									<option value="monthly" selected>Monthly</option>
+								</select>
+							</div>
 
-								<div>
-									<h5>Description</h5>
-									<div id="dues-summary" class="mt-2"></div>
-								</div>	
+							<div class="col-md-6">
+								<label>Monthly Rent(Expected)</label>
+								<input type="text"
+									name="monthly_rent"
+									class="form-control  form-control-sm mb-2 monthly_rent  required amount"
+									placeholder="Monthly rent"
+									value="0"
+									required>
 							</div>
 						</div>
 
+						<div class="row g-2 mt-2">
+							<div class="col-md-12">
+								<label>Security Amount (Expected)</label>
+								<input type="text"
+									name="security_expected"
+									class="form-control  form-control-sm mb-2 security_expected  required amount"
+									placeholder="Expected security amount">
+							</div>
+						</div>
 
-						
-				</form>
-			</div>
+						<hr/>
+
+
+					</form>
+				</div>
+
+
+<div class="step-tab-panel" data-step="step4">
+    <h3>Payment collection</h3>
+
+    <form name="frmPayment" class="frmPayment-section" id="frmPayment">
+        <div class="row g-3">
+
+            <!-- Rent for remaining days -->
+            <div class="col-md-3">
+                <input type="text" name="rent_due" class="form-control form-control-sm mb-2 rent_due amount required" title="Rent for Remaining Days" placeholder="Rent for Remaining Days" required>
+            </div>
+
+            <!-- Security collected now -->
+            <div class="col-md-3">
+                <input type="text" name="security_due" class="form-control form-control-sm mb-2 security_due amount required" title="Security Collected" placeholder="Security Collected" required>
+            </div>
+
+            <!-- Advance payment -->
+            <div class="col-md-3">
+                <input type="text" name="advance_due" class="form-control form-control-sm mb-2 advance_due amount required" title="Advance collected(Optional)" placeholder="Advance collected(Optional)" required>
+            </div>
+
+            <!-- Total amount -->
+            <div class="col-md-3">
+                <input type="text" name="total_amount" class="form-control form-control-sm mb-2 total_amount amount required" placeholder="0" readonly>
+            </div>
+
+            <!-- ========================= -->
+            <!-- 💳 PAYMENT INFO ROW -->
+            <!-- ========================= -->
+
+            <div class="col-md-3">
+                <input type="text" class="form-control form-control-sm mb-2 trx-id required" placeholder="Transaction ID">
+            </div>
+
+            <div class="col-md-3">
+                <input type="month" class="form-control form-control-sm mb-2 payinitate-month-year required" min="1990-01" max="2030-12">
+            </div>
+
+            <div class="col-md-3">
+                <input type="date" class="form-control form-control-sm mb-2 pay-date required" >
+            </div>
+
+            <div class="col-md-3">
+                <select class="form-control form-control-sm mb-2 form-select payment-mode required">
+                    <option value="">Select</option>
+                    <option value="DIGIT">Digital</option>
+                    <option value="CASH">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="IMPS">IMPS</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <input type="text" class="form-control form-control-sm mb-2 paid-by" placeholder="Guest Name">
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center mt-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="payApprovalChk" checked>
+                    <label class="form-control form-control-sm mb-2 m-check-label" for="payApprovalChk">
+                        Approve payment
+                    </label>
+                </div>
+            </div>
+
+            <!-- ========================= -->
+            <!-- 📝 DESCRIPTION ROW -->
+            <!-- ========================= -->
+            <div class="col-12 mt-3">
+                <div id="dues-summary" class="mt-2 border p-2 rounded"></div>
+            </div>
+
+        </div>
+    </form>
+</div>
+				
+
+
+
+
 <div class="step-tab-panel" data-step="step5">
     <h3>Summary</h3>
 
@@ -875,7 +948,7 @@
                     <td id="sumBed"></td>
                 </tr>
                 <tr>
-                    <th>Rent Due</th>
+                    <th>Expected due</th>
                     <td id="sumDues"></td>
                 </tr>
                 <tr>
@@ -1146,8 +1219,6 @@
 									<select class="form-control mb-2 dues-type required">
 										<option value="">Select</option>
 										<option value="RENT">Monthly Rent</option>
-										<option value="ADVANCE">Advance Payment</option>
-										<option value="SECURITY">Security Deposit</option>
 										<option value="MAINT">Maintenance</option>
 										<option value="ELEC">Electricity</option>
 										<option value="FOOD">Food</option>
@@ -1744,7 +1815,7 @@
         }
 		// step3
         if (currentIndex === 2) {
-
+		  loadAdmission();
           if (stepDirection === 'forward') {
             if (!frmDue.valid()) return false;
 			if (!validateSection($("#frmDue"))) {return false; }// stop wizard }
@@ -1756,6 +1827,7 @@
         }		
         // step4
         if (currentIndex === 3) {
+		  loadPaymentCollection();
           if (stepDirection === 'forward') {
             if (!frmPayment.valid()) return false;
 			if (!validateSection($("#frmPayment"))) {return false; }// stop wizard }
@@ -1792,16 +1864,27 @@
 
 		const section = $("#frmPayment");
 
+		const payAmount = parseInt($("#frmPayment").find(".total_amount").val(), 10) || 0;
 		const summary = {
 			activate_user: $("#activateUserChk").is(":checked"),
 			send_email: $("#emailUserChk").is(":checked"),
 			created_by: CURRENT_USER,
 			guest_id: action_dataset_info.guest_id,	
 			guest_name: action_dataset_info.name,		
-			rent_dueable  : $("#frmDue input[name='rent_due']").val() || "0",
-			security_due : $("#frmDue input[name='security_due']").val() || "0",			
-			pay_security  : section.find(".pay-security").val()|| "0",
-			pay_rent      : $("#frmPayment input[name='pay-amount']").val()|| "0",
+			
+			
+			rent_dueable  : $("#frmDue").find(".monthly_rent").val() || "0",
+			security_due :$("#frmDue").find(".security_expected").val() || "0",			
+			admission_date:$("#frmDue").find(".admission_date").val() || "-",
+			rent_start_date:$("#frmDue").find(".rent_start_date").val() || "-",
+			billing_cycle:$("#billing_cycle option:selected").val() ? $("#billing_cycle option:selected").text() : "Not assigned",
+
+			pay_rent  : section.find(".rent_due").val()|| "0", 
+			pay_security  : section.find(".security_due").val()|| "0",
+			pay_advance  : section.find(".advance_due").val()|| "0",			
+
+			
+			total_payment : $("#frmPayment").find(".total_amount").val()|| "0",
 			trx_id        : section.find(".trx-id").val(),
 			pay_month_year : section.find(".payinitate-month-year").val(),					
 			pay_date      : section.find(".pay-date").val(),
@@ -1907,6 +1990,63 @@ function validateSection(section) {
 }
 
 
+function loadAdmission() {
+			const roomRent =
+			$("#roomTypeContainer .room-card.active .room-rent").text().replace(/\D/g, '') || "0";
+			$('[name="monthly_rent"]').val(roomRent);
+			$('[name="security_expected"]').val(roomRent);
+			
+}
+function loadPaymentCollection() {
+
+    const frmDue = $("#frmDue");
+    const frmPayment = $("#frmPayment");
+
+    const rentStartDate = frmDue.find(".rent_start_date").val();
+	const security_expected= frmDue.find(".security_expected").val();
+    const rentVal = frmDue.find(".monthly_rent").val() || "0";
+    const monthlyRent = Number(rentVal.replace(/\D/g, ''));
+
+    if (!rentStartDate || monthlyRent === 0) return;
+
+    // Convert to Date
+    const startDate = new Date(rentStartDate);
+
+    // Days in month
+    const daysInMonth = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        0
+    ).getDate();
+
+    // Remaining days (including start date)
+    const remainingDays = daysInMonth - startDate.getDate() + 1;
+
+    // Pro-rata rent
+    const perDayRent = monthlyRent / daysInMonth;
+    const expectedRent = Math.round(perDayRent * remainingDays);
+
+		// ✅ Set rent due in PAYMENT section
+	const rentDueField = frmPayment.find(".rent_due");
+
+	if (!rentDueField.val()?.trim()) {
+		rentDueField.val(expectedRent).trigger("input");
+	}
+
+	const securityDueField = frmPayment.find(".security_due");
+
+	if (!securityDueField.val()?.trim()) {
+		securityDueField.val(security_expected).trigger("input");
+	}
+    // ✅ Summary
+    $("#dues-summary").html(`
+        <div class="form-control-sm mb-2 text-danger">
+            Expected rent for remaining days: ₹${expectedRent}<br>
+            Expected security collected:₹${security_expected}<br>
+            Expected advance collected (Optional): Zero
+        </div>
+    `);
+}
 function populateSummary() {
 
     // STEP-1 (example – adjust IDs if needed)
@@ -1921,17 +2061,15 @@ function populateSummary() {
     const bedOpt = $("#vacantRoomSelect option:selected");
     $("#sumBed").text((bedOpt.val() ? bedOpt.text() : "Not assigned")+' - Date:'+$("#assignDate").val() || "-");
     // STEP-3 (Due form)
-    const rentDue = parseInt($("#frmDue input[name='rent_due']").val(), 10) || 0;
-	const securityDue = parseInt($("#frmDue input[name='security_due']").val(), 10) || 0;
-	const payAmount = parseInt($("#frmPayment input[name='pay-amount']").val(), 10) || 0;
+    const rentDue = parseInt($("#frmDue").find(".monthly_rent").val(), 10) || 0;
+	const securityDue = parseInt($("#frmDue").find(".security_expected").val(), 10) || 0;
+	const payAmount = parseInt($("#frmPayment").find(".total_amount").val(), 10) || 0;
 	const totalDues = rentDue + securityDue;
 	
-	$("#sumDues").text(rentDue+' + '+securityDue +' = '+ totalDues  +' : Rent + Security');
+	$("#sumDues").text(rentDue+' + '+securityDue +' = '+ totalDues  +' : Rent + Sec');
 	$("#sumPayment").text(payAmount);
 
     $("#sumSecurity").text(totalDues-payAmount );
-
-
 
 
 
@@ -2177,7 +2315,19 @@ document.addEventListener("click", function (e) {
   }
 });
 
+$(document).on(
+	"input change",
+	".frmPayment-section input, .frmPayment-section  select",
+	function () {
+		const section = $(this).closest(".frmPayment-section");
 
+		const _rent_due = parseFloat(section.find(".rent_due").val().replace(/\D/g, '')) || 0;
+		const _security_due = parseFloat(section.find(".security_due").val().replace(/\D/g, '')) || 0;
+		const _advance_due = parseFloat(section.find(".advance_due").val().replace(/\D/g, '')) || 0;
+		section.find(".total_amount").val(_rent_due+_security_due+_advance_due);
+
+	}
+)
 function validateRoomAndBedMatch() {
     const errorDiv = $("#bedSharingError");
     errorDiv.addClass("d-none");
@@ -2198,6 +2348,7 @@ function validateRoomAndBedMatch() {
         errorDiv.removeClass("d-none");
         return false;
     }
+
 
     return true;
 }
@@ -2246,6 +2397,9 @@ function resetWizard() {
     $("#emailUserChk").prop("checked", false);
     $("#payApprovalChk").prop("checked", false);
 
+    let today = new Date().toISOString().split('T')[0];
+    $('input[name="admission_date"]').val(today);
+	$('input[name="rent_start_date"]').val(today);
 
     /* ===============================
        6. Clear inline validation errors

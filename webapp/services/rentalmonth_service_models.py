@@ -58,3 +58,11 @@ class PayInitialRentRequest(BaseModel):
     roomBed: str = "-"
     roomAssignedAt: str = "-"
     bdasign: str = "-"
+
+    admission_date: str
+    billing_cycle: str
+    pay_advance: float
+    total_payment: float
+    rent_start_date: str
+
+
