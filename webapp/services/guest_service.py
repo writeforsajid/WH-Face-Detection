@@ -503,7 +503,7 @@ def confirm_guest(guest_id: str) -> bool:
 
         # Update confirmed status
         data["confirmed"] = True
-
+# 
         guest_id = datetime.now().strftime("%Y%m%d%H%M%S")
         name=  data["guest_name"];
         guest_type= data["guest_type"];
@@ -596,8 +596,7 @@ def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
     conn.commit()
     conn.close()
 
-    thisdict = { "company_name": "White House residence", "contact": 8744000574 }
-    thisdict.name=name;
+    thisdict = { "company_name": "White House residence", "name": name ,"contact": 8744000574 }
     thisList =[]
     thisList.append(email);
     send_email(thisList,"Welcome to White House residence","welcome.html",thisdict)
