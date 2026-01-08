@@ -71,11 +71,21 @@ class RentDueJob:
 def apply_wallet_to_due(cur, guest_id, due_id, due_amount):
     # 1️⃣ get wallet balance
     cur.execute("""
-        SELECT COALESCE(SUM(amount), 0) AS balance
-        FROM wallet_transactions
-        WHERE guest_id = ?
+        SELECT COALESCE(SUM(
+            CASE
+                WHEN wt.txn_type = 'credit' THEN wt.amount
+                WHEN wt.txn_type = 'debit'  THEN -wt.amount
+                ELSE 0
+            END
+        ), 0) AS balance
+        FROM wallet_accounts wa
+        LEFT JOIN wallet_transactions wt
+            ON wt.wallet_id = wa.id
+        WHERE wa.guest_id = ?
     """, (guest_id,))
-    wallet_balance = cur.fetchone()["balance"]
+
+    wallet_balance = float(cur.fetchone()["balance"])
+
 
     if wallet_balance <= 0:
         return
@@ -94,18 +104,39 @@ def apply_wallet_to_due(cur, guest_id, due_id, due_amount):
         WHERE id = ?
     """, (adjust_amount, adjust_amount, due_id))
 
-    # 4️⃣ deduct from wallet
+    cur.execute("""
+        SELECT id
+        FROM wallet_accounts
+        WHERE guest_id = ?
+    """, (guest_id,))
+
+    row = cur.fetchone()
+
+    if row:
+        wallet_id = row["id"]
+    else:
+        cur.execute("""
+            INSERT INTO wallet_accounts (guest_id, created_on)
+            VALUES (?, datetime('now'))
+        """, (guest_id,))
+        wallet_id = cur.lastrowid
+ 
     cur.execute("""
         INSERT INTO wallet_transactions (
-            guest_id, amount, reason,
-            reference_id, created_at, remarks
+            wallet_id,
+            amount,
+            txn_type,
+            reference_id,
+            created_at,
+            remarks
         )
-        VALUES (?, ?, 'ADVANCE_APPLIED', ?, datetime('now'), ?)
+        VALUES (?, ?, 'debit', ?, datetime('now'), ?)
     """, (
-        guest_id,
-        -adjust_amount,
+        wallet_id,
+        adjust_amount,     # POSITIVE number
         due_id,
         "Advance adjusted against monthly rent"
     ))
 
+        
     PaymentEmailService.send(cur,guest_id,adjust_amount)

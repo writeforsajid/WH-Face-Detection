@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, HTTPException, Query, Header,Form, UploadFile
 from pydantic import BaseModel
-from services import rentalmonth_service,dash_rental_service,rentalmonth_service_models
+from services import rentalmonth_service,dash_rental_service,rentalmonth_service_models,rentalmonth_pay_Initial_rent
 from datetime import datetime, timezone
 from typing import List, Dict, Optional,Any
 
@@ -251,6 +251,27 @@ payload: rentalmonth_service_models.PayInitialRentRequest
         
         return rentalmonth_service.pay_initial_rent(payload)
         #return rentalmonth_service.pay_initial_rent(created_by, guest_id,rent_dueable,pay_security,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+
+
+@router.post("/paySecurity")
+def pay_Security(
+payload: rentalmonth_service_models.SecurityRequest
+):
+         return rentalmonth_service.pay_intermediate_security(payload)
+       
+
+
+@router.post("/payAdvance")
+def pay_Advance(
+payload: rentalmonth_service_models.AdvanceRequest
+):
+        
+        return rentalmonth_service.pay_intermediate_advance(payload)
+        #return rentalmonth_service.pay_initial_rent(created_by, guest_id,rent_dueable,pay_security,pay_rent,trx_id,pay_month_year,pay_date,payment_mode,paid_by)
+
+
+
+
 
 
 

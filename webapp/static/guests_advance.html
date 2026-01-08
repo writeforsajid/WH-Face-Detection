@@ -16,7 +16,7 @@
 	<!-- <script type="module" src="/static/components/employee-filter.js"></script> -->
 	
 	<style>
-       body{font-family:Arial;padding:20px;margin:auto;}
+      body{font-family:Arial;padding:20px;margin:auto;}
       label{display:block;font-weight:bold;margin-top:15px;}
       input,select,textarea{width:100%;padding:10px;margin-top:5px;border-radius:5px;border:1px solid #ccc;}
       button{margin-top:20px;padding:12px;width:100%;background:#0275d8;color:#fff;border:none;border-radius:5px;font-size:16px;cursor:pointer;}
@@ -33,7 +33,7 @@
     <div class="page-header">
       <div class="page-header-content">
           <div>
-            <h1><i class="bi bi-people-fill"></i> Leave approval</h1>
+            <h1><i class="bi bi-people-fill"></i> Guests Advance</h1>
           </div>
 
     </div>
@@ -42,24 +42,24 @@
 
 
 
-      <employee-filter  data-api="/employees/active"> </employee-filter>
+      <employee-filter  data-api="/guests/active"> </employee-filter>
     
 
       <smart-table
-        id="leaveTable"
-        data-api="/leave/unapproved"
-        data-title="Unapproved leaves"
-        data-id-key="leave_id" 
+        id="advanceTable"
+        data-api="/guests/guest_advance"
+        data-title="Advance payment"
+        data-id-key="id" 
         data-auto-load="false"
         data-columns='[
-          {"key":"leave_id","label":"ID"},
-          {"key":"leave_type_id","label":"Type"},
-          {"key":"start_date","label":"Start"},
-          {"key":"end_date","label":"End"},
+          {"key":"id","label":"ID"},
+          {"key":"guest_id","label":"Guest"},
+          {"key":"amount","label":"Amount"},
           {"key":"reason","label":"Reason"},
-          {"key":"status","label":"Status"}
+          {"key":"reference_id","label":"ref"},
+          {"key":"remark","label":"Remark"}
         ]'
-        data-actions='["approve","reject","delete"]'
+        data-actions='["myapprove","yrreject","ourdelete"]'
       >
       </smart-table>
 
@@ -162,12 +162,13 @@
     const role = user.role || '';
     console.log("Received DATA:", filter);
     //let filter = document.getElementById("logFilter");
-    let table = document.getElementById("leaveTable");
+    let table = document.getElementById("advanceTable");
 
     
 
 
     table.setParams({
+      guest_id: filter.employeeId,
       startDate: filter.startDate,
       endDate: filter.endDate,
     });
@@ -184,7 +185,7 @@
 
 <script>
 customElements.whenDefined("smart-table").then(() => {
-    const table = document.getElementById("leaveTable");
+    const table = document.getElementById("advanceTable");
 
     // APPLY FORMATTERS
     table.setFormatters({

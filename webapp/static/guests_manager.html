@@ -27,44 +27,13 @@
 	<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>	
 
 <style>
-.room-type-grid {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.room-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 6px 8px;
-    min-width: 100px;
-    cursor: pointer;
-    text-align: center;
-    transition: 0.2s;
-}
-
-.room-card:hover {
-    border-color: #0d6efd;
-}
-
-.room-card input {
-    display: none;
-}
-
-.room-card.active {
-    border-color: #0d6efd;
-    background: #f1f7ff;
-}
-
-.room-title {
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.room-rent {
-    color: #555;
-    font-size: 14px;
-}
+.room-type-grid{display:flex;gap:6px;flex-wrap:wrap;}
+.room-card{border:1px solid #ddd;border-radius:8px;padding:6px 8px;min-width:100px;cursor:pointer;text-align:center;transition:.2s;}
+.room-card:hover{border-color:#0d6efd;}
+.room-card input{display:none;}
+.room-card.active{border-color:#0d6efd;background:#f1f7ff;}
+.room-title{font-weight:600;margin-bottom:4px;}
+.room-rent{color:#555;font-size:14px;}
 </style>
 
 		<style>
@@ -247,6 +216,21 @@
 								>
 									Init
 								</button>` : ''}
+
+								<button 
+            class="btn btn-primary  btn-sm secadv-btn ${isJustRegistered ? 'disabled' : ''}"
+            ${isJustRegistered ? 'disabled title="Payment disabled for blank status"' : ''}
+            data-info='${JSON.stringify({
+										guest_id: r.guest_id,
+										name: r.name,
+										bed_no: r.bed_no,
+										face_count: r.face_count,
+										email: r.email,
+										status: r.status
+									})}'
+								>
+									Sec
+								</button>
 
 								${!isJustRegistered ? `<button class="btn btn-dark btn-sm moveout-btn" data-info='${JSON.stringify({
 										guest_id: r.guest_id,
@@ -651,440 +635,723 @@
 			</div>
 	</div>
 
-		<!-- Inactive Guests Modal -->
-		<div class="modal-overlay" id="inactiveGuestsModal">
-			<div class="modal-card">
-				<div class="modal-header">
-					<h3><i class="bi bi-people"></i> Inactive Guests</h3>
-					<button class="modal-close" onclick="closeModal()">×</button>
+	<!-- Inactive Guests Modal -->
+	<div class="modal-overlay" id="inactiveGuestsModal">
+		<div class="modal-card">
+			<div class="modal-header">
+				<h3><i class="bi bi-people"></i> Inactive Guests</h3>
+				<button class="modal-close" onclick="closeModal()">×</button>
+			</div>
+			<div class="modal-body" id="inactiveGuestsBody">
+				<!-- Content will be dynamically loaded here -->
+			</div>
+		</div>
+	</div>
+
+
+	<!-- Initiate Wizard Modal -->
+	<div class="modal fade" id="initiateModal" tabindex="-1">
+	<div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+		<div class="modal-content">
+
+		<div class="modal-header">
+			<h5 class="modal-title" id="actionPaymentLabel">
+			<i class="bi bi-lightning-charge"></i> Initiate Process
+			</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+		</div>
+
+		<div class="modal-body">
+			<!-- Confirmation Prompt  -->		
+				<div id="wizconfirmBar" class="alert alert-warning d-none"
+					style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+							z-index:1055; min-width:300px;">
+					<span id="wizconfirmText">Are you sure?</span>
+
+					<div class="float-end">
+						<button id="wizconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+						<button id="wizconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+					</div>
 				</div>
-				<div class="modal-body" id="inactiveGuestsBody">
-					<!-- Content will be dynamically loaded here -->
+			<!-- Wizard START -->
+			<div class="step-app" id="init_wizard">
+			<ul class="step-steps">
+				<li data-step-target="step1">Step 1</li>
+				<li data-step-target="step2">Step 2</li>
+				<li data-step-target="step3">Step 3</li>
+				<li data-step-target="step4">Step 4</li>
+				<li data-step-target="step5">Step 5</li>
+			</ul>
+
+			<div style="color:#000" class="step-content">
+				<div class="step-tab-panel" data-step="step1">
+					<div id="guestDetailsLoader" class="text-muted">Loading guest details...</div>
+
+					<table class="table table-sm table-bordered mt-3 d-none" id="guestDetailsTable">
+						<tbody>
+						<tr>
+							<th>Guest ID</th>
+							<td id="gd_guest_id"></td>
+						</tr>
+						<tr>
+							<th>Name</th>
+							<td id="gd_name"></td>
+						</tr>
+						<tr>
+							<th>Bed Number</th>
+							<td id="gd_bed"></td>
+						</tr>
+						<tr>
+							<th>Sharing Type</th>
+							<td id="gd_sharing"></td>
+						</tr>
+						<tr>
+							<th>Status</th>
+							<td id="gd_state"></td>
+						</tr>
+						<tr>
+							<th>Due Balance</th>
+							<td id="gd_amount"></td>
+						</tr>
+						<tr>
+							<th>Security Paid</th>
+							<td id="gd_security"></td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="step-tab-panel" data-step="step2">
+					<h3>Room details</h3>
+					
+					<form name="frmInfo" id="frmInfo">
+
+		Room type:<br>
+		<div id="roomTypeContainer" class="room-type-grid"></div>
+
+		<hr/>
+
+		<label class="form-label">Vacant Bed(s): OPTIONAL</label>
+		<input type="text" id="roomType" class="form-control" hidden>
+
+		<select id="vacantRoomSelect" name="bed_id" class="form-select">
+			<!-- options added by JS -->
+		</select>
+
+		<div class="text-danger small mt-1 d-none" id="bedSharingError">
+			Selected bed does not match room type
+		</div>
+
+		<!-- Assign bed + date (same row) -->
+		<div class="row align-items-center mt-3">
+			<div class="col-auto">
+				<div class="form-check">
+					<input class="form-check-input"
+						type="checkbox"
+						id="assignBedChk"
+						disabled>
+					<label class="form-check-label" for="assignBedChk">
+						Assign this bed
+					</label>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<input type="date"
+					id="assignDate"
+					class="form-control"
+					disabled>
+				<div class="text-danger small d-none" id="assignDateError">
+					Assign date is required
 				</div>
 			</div>
 		</div>
 
+	</form>
 
- <!-- Initiate Wizard Modal -->
-<div class="modal fade" id="initiateModal" tabindex="-1">
-  <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title" id="actionPaymentLabel">
-          <i class="bi bi-lightning-charge"></i> Initiate Process
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Confirmation Prompt  -->		
-			<div id="wizconfirmBar" class="alert alert-warning d-none"
-				style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
-						z-index:1055; min-width:300px;">
-				<span id="wizconfirmText">Are you sure?</span>
-
-				<div class="float-end">
-					<button id="wizconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
-					<button id="wizconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
 				</div>
-			</div>
-        <!-- Wizard START -->
-        <div class="step-app" id="init_wizard">
-          <ul class="step-steps">
-            <li data-step-target="step1">Step 1</li>
-            <li data-step-target="step2">Step 2</li>
-            <li data-step-target="step3">Step 3</li>
-            <li data-step-target="step4">Step 4</li>
-            <li data-step-target="step5">Step 5</li>
-          </ul>
+					<div class="step-tab-panel" data-step="step3">
+						<h3>Admission Details</h3>
 
-		<div style="color:#000" class="step-content">
-			<div class="step-tab-panel" data-step="step1">
-				<div id="guestDetailsLoader" class="text-muted">Loading guest details...</div>
+						<form name="frmDue"class="frmDue-section"  id="frmDue">
 
-				<table class="table table-sm table-bordered mt-3 d-none" id="guestDetailsTable">
-					<tbody>
-					<tr>
-						<th>Guest ID</th>
-						<td id="gd_guest_id"></td>
-					</tr>
-					<tr>
-						<th>Name</th>
-						<td id="gd_name"></td>
-					</tr>
-					<tr>
-						<th>Bed Number</th>
-						<td id="gd_bed"></td>
-					</tr>
-					<tr>
-						<th>Sharing Type</th>
-						<td id="gd_sharing"></td>
-					</tr>
-					<tr>
-						<th>Status</th>
-						<td id="gd_state"></td>
-					</tr>
-					<tr>
-						<th>Due Balance</th>
-						<td id="gd_amount"></td>
-					</tr>
-					<tr>
-						<th>Security Paid</th>
-						<td id="gd_security"></td>
-					</tr>
-					</tbody>
-				</table>
-			</div>
-			<div class="step-tab-panel" data-step="step2">
-				<h3>Room details</h3>
-				
-				<form name="frmInfo" id="frmInfo">
-
-    Room type:<br>
-    <div id="roomTypeContainer" class="room-type-grid"></div>
-
-    <hr/>
-
-    <label class="form-label">Vacant Bed(s): OPTIONAL</label>
-    <input type="text" id="roomType" class="form-control" hidden>
-
-    <select id="vacantRoomSelect" name="bed_id" class="form-select">
-        <!-- options added by JS -->
-    </select>
-
-    <div class="text-danger small mt-1 d-none" id="bedSharingError">
-        Selected bed does not match room type
-    </div>
-
-    <!-- Assign bed + date (same row) -->
-    <div class="row align-items-center mt-3">
-        <div class="col-auto">
-            <div class="form-check">
-                <input class="form-check-input"
-                       type="checkbox"
-                       id="assignBedChk"
-                       disabled>
-                <label class="form-check-label" for="assignBedChk">
-                    Assign this bed
-                </label>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <input type="date"
-                   id="assignDate"
-                   class="form-control"
-                   disabled>
-            <div class="text-danger small d-none" id="assignDateError">
-                Assign date is required
-            </div>
-        </div>
-    </div>
-
-</form>
-
-			</div>
-				<div class="step-tab-panel" data-step="step3">
-					<h3>Admission Details</h3>
-
-					<form name="frmDue"class="frmDue-section"  id="frmDue">
-
-						<!-- ========================= -->
-						<!-- 📅 Admission FACTS -->
-						<!-- ========================= -->
-						<div class="row g-2">
-							<div class="col-md-6">
-								<label>Admission Date</label>
-								<input type="date"
-									name="admission_date"
-									class="form-control form-control-sm mb-2 admission_date  required"
-									required>
-							</div>
-
-							<div class="col-md-6">
-								<label>Rent Start Date</label>
-								<input type="date"
-									name="rent_start_date"
-									class="form-control  form-control-sm mb-2 rent_start_date  required"
-									required>
- 
+							<!-- ========================= -->
+							<!-- 📅 Admission FACTS -->
+							<!-- ========================= -->
+							<div class="row g-2">
+								<div class="col-md-6">
+									<label>Admission Date</label>
+									<input type="date"
+										name="admission_date"
+										class="form-control form-control-sm mb-2 admission_date  required"
+										required>
 								</div>
-						</div>
 
-						<div class="row g-2 mt-2">
-							<div class="col-md-6">
-								<label>Billing Cycle</label>
-								<select id ="billing_cycle" name="billing_cycle" class="form-control">
-									<option value="monthly" selected>Monthly</option>
-								</select>
+								<div class="col-md-6">
+									<label>Rent Start Date</label>
+									<input type="date"
+										name="rent_start_date"
+										class="form-control  form-control-sm mb-2 rent_start_date  required"
+										required>
+	
+									</div>
 							</div>
 
-							<div class="col-md-6">
-								<label>Monthly Rent(Expected)</label>
-								<input type="text"
-									name="monthly_rent"
-									class="form-control  form-control-sm mb-2 monthly_rent  required amount"
-									placeholder="Monthly rent"
-									value="0"
-									required>
+							<div class="row g-2 mt-2">
+								<div class="col-md-6">
+									<label>Billing Cycle</label>
+									<select id ="billing_cycle" name="billing_cycle" class="form-control">
+										<option value="monthly" selected>Monthly</option>
+									</select>
+								</div>
+
+								<div class="col-md-6">
+									<label>Monthly Rent(Expected)</label>
+									<input type="text"
+										name="monthly_rent"
+										class="form-control  form-control-sm mb-2 monthly_rent  required amount"
+										placeholder="Monthly rent"
+										value="0"
+										required>
+								</div>
 							</div>
-						</div>
 
-						<div class="row g-2 mt-2">
-							<div class="col-md-12">
-								<label>Security Amount (Expected)</label>
-								<input type="text"
-									name="security_expected"
-									class="form-control  form-control-sm mb-2 security_expected  required amount"
-									placeholder="Expected security amount">
+							<div class="row g-2 mt-2">
+								<div class="col-md-12">
+									<label>Security Amount (Expected)</label>
+									<input type="text"
+										name="security_expected"
+										class="form-control  form-control-sm mb-2 security_expected  required amount"
+										placeholder="Expected security amount">
+								</div>
 							</div>
-						</div>
 
-						<hr/>
+							<hr/>
 
 
-					</form>
+						</form>
+					</div>
+
+
+	<div class="step-tab-panel" data-step="step4">
+		<h3>Payment collection</h3>
+
+		<form name="frmPayment" class="frmPayment-section" id="frmPayment">
+			<div class="row g-3">
+
+				<!-- Rent for remaining days -->
+				<div class="col-md-3">
+					<input type="text" name="rent_due" class="form-control form-control-sm mb-2 rent_due amount required" title="Rent for Remaining Days" placeholder="Rent for Remaining Days" required>
 				</div>
 
+				<!-- Security collected now -->
+				<div class="col-md-3">
+					<input type="text" name="security_due" class="form-control form-control-sm mb-2 security_due amount required" title="Security Collected" placeholder="Security Collected" required>
+				</div>
 
-<div class="step-tab-panel" data-step="step4">
-    <h3>Payment collection</h3>
+				<!-- Advance payment -->
+				<div class="col-md-3">
+					<input type="text" name="advance_due" class="form-control form-control-sm mb-2 advance_due amount required" title="Advance collected(Optional)" placeholder="Advance collected(Optional)" required>
+				</div>
 
-    <form name="frmPayment" class="frmPayment-section" id="frmPayment">
-        <div class="row g-3">
+				<!-- Total amount -->
+				<div class="col-md-3">
+					<input type="text" name="total_amount" class="form-control form-control-sm mb-2 total_amount amount required" placeholder="0" readonly>
+				</div>
 
-            <!-- Rent for remaining days -->
-            <div class="col-md-3">
-                <input type="text" name="rent_due" class="form-control form-control-sm mb-2 rent_due amount required" title="Rent for Remaining Days" placeholder="Rent for Remaining Days" required>
-            </div>
+				<!-- ========================= -->
+				<!-- 💳 PAYMENT INFO ROW -->
+				<!-- ========================= -->
 
-            <!-- Security collected now -->
-            <div class="col-md-3">
-                <input type="text" name="security_due" class="form-control form-control-sm mb-2 security_due amount required" title="Security Collected" placeholder="Security Collected" required>
-            </div>
+				<div class="col-md-3">
+					<input type="text" class="form-control form-control-sm mb-2 trx-id required" placeholder="Transaction ID">
+				</div>
 
-            <!-- Advance payment -->
-            <div class="col-md-3">
-                <input type="text" name="advance_due" class="form-control form-control-sm mb-2 advance_due amount required" title="Advance collected(Optional)" placeholder="Advance collected(Optional)" required>
-            </div>
+				<div class="col-md-3">
+					<input type="month" class="form-control form-control-sm mb-2 payinitate-month-year required" min="1990-01" max="2030-12">
+				</div>
 
-            <!-- Total amount -->
-            <div class="col-md-3">
-                <input type="text" name="total_amount" class="form-control form-control-sm mb-2 total_amount amount required" placeholder="0" readonly>
-            </div>
+				<div class="col-md-3">
+					<input type="date" class="form-control form-control-sm mb-2 pay-date required" >
+				</div>
 
-            <!-- ========================= -->
-            <!-- 💳 PAYMENT INFO ROW -->
-            <!-- ========================= -->
+				<div class="col-md-3">
+					<select class="form-control form-control-sm mb-2 form-select payment-mode required">
+						<option value="">Select</option>
+						<option value="DIGIT">Digital</option>
+						<option value="CASH">Cash</option>
+						<option value="UPI">UPI</option>
+						<option value="IMPS">IMPS</option>
+					</select>
+				</div>
 
-            <div class="col-md-3">
-                <input type="text" class="form-control form-control-sm mb-2 trx-id required" placeholder="Transaction ID">
-            </div>
+				<div class="col-md-6">
+					<input type="text" class="form-control form-control-sm mb-2 paid-by" placeholder="Guest Name">
+				</div>
 
-            <div class="col-md-3">
-                <input type="month" class="form-control form-control-sm mb-2 payinitate-month-year required" min="1990-01" max="2030-12">
-            </div>
+				<div class="col-md-6 d-flex align-items-center mt-4">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="payApprovalChk" checked>
+						<label class="form-control form-control-sm mb-2 m-check-label" for="payApprovalChk">
+							Approve payment
+						</label>
+					</div>
+				</div>
 
-            <div class="col-md-3">
-                <input type="date" class="form-control form-control-sm mb-2 pay-date required" >
-            </div>
-
-            <div class="col-md-3">
-                <select class="form-control form-control-sm mb-2 form-select payment-mode required">
-                    <option value="">Select</option>
-                    <option value="DIGIT">Digital</option>
-                    <option value="CASH">Cash</option>
-                    <option value="UPI">UPI</option>
-                    <option value="IMPS">IMPS</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <input type="text" class="form-control form-control-sm mb-2 paid-by" placeholder="Guest Name">
-            </div>
-
-            <div class="col-md-6 d-flex align-items-center mt-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="payApprovalChk" checked>
-                    <label class="form-control form-control-sm mb-2 m-check-label" for="payApprovalChk">
-                        Approve payment
-                    </label>
-                </div>
-            </div>
-
-            <!-- ========================= -->
-            <!-- 📝 DESCRIPTION ROW -->
-            <!-- ========================= -->
-            <div class="col-12 mt-3">
-                <div id="dues-summary" class="mt-2 border p-2 rounded"></div>
-            </div>
-
-        </div>
-    </form>
-</div>
-				
-
-
-
-
-<div class="step-tab-panel" data-step="step5">
-    <h3>Summary</h3>
-
-    <form name="frmSummary" id="frmSummary">
-
-        <table class="table table-bordered table-sm">
-            <tbody>
-                <tr>
-                    <th width="30%">Guest Name</th>
-                    <td id="sumGuestName"></td>
-                </tr>
-                <tr>
-                    <th>Room Type</th>
-                    <td id="sumRoomType"></td>
-                </tr>
-                <tr>
-                    <th>Bed Assigned</th>
-                    <td id="sumBed"></td>
-                </tr>
-                <tr>
-                    <th>Expected due</th>
-                    <td id="sumDues"></td>
-                </tr>
-                <tr>
-                    <th>Payment Deposit</th>
-                    <td id="sumPayment"></td>
-                </tr>
-                <tr>
-                    <th>Balance</th>
-                    <td id="sumSecurity"></td>
-                </tr>				
-            </tbody>
-        </table>
-
-        <hr>
-
-        <!-- Final actions -->
-        <div class="form-check">
-            <input class="form-check-input"
-                   type="checkbox"
-                   id="activateUserChk"
-                   checked disabled>
-            <label class="form-check-label" for="activateUserChk">
-                Activate user
-            </label>
-        </div>
-
-        <div class="form-check mt-2">
-            <input class="form-check-input"
-                   type="checkbox"
-                   id="emailUserChk"
-                   checked>
-            <label class="form-check-label" for="emailUserChk">
-                Intimate guest through e-mail
-            </label>
-        </div>
-
-    </form>
-</div>
+				<!-- ========================= -->
+				<!-- 📝 DESCRIPTION ROW -->
+				<!-- ========================= -->
+				<div class="col-12 mt-3">
+					<div id="dues-summary" class="mt-2 border p-2 rounded"></div>
+				</div>
 
 			</div>
-
-          <div class="step-footer">
-            <button data-step-action="prev" class="step-btn">Previous</button>
-            <button data-step-action="next" class="step-btn">Next</button>
-            <button data-step-action="finish" class="step-btn">Finish</button>
-          </div>
-        </div>
-        <!-- Wizard END -->
-
-      </div>
-
-    </div>
-  </div>
-</div>
+		</form>
+	</div>
+					
 
 
 
 
+	<div class="step-tab-panel" data-step="step5">
+		<h3>Summary</h3>
 
-		<!-- ACTION MODAL (Initate and Moveout) -->
-		<div class="modal-overlay" id="actionModal">
-			<div class="modal-card">
-				<div class="modal-header">
-					<h3 id="actionPaymentLabel" >Move out action</h3>
-					<button class="modal-close" onclick="closeActionModal()">×</button>
+		<form name="frmSummary" id="frmSummary">
+
+			<table class="table table-bordered table-sm">
+				<tbody>
+					<tr>
+						<th width="30%">Guest Name</th>
+						<td id="sumGuestName"></td>
+					</tr>
+					<tr>
+						<th>Room Type</th>
+						<td id="sumRoomType"></td>
+					</tr>
+					<tr>
+						<th>Bed Assigned</th>
+						<td id="sumBed"></td>
+					</tr>
+					<tr>
+						<th>Expected due</th>
+						<td id="sumDues"></td>
+					</tr>
+					<tr>
+						<th>Payment Deposit</th>
+						<td id="sumPayment"></td>
+					</tr>
+					<tr>
+						<th>Balance</th>
+						<td id="sumSecurity"></td>
+					</tr>				
+				</tbody>
+			</table>
+
+			<hr>
+
+			<!-- Final actions -->
+			<div class="form-check">
+				<input class="form-check-input"
+					type="checkbox"
+					id="activateUserChk"
+					checked disabled>
+				<label class="form-check-label" for="activateUserChk">
+					Activate user
+				</label>
+			</div>
+
+			<div class="form-check mt-2">
+				<input class="form-check-input"
+					type="checkbox"
+					id="emailUserChk"
+					checked>
+				<label class="form-check-label" for="emailUserChk">
+					Intimate guest through e-mail
+				</label>
+			</div>
+
+		</form>
+	</div>
+
 				</div>
 
-				<div class="modal-body">
-					<!-- <p id="actionPaymentLabel" style="font-weight:600;margin-bottom:1rem;"></p> -->
-					<!-- Confirmation Bar -->
-					<div id="confirmBar" class="alert alert-warning d-none"
-						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
-								z-index:1055; min-width:300px;">
-						<span id="confirmText">Are you sure?</span>
+			<div class="step-footer">
+				<button data-step-action="prev" class="step-btn">Previous</button>
+				<button data-step-action="next" class="step-btn">Next</button>
+				<button data-step-action="finish" class="step-btn">Finish</button>
+			</div>
+			</div>
+			<!-- Wizard END -->
 
-						<div class="float-end">
-							<button id="confirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
-							<button id="confirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+		</div>
+
+		</div>
+	</div>
+	</div>
+
+
+
+	<!-- Security Advance MODAL -->
+	<div class="modal-overlay" id="secadvModal">
+		<div class="modal-card">
+			<div class="modal-header">
+				<h3 id="secadvSecurityLabel" >Security secadvs</h3>
+				<button class="modal-close" onclick="closesecadvModal()">×</button>
+			</div>
+
+			<div class="modal-body">
+				<div id="saconfirmBar" class="alert alert-warning d-none"
+					style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+							z-index:1055; min-width:300px;">
+					<span id="saconfirmText">Are you sure?</span>
+
+					<div class="float-end">
+						<button id="saconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+						<button id="saconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+					</div>
+				</div>
+				<div id="satabs">
+					<ul>
+						<li><a href="#satabs-1">Security</a></li>
+						<li><a href="#satabs-2">Advance</a></li>
+
+					</ul>
+					<!-- jQuery UI will load the tab content here -->
+					<div id="satabs-1" class="pd-refund-section pd-guest-refund">
+
+						
+
+						<div class="row g-2">
+
+							<div class="col-md-4">
+
+								<!-- Transaction Type -->
+									<select class="form-control mb-2 sec-txn-type required">
+										<option value="">Select Transaction Type</option>
+										<option value="received">Security Received</option>
+										<option value="adjusted">Adjusted Against Rent</option>
+										<option value="refunded">Refunded</option>
+									</select>
+
+									<!-- Amount -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 sec-amount amount required"
+										placeholder="Amount" />
+
+									<!-- Payment Mode -->
+									<select class="form-control mb-2 sec-payment-mode required">
+										<option value="">Select Payment Mode</option>
+										<option value="CASH">Cash</option>
+										<option value="UPI">UPI</option>
+										<option value="DIGIT">Digital</option>
+										<option value="IMPS">IMPS</option>
+									</select>
+
+									<!-- Reference / Transaction ID -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 sec-ref"
+										placeholder="Transaction / Reference ID (optional)" />
+
+									<!-- Transaction Date -->
+									<input type="date"
+										class="form-control form-control-sm mb-2 sec-date required" />
+
+									<!-- Remarks -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 sec-remarks"
+										placeholder="Remarks (optional)" />
+
+									<!-- Submit -->
+									<div class="mt-2 text-end">
+										<button class="btn btn-sm btn-outline-primary saconfirm-secadv"
+												data-secadv="Security_ok"
+												disabled>
+											Add Security
+										</button>
+									</div>
+							</div>
+						
+							<!-- 🔹 RIGHT COLUMN (DYNAMIC Advance SUMMARY) -->
+							<div class="col-md-8">
+
+
+							<div id="pd-Security-summary" class="border rounded p-2 mt-2 bg-light">
+								<div class="text-muted">Select tab to load Security...</div>
+							</div>
+
+							</div>							
+						
+						</div>
+
+
+					</div>
+
+					
+
+
+					<div id="satabs-2" class="pd-refund-section pd-owner-refund">
+
+						<div class="row g-2">
+
+							<!-- 🔹 LEFT COLUMN (EXISTING FORM – unchanged) -->
+							<div class="col-md-4">
+
+								<!-- Transaction Type -->
+									<select class="form-control mb-2 adv-txn-type required">
+										<option value="">Select Transaction Type</option>
+										<option value="credited">Credited</option>
+										<option value="debited">Debited</option>
+										<option value="refunded">Refunded</option>
+									</select>
+
+									<!-- Amount -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 adv-amount amount required"
+										placeholder="Amount" />
+
+									<!-- Payment Mode -->
+									<select class="form-control mb-2 adv-payment-mode required">
+										<option value="">Select Payment Mode</option>
+										<option value="CASH">Cash</option>
+										<option value="UPI">UPI</option>
+										<option value="DIGIT">Digital</option>
+										<option value="IMPS">IMPS</option>
+									</select>
+
+									<!-- Reference / Transaction ID -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 adv-ref"
+										placeholder="Transaction / Reference ID (optional)" />
+
+									<!-- Transaction Date -->
+									<input type="date"
+										class="form-control form-control-sm mb-2 adv-date required" />
+
+									<!-- Remarks -->
+									<input type="text"
+										class="form-control form-control-sm mb-2 adv-remarks"
+										placeholder="Remarks (optional)" />
+
+									<!-- Submit -->
+									<div class="mt-2 text-end">
+										<button class="btn btn-sm btn-outline-primary saconfirm-secadv"
+												data-secadv="Advance_ok"
+												disabled>
+											Add Advance
+										</button>
+									</div>
+
+
+
+
+
+								<!-- <div class="mt-2 text-end">
+									<button class="btn btn-sm btn-outline-secondary saconfirm-secadv"
+											data-secadv="Advance_ok" disabled>
+									OK
+									</button>
+								</div> -->
+
+							</div>
+
+							<!-- 🔹 RIGHT COLUMN (DYNAMIC Advance SUMMARY) -->
+							<div class="col-md-8">
+
+
+
+								<div id="pd-Advance-summary" class="border rounded p-2 mt-2 bg-light">
+									<div class="text-muted">Select tab to load Advance...</div>
+								</div>
+
+							</div>
+
 						</div>
 					</div>
-					<div id="tabs">
-						<ul>
-							<li><a href="#tabs-1">Guest info</a></li>
-							<li><a href="#tabs-2">Move Out</a></li>
-
-						</ul>
-						<!-- jQuery UI will load the tab content here -->
-						<div id="tabs-1" class="refund-section guest-refund">
 
 
-							<strong>Guest Information</strong>
+					
 
-							<div id="payment-dues-summary" class="border rounded p-2 mt-2 bg-light">
-								<div class="text-muted">Select tab to load dues...</div>
-							</div>
-						
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+	<!-- ACTION MODAL (Initate and Moveout) -->
+	<div class="modal-overlay" id="actionModal">
+		<div class="modal-card">
+			<div class="modal-header">
+				<h3 id="actionPaymentLabel" >Move out action</h3>
+				<button class="modal-close" onclick="closeActionModal()">×</button>
+			</div>
+
+			<div class="modal-body">
+				<!-- <p id="actionPaymentLabel" style="font-weight:600;margin-bottom:1rem;"></p> -->
+				<!-- Confirmation Bar -->
+				<div id="confirmBar" class="alert alert-warning d-none"
+					style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+							z-index:1055; min-width:300px;">
+					<span id="confirmText">Are you sure?</span>
+
+					<div class="float-end">
+						<button id="confirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+						<button id="confirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+					</div>
+				</div>
+				<div id="tabs">
+					<ul>
+						<li><a href="#tabs-1">Guest info</a></li>
+						<li><a href="#tabs-2">Move Out</a></li>
+
+					</ul>
+					<!-- jQuery UI will load the tab content here -->
+					<div id="tabs-1" class="refund-section guest-refund">
+
+
+						<strong>Guest Information</strong>
+
+						<div id="payment-dues-summary" class="border rounded p-2 mt-2 bg-light">
+							<div class="text-muted">Select tab to load dues...</div>
 						</div>
+					
+					</div>
 
+					
+
+
+					<div id="tabs-2" class="refund-section owner-refund">
+
+					
+
+					<div class="row g-2">
 						
+						<div class="col-md-6">
+						<strong>Guest final payment</strong>
+						<input type="text" class="form-control form-control-sm mb-2 security-paid amount"
+								placeholder="Security Paid" disabled/>
 
-
-						<div id="tabs-2" class="refund-section owner-refund">
-
+						<input type="text" class="form-control form-control-sm mb-2 rent-paid amount"
+								placeholder="Rent Paid" disabled/>
+						<hr/>
+							<div>
+								<h5>Description2</h5>
+								Bring paid security and amount from DB
+								Securty paid<br>
+								Amount pending<br>
+								and<br>
+								Refund at right portion
+							</div>
+						</div>
 						
+						<div class="col-md-6">
+						<strong>Owner Refund</strong>
+						<input type="text" class="form-control form-control-sm mb-2 refund-security amount required"
+								placeholder="Refund Security" />
+
+						<!-- <input type="text" class="form-control form-control-sm mb-2 refund-rent amount required"
+								placeholder="Refund Rent" /> -->
+						<hr/>
+						<input type="text" class="form-control form-control-sm mb-2 trx-id required"
+								placeholder="Transaction ID" />
+						<input type="month"  class="form-control form-control-sm mb-2 paymoveout-month-year"  min="1990-01" max="2030-12">
+						<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
+
+						<select class="form-control mb-2 payment-mode required">
+							<option value="">Select</option>
+							<option value="DIGIT">Digital</option>
+							<option value="CASH">Cash</option>
+							<option value="UPI">UPI</option>
+							<option value="IMPS">IMPS</option>
+						</select>
+
+						<input type="text" class="form-control form-control-sm mb-2 paid-by required"
+								placeholder="Made by owner name" />
+						</div>
+					</div>
+
+					<div class="mt-2 text-end">
+						<button class="btn btn-sm btn-outline-secondary confirm-action "
+								data-action="moveout_ok" disabled>
+						OK
+						</button>
+					</div>
+					</div>
+
+					
+
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Contact Modal -->
+	<div class="modal fade" id="contactModal" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+		
+		<div class="modal-header">
+			<h5 class="modal-title">Update Contact</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+		</div>
+
+		<div class="modal-body">
+			<input type="hidden" id="contact_guest_id">
+
+			<label class="form-label">Contact Name</label>
+			<input type="text" id="contact_name" class="form-control">
+		</div>
+
+		<div class="modal-footer">
+			<button class="btn btn-primary" onclick="applyContact()">Apply</button>
+		</div>
+
+		</div>
+	</div>
+	</div>
+
+
+	<!-- Pay Due MODAL -->
+	<div class="modal-overlay" id="paydueModal">
+		<div class="modal-card">
+			<div class="modal-header">
+				<h3 id="payduePaymentLabel" >Payment Paydues</h3>
+				<button class="modal-close" onclick="closepaydueModal()">×</button>
+			</div>
+
+			<div class="modal-body">
+				<div id="pdconfirmBar" class="alert alert-warning d-none"
+					style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
+							z-index:1055; min-width:300px;">
+					<span id="pdconfirmText">Are you sure?</span>
+
+					<div class="float-end">
+						<button id="pdconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
+						<button id="pdconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
+					</div>
+				</div>
+				<div id="pdtabs">
+					<ul>
+						<li><a href="#pdtabs-1">Payment</a></li>
+						<li><a href="#pdtabs-2">Dues</a></li>
+
+					</ul>
+					<!-- jQuery UI will load the tab content here -->
+					<div id="pdtabs-1" class="pd-refund-section pd-guest-refund">
+
+						<strong>Payment collection</strong>
 
 						<div class="row g-2">
-							
-							<div class="col-md-6">
-							<strong>Guest final payment</strong>
-							<input type="text" class="form-control form-control-sm mb-2 security-paid amount"
-									placeholder="Security Paid" disabled/>
+							<div class="col-md-12">
 
-							<input type="text" class="form-control form-control-sm mb-2 rent-paid amount"
-									placeholder="Rent Paid" disabled/>
-							<hr/>
-								<div>
-									<h5>Description2</h5>
-									Bring paid security and amount from DB
-									Securty paid<br>
-									Amount pending<br>
-									and<br>
-									Refund at right portion
-								</div>
-							</div>
-							
-							<div class="col-md-6">
-							<strong>Owner Refund</strong>
-							<input type="text" class="form-control form-control-sm mb-2 refund-security amount required"
-									placeholder="Refund Security" />
+							<input type="text" class="form-control form-control-sm mb-2 pay-rent amount required"
+									placeholder="Pay Rent" />
 
-							<!-- <input type="text" class="form-control form-control-sm mb-2 refund-rent amount required"
-									placeholder="Refund Rent" /> -->
-							<hr/>
 							<input type="text" class="form-control form-control-sm mb-2 trx-id required"
-									placeholder="Transaction ID" />
-							<input type="month"  class="form-control form-control-sm mb-2 paymoveout-month-year"  min="1990-01" max="2030-12">
+									placeholder="Transection amount ID" />
+							<input type="month"  class="form-control form-control-sm mb-2 pay-month-year required"  min="1990-01" max="2030-12" >
 							<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
 
 							<select class="form-control mb-2 payment-mode required">
@@ -1096,176 +1363,80 @@
 							</select>
 
 							<input type="text" class="form-control form-control-sm mb-2 paid-by required"
-									placeholder="Made by owner name" />
+									placeholder="Made by guest name" />
 							</div>
 						</div>
 
 						<div class="mt-2 text-end">
-							<button class="btn btn-sm btn-outline-secondary confirm-action "
-									data-action="moveout_ok" disabled>
+							<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+									data-Paydue="payment_ok" disabled>
 							OK
 							</button>
 						</div>
-						</div>
-
-						
-
-
 					</div>
-				</div>
-			</div>
-		</div>
 
-		<!-- Contact Modal -->
-		<div class="modal fade" id="contactModal" tabindex="-1">
-		<div class="modal-dialog">
-			<div class="modal-content">
-			
-			<div class="modal-header">
-				<h5 class="modal-title">Update Contact</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-
-			<div class="modal-body">
-				<input type="hidden" id="contact_guest_id">
-
-				<label class="form-label">Contact Name</label>
-				<input type="text" id="contact_name" class="form-control">
-			</div>
-
-			<div class="modal-footer">
-				<button class="btn btn-primary" onclick="applyContact()">Apply</button>
-			</div>
-
-			</div>
-		</div>
-		</div>
+					
 
 
-		<!-- Pay Due MODAL -->
-		<div class="modal-overlay" id="paydueModal">
-			<div class="modal-card">
-				<div class="modal-header">
-					<h3 id="payduePaymentLabel" >Payment Paydues</h3>
-					<button class="modal-close" onclick="closepaydueModal()">×</button>
-				</div>
+					<div id="pdtabs-2" class="pd-refund-section pd-owner-refund">
 
-				<div class="modal-body">
-					<div id="pdconfirmBar" class="alert alert-warning d-none"
-						style="position:absolute; top:10px; left:50%; transform:translateX(-50%);
-								z-index:1055; min-width:300px;">
-						<span id="pdconfirmText">Are you sure?</span>
+						<div class="row g-2">
 
-						<div class="float-end">
-							<button id="pdconfirmYes" class="btn btn-sm btn-danger ms-2">Yes</button>
-							<button id="pdconfirmNo" class="btn btn-sm btn-secondary ms-1">No</button>
-						</div>
-					</div>
-					<div id="pdtabs">
-						<ul>
-							<li><a href="#pdtabs-1">Payment</a></li>
-							<li><a href="#pdtabs-2">Dues</a></li>
+							<!-- 🔹 LEFT COLUMN (EXISTING FORM – unchanged) -->
+							<div class="col-md-6">
 
-						</ul>
-						<!-- jQuery UI will load the tab content here -->
-						<div id="pdtabs-1" class="pd-refund-section pd-guest-refund">
+								<strong>Add dues</strong>
 
-							<strong>Payment collection</strong>
-
-							<div class="row g-2">
-								<div class="col-md-12">
-
-								<input type="text" class="form-control form-control-sm mb-2 pay-rent amount required"
-										placeholder="Pay Rent" />
-
-								<input type="text" class="form-control form-control-sm mb-2 trx-id required"
-										placeholder="Transection amount ID" />
-								<input type="month"  class="form-control form-control-sm mb-2 pay-month-year required"  min="1990-01" max="2030-12" >
-								<input type="date" class="form-control form-control-sm mb-2 pay-date required" />
-
-								<select class="form-control mb-2 payment-mode required">
+								<select class="form-control mb-2 dues-type required">
 									<option value="">Select</option>
-									<option value="DIGIT">Digital</option>
-									<option value="CASH">Cash</option>
-									<option value="UPI">UPI</option>
-									<option value="IMPS">IMPS</option>
+									<option value="RENT">Monthly Rent</option>
+									<option value="MAINT">Maintenance</option>
+									<option value="ELEC">Electricity</option>
+									<option value="FOOD">Food</option>
+									<option value="REG">Registration</option>
+									<option value="FINE">Fine</option>
+									<option value="OTHER">Other</option>
 								</select>
 
-								<input type="text" class="form-control form-control-sm mb-2 paid-by required"
-										placeholder="Made by guest name" />
+								<input type="text" class="form-control form-control-sm mb-2 dues-amount required amount"
+										placeholder="Amount" />
+
+								<input type="month" class="form-control form-control-sm mb-2 required due-month-year"
+										min="1990-01" max="2030-12">
+
+								<input type="date" class="form-control form-control-sm mb-2 due-date required" />
+
+								<div class="mt-2 text-end">
+									<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
+											data-paydue="dues_ok" disabled>
+									OK
+									</button>
 								</div>
+
 							</div>
 
-							<div class="mt-2 text-end">
-								<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
-										data-Paydue="payment_ok" disabled>
-								OK
-								</button>
+							<!-- 🔹 RIGHT COLUMN (DYNAMIC DUES SUMMARY) -->
+							<div class="col-md-6">
+
+							<strong>Current dues summary</strong>
+
+								<div id="pd-dues-summary" class="border rounded p-2 mt-2 bg-light">
+									<div class="text-muted">Select tab to load dues...</div>
+								</div>
+
 							</div>
+
 						</div>
-
-						
-
-
-						<div id="pdtabs-2" class="pd-refund-section pd-owner-refund">
-
-							<div class="row g-2">
-
-								<!-- 🔹 LEFT COLUMN (EXISTING FORM – unchanged) -->
-								<div class="col-md-6">
-
-									<strong>Add dues</strong>
-
-									<select class="form-control mb-2 dues-type required">
-										<option value="">Select</option>
-										<option value="RENT">Monthly Rent</option>
-										<option value="MAINT">Maintenance</option>
-										<option value="ELEC">Electricity</option>
-										<option value="FOOD">Food</option>
-										<option value="REG">Registration</option>
-										<option value="FINE">Fine</option>
-										<option value="OTHER">Other</option>
-									</select>
-
-									<input type="text" class="form-control form-control-sm mb-2 dues-amount required amount"
-											placeholder="Amount" />
-
-									<input type="month" class="form-control form-control-sm mb-2 required due-month-year"
-											min="1990-01" max="2030-12">
-
-									<input type="date" class="form-control form-control-sm mb-2 due-date required" />
-
-									<div class="mt-2 text-end">
-										<button class="btn btn-sm btn-outline-secondary pdconfirm-paydue"
-												data-paydue="dues_ok" disabled>
-										OK
-										</button>
-									</div>
-
-								</div>
-
-								<!-- 🔹 RIGHT COLUMN (DYNAMIC DUES SUMMARY) -->
-								<div class="col-md-6">
-
-								<strong>Current dues summary</strong>
-
-									<div id="pd-dues-summary" class="border rounded p-2 mt-2 bg-light">
-										<div class="text-muted">Select tab to load dues...</div>
-									</div>
-
-								</div>
-
-							</div>
-						</div>
-
-
-						
-
-
 					</div>
+
+
+					
+
+
 				</div>
 			</div>
 		</div>
+	</div>
 
 		
 
@@ -1643,6 +1814,314 @@
 
 
 
+
+
+
+<!-- Manual Rent Security/Advance  --> 
+<script>	
+		
+		let satabsInput;
+
+		// open modal
+		document.addEventListener("click", function(e) {
+			if (e.target.classList.contains("secadv-btn")) {
+					let info = JSON.parse(e.target.dataset.info);
+					infoFromBaseRow=info;
+					let url = "/guests/onload_security_advance_statement";   // change to actual API later
+					let data = {
+						guest_id: info.guest_id
+					};
+					$.ajax({
+						url: API_BASE_URL + url,
+						method: "GET",   // change to POST later
+						data: data,
+						success: function (dataout) {
+							renderLedgerTable(
+								"pd-Security-summary",
+								"Security Ledger",
+								dataout.security.balance,
+								dataout.security.rows,
+								true      // show txn_type
+							);
+
+							// 💰 ADVANCE TAB (section2)
+							renderLedgerTable(
+								"pd-Advance-summary",
+								"Advance Ledger",
+								dataout.advance.balance,
+								dataout.advance.rows,
+								false
+							);
+							$("#satabs").tabs("option", "active", 0);
+
+
+
+							if (!dataout.records || dataout.records.length === 0) {
+								return;
+							}
+							satabsInput = dataout.records[0];
+							
+							// const section2 = $("#satabs-2");
+							// $("#satabs").tabs("option", "active", 1);
+							// section2.find(".due-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							// section2.find(".Advance-type").val('RENT').trigger("input");
+							// section2.find(".Advance-amount").val(0).trigger("input");
+
+
+
+							// const section1 = $("#satabs-1");
+							// $("#satabs").tabs("option", "active", 0);
+							// section1.find(".pay-rent").val(satabsInput.amount).trigger("input");
+							// section1.find(".pay-date").val(new Date().toISOString().split("T")[0]).trigger("input");
+							// section1.find(".paid-by").val(satabsInput.name).trigger("input");
+							// section1.find(".Security-mode").val("UPI").trigger("change");
+							// section1.find(".trx-id").val('').trigger("input");
+
+					
+						},
+						error: function (xhr) {
+							alert(xhr.responseJSON?.detail || "secadv failed");
+						}
+					});					
+					document.getElementById("secadvSecurityLabel").textContent =
+						info.name +'-'+info.guest_id ;
+					document.getElementById("secadvModal").classList.add("active");
+					// let html = `
+					// 	<table class="table table-bordered table-sm mt-2">
+					// 		<tr>
+					// 			<td><strong>Bed</strong><br/>${info.bed_no || '-'}</td>
+					// 			<td><strong>status</strong><br/>${info.status || '-'}</td>
+					// 			<td><strong>Email</strong><br/>${info.email || '-'}</td>
+					// 		</tr>
+
+					// 	</table>
+					// `;
+					let html = '';
+					// Put same content in both satabs
+					$("#tab1-info").html(html);
+					$("#tab2-info").html(html);
+
+			}
+		});
+
+		function renderLedgerTable(containerId, title, balance, rows, showTxnType = false) {
+			let html = `
+				<h5>${title}</h5>
+				<div class="mb-2 fw-bold">Balance: ₹ ${balance}</div>
+				<table class="table table-sm table-bordered">
+					<thead>
+						<tr>
+							<th>Date</th>
+							${showTxnType ? "<th>Type</th>" : ""}
+							<th>Amount</th>
+							<th>Remarks</th>
+						</tr>
+					</thead>
+					<tbody>
+			`;
+
+			if (!rows || rows.length === 0) {
+				html += `
+					<tr>
+						<td colspan="${showTxnType ? 4 : 3}" class="text-center text-muted">
+							No records found
+						</td>
+					</tr>
+				`;
+			} else {
+				rows.forEach(r => {
+					html += `
+						<tr>
+							<td>${r.date || "-"}</td>
+							${showTxnType ? `<td>${r.txn_type || "-"}</td>` : ""}
+							<td class="${r.amount < 0 ? 'text-danger' : 'text-success'}">
+								${r.amount}
+							</td>
+							<td>${r.remarks || ""}</td>
+						</tr>
+					`;
+				});
+			}
+
+			html += `
+					</tbody>
+				</table>
+			`;
+
+			document.getElementById(containerId).innerHTML = html;
+		}
+
+
+		// close modal
+		function closesecadvModal() {
+			document.getElementById("secadvModal").classList.remove("active");
+		}
+
+		// secadv handler
+		function dosecadv(type) {
+			console.log("secadv:", type, "for Security:", currentSecurity);
+
+			// You can plug API later
+			alert(`secadv: ${type}\nSecurity ID: ${currentSecurity}`);
+
+			closesecadvModal();
+		}
+
+		$(function () {
+
+			// Initialize satabs with AJAX loading
+			$("#satabs").tabs({
+			activate: function (event, ui) {
+				const tabId = ui.newPanel.attr("id");
+
+				if (tabId === "satabs-2") {
+				// loadsecadvSummary();
+				}
+			}
+			});
+
+		});
+
+		let pendingsecadv = null;
+		let allAdvanceofAGuest = null;
+
+
+		function pdvalidateSection(section) {
+			let valid = true;
+			section.find(".required").each(function () {
+			const value = $(this).val().trim();
+
+			if (!value) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".amount").each(function () {
+			const value = parseFloat($(this).val());
+
+			if ($(this).val() && (isNaN(value) || value <= 0)) {
+				$(this).addClass("is-invalid");
+				valid = false;
+			} else {
+				$(this).removeClass("is-invalid");
+			}
+			});
+			section.find(".saconfirm-secadv").prop("disabled", !valid);
+			return valid;
+		}
+
+		
+		// Live validation on input/change
+		$(document).on("input change", ".pd-refund-section input, .pd-refund-section select", function () {
+			const section = $(this).closest(".pd-refund-section");
+			
+			pdvalidateSection(section);
+		});
+
+		
+		$(document).on("click", ".saconfirm-secadv", function () {
+			pendingsecadv = $(this).data("secadv");
+			pendingBtn = this;
+			const section = $(this).closest(".pd-refund-section");
+
+			if (!pdvalidateSection(section)) {
+			alert("⚠️ Please fill all required fields with valid values");
+			section.find(".is-invalid").first().focus();
+			return;
+			}	
+			if (pendingsecadv=="Advance_ok")
+			{
+
+			}
+
+			const messages = {
+				Security_ok: "Pay rent of guest '"+infoFromBaseRow.name +"''.?",
+				Advance_ok: "Add new Advance to account of '"+infoFromBaseRow.name +"''.?"
+			};
+
+			$("#saconfirmText").text(messages[pendingsecadv] || "Are you sure?");
+			$("#saconfirmBar").removeClass("d-none");
+		});
+
+		$("#saconfirmNo").on("click", function () {
+			$("#saconfirmBar").addClass("d-none");
+			pendingsecadv = null;
+			pendingBtn = null;
+		});
+
+		$("#saconfirmYes").on("click", function () {
+			$("#saconfirmBar").addClass("d-none");
+
+			if (!pendingsecadv || !pendingBtn) return;
+			
+			handleRefundsecadv(pendingsecadv, pendingBtn);
+
+			pendingsecadv = null;
+			pendingBtn = null;
+		});
+		function toNumber(val) {
+			return Number(String(val).replace(/\D/g, '')) || 0;
+		}
+		function handleRefundsecadv(secadv, btn) {
+			const section = $(btn).closest(".pd-refund-section");
+			//const rentSecurityId = currentSecurity;   // already global
+			const approver = CURRENT_USER;           // already global
+			
+			let url = "";
+			let data = {
+				guest_id: infoFromBaseRow.guest_id,
+				created_by: CURRENT_USER
+
+			};
+
+			switch (secadv) {
+
+				case "Security_ok":
+					url = "/rentalmonth/paySecurity";
+					data.pay_security = toNumber(section.find(".sec-amount").val());
+					data.txn_type= section.find(".sec-txn-type").val(); //'received', 'adjusted', 'refunded')
+					data.payment_mode= section.find(".sec-payment-mode").val(); //UPI
+					data.pay_date  = section.find(".sec-date").val();
+					data.sec_remarks = section.find(".sec-remarks").val();
+					data.trx_id= section.find(".sec-ref").val();
+					break;
+
+				case "Advance_ok":
+					url = "/rentalmonth/payAdvance";
+					data.pay_advance = toNumber(section.find(".adv-amount").val());
+					data.txn_type= section.find(".adv-txn-type").val(); //'received', 'adjusted', 'refunded')
+					data.payment_mode= section.find(".adv-payment-mode").val(); //UPI
+					data.pay_date  = section.find(".adv-date").val();
+					data.sec_remarks = section.find(".adv-remarks").val();
+					data.trx_id= section.find(".adv-ref").val();
+					break;
+
+				default:
+					console.error("Unknown secadv:", secadv);
+					return;
+			}
+
+			console.log("Submitting:", data);
+			
+			$.ajax({
+				url: API_BASE_URL + url,
+				method: "POST",   // change to POST later
+				contentType: "application/json",   // 🔥 REQUIRED
+				dataType: "json",
+				data: JSON.stringify(data),         // 🔥 REQUIRED
+				success: function () {
+					alert("Action completed successfully");
+					location.reload();
+				},
+				error: function (xhr) {
+					alert(xhr.responseJSON?.detail || "Action failed");
+				}
+			});
+		}
+		
+</script>
 
 
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query, Header,Form
 from typing import Optional, Dict
 from db.database import get_connection
-from services import guest_service,google_contact_service
+from services import guest_service,google_contact_service,guest_adv_sec_service
 from datetime import date,datetime, timezone
-
+from services import rentalmonth_service_models as rsm
 router = APIRouter()
 
 
@@ -78,9 +78,43 @@ def guests_stats(
         
         totaldue = int(cur.fetchone()[0] or 0)
 
+        cur.execute("""
+                SELECT 
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN wt.txn_type = 'credited' THEN wt.amount
+                                WHEN wt.txn_type IN ('debited','refunded') THEN -wt.amount
+                                ELSE 0
+                            END
+                        ), 0
+                    ) AS wallet_balance
+                FROM wallet_transactions wt
+                JOIN wallet_accounts wa ON wa.id = wt.wallet_id
+                WHERE wa.guest_id = ?
+        """, (guest_id,))
 
+        advance_balance = int(cur.fetchone()[0])
 
-        return {"attendance": attendance, "totaldue": totaldue,}
+        cur.execute("""
+                SELECT 
+                    COALESCE(
+                        SUM(
+                            CASE 
+                                WHEN st.txn_type = 'received' THEN st.amount
+                                WHEN st.txn_type IN ('adjusted', 'refunded') THEN -st.amount
+                                ELSE 0
+                            END
+                        ), 
+                    0) AS security_balance
+                FROM security_transactions st
+                JOIN security_accounts sa ON sa.id = st.security_id
+                WHERE sa.guest_id = ?
+        """, (guest_id,))
+
+        security_balance = int(cur.fetchone()[0])
+
+        return {"attendance": attendance, "totaldue": totaldue,"advance_balance": advance_balance,"security_balance":security_balance }
     finally:
         conn.close()
 
@@ -130,6 +164,28 @@ def get_active_guests():
     return result
   
 
+
+@router.get("/onload_security_advance_statement")
+def get_security_statement(guest_id: str):
+    try:
+        advance_data = guest_adv_sec_service.get_wallet_statement(guest_id)
+        security_data = guest_adv_sec_service.get_security_statement(guest_id)
+        result=  {
+            "advance": {
+                "balance": advance_data["advance_balance"],
+                "rows": advance_data["rows"]
+            },
+            "security": {
+                "balance": security_data["security_balance"],
+                "rows": security_data["rows"]
+            }
+        }
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
 @router.get("/activeReviewers")
 def get_active_reviewers():
     """
@@ -153,7 +209,7 @@ def add_update_contact(
     contact_name: str = Form(...)
 ):
     try:
-        result = google_contact_service.add_or_edit_contact(guest_id, contact_name)
+        result = google_contact_service.safe_add_or_edit_contact(guest_id, contact_name)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -210,14 +266,22 @@ def add_guest_metadata(meta: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/update")
-def update_guest(meta: dict, authorization: str = Header(None)):
-    try:
-        # Token validation
-        if not authorization or authorization != "Bearer VALID_TOKEN":
-            raise HTTPException(status_code=401, detail="Invalid or missing token")
+@router.get("/profile")
+def get_profile_details(
+    guest_id: str = Query(...)):
 
-        result = guest_service.update_guest(meta)
+    result = guest_service.get_profile_details(guest_id)
+    
+    if isinstance(result, dict) and "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"]) 
+    
+    return result
+
+@router.post("/profile_update")
+def update_guest(profile_data:  rsm.GuestProfileUpdate):
+    try:
+        print(profile_data);
+        result = guest_service.update_guest(profile_data)
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
         return {"message": "Guest updated successfully"}

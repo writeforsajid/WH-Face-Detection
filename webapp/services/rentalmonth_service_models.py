@@ -1,31 +1,10 @@
 from pydantic import BaseModel
 from fastapi import APIRouter
-# class PayInitialRentRequest(BaseModel):
-#     created_by: str
-#     guest_id: str
-#     rent_dueable: float
-#     security_due: float
-#     pay_security: float
-#     pay_rent: float
-#     trx_id: str
-#     pay_month_year: str
-#     pay_date: str
-#     payment_mode: str
-#     paid_by: str
-#     bedNumber: str
-#     rent_payment_id: int | None = 0
+from typing import Optional
+from db.database import get_connection
+import sqlite3
 
-#     # Optional extra fields (sent from JS)
-#     approved_payment: bool | None = False
-#     activate_user: bool | None = False
-#     send_email: bool | None = False
-#     roomType: str | None = "-"
-#     roomBed: str | None = "-"
-#     roomAssignedAt: str | None = "-"
-#     bdasign: str | None = "-"
-
-
-
+# TODO: Models 
 
 class PayInitialRentRequest(BaseModel):
     created_by: str
@@ -64,5 +43,54 @@ class PayInitialRentRequest(BaseModel):
     pay_advance: float
     total_payment: float
     rent_start_date: str
+
+
+
+
+
+class SecurityRequest(BaseModel):
+    created_by: str
+    guest_id: str
+    pay_security: float
+    pay_date: str
+    payment_mode: str
+    sec_remarks:str
+    txn_type: str ## ('received', 'adjusted', 'refunded')
+    trx_id:  Optional[str] = None
+
+
+
+class AdvanceRequest(BaseModel):
+    created_by: str
+    guest_id: str
+    pay_advance: float
+    pay_date: str
+    payment_mode: str
+    sec_remarks:str
+    txn_type: str ## ('received', 'adjusted', 'refunded')
+    trx_id:  Optional[str] = None
+
+
+
+# TODO: Models Profile
+class GuestProfileUpdate(BaseModel):
+    guest_id: str
+    date_of_birth: str
+    phone_number: str
+    emergency_contact: str
+    permanent_address: str
+    pincode: str
+    police_station: str
+    aadhaar_number: str
+    marital_status: str
+
+
+
+
+
+
+
+
+
 
 

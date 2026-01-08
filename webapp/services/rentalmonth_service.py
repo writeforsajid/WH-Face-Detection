@@ -12,6 +12,7 @@ from services.rentalmonth_guest_due_settlement import GuestDueSettlement
 from services import rentalmonth_pay_Initial_rent as rpir
 from Designs.Chain_of_Responsibility  import TaskContext
 from services import rentalmonth_service_models as rsm
+from services.google_contact_service import safe_add_or_edit_contact
 #load_environment(env_path);
 
 load_environment("./../data/.env.webapp")
@@ -649,6 +650,30 @@ def approve_rent_payment( rent_payment_id, approver, comment=None):
             VALUES (?,?, 'approved', ?)
         """, (rent_payment_id, approver, comment))
 
+#############################################################
+#   UPDATE CONTACT NUMBER 
+#############################################################
+
+        cur.execute("""
+                SELECT
+                    COALESCE(SUM(d.due_amount - d.amount_paid), 0) AS total_balance,
+                    gb.bed_id
+                FROM dues d
+                LEFT JOIN guest_beds gb
+                    ON gb.guest_id = d.guest_id
+                WHERE d.guest_id = ?
+                AND d.status IN ('open','partial')
+                GROUP BY gb.bed_id;
+        """, (payment["guest_id"],))
+        row = cur.fetchone()
+        total_balance = row["total_balance"]
+        bedNumber  = row["bed_id"]
+        prefix = "AV. "
+
+        if ((total_balance >  0) and bedNumber) : prefix="AV.D. "
+        guest_name = prefix  + guest_name + " "+ bedNumber
+        safe_add_or_edit_contact(payment["guest_id"], guest_name)
+
         conn.commit()
         return {
             "success": True,
@@ -1128,7 +1153,7 @@ payload: rsm.PayInitialRentRequest
         cur=cur
     )
 
-
+    # TODO: Chain of responsibilities
     workflow = rpir.ParseMonthTask(                         # Split Month/Year
         rpir.ValidatePaymentModeTask(                       # in ("UPI", "CASH", "IMPS", "DD"):
             rpir.ActivateGuestTask(                         # UPDATE guests SET status='active'
@@ -1176,9 +1201,57 @@ payload: rsm.PayInitialRentRequest
         conn.close()
 
     
+def pay_intermediate_security(payload: rsm.SecurityRequest):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    ctx = TaskContext(
+        created_by=payload.created_by,
+        guest_id=payload.guest_id,
+        txn_type=payload.txn_type,
+        pay_security=payload.pay_security,
+        trx_id=payload.trx_id,
+        pay_date=payload.pay_date,
+        payment_mode=payload.payment_mode,
+        sec_remarks=payload.sec_remarks,
+        conn=conn,
+        cur=cur
+    )
+
+    workflow = rpir.SecurityDueTaskPartTwo()
+    workflow.execute(ctx)
+
+    conn.commit()
+    conn.close()   # ✅ IMPORTANT
+
+    return {"status": "success"}
 
 
+    
+def pay_intermediate_advance(payload: rsm.AdvanceRequest):
+    conn = get_connection()
+    cur = conn.cursor()
 
+    ctx = TaskContext(
+        created_by=payload.created_by,
+        guest_id=payload.guest_id,
+        txn_type=payload.txn_type,
+        pay_advance=payload.pay_advance,
+        trx_id=payload.trx_id,
+        pay_date=payload.pay_date,
+        payment_mode=payload.payment_mode,
+        sec_remarks=payload.sec_remarks,
+        conn=conn,
+        cur=cur
+    )
+
+    workflow = rpir.AdvanceDueTaskPartTwo()
+    workflow.execute(ctx)
+
+    conn.commit()
+    conn.close()   # ✅ IMPORTANT
+
+    return {"status": "success"}
 
 
 def get_due_type_id(cur, code: str) -> int:
@@ -1589,85 +1662,6 @@ def duesofguest( guest_id,year,month,due_type_id):
     }
 
 
-# def list_guest_payments(guest_id):
-#     conn = get_connection()
-#     cur = conn.cursor()
-
-#     cur.execute("""
-#         WITH dues_with_cumulative AS (
-#             SELECT
-#                 d.id AS due_id,
-#                 d.due_type_id,
-#                 d.year,
-#                 d.month,
-#                 d.due_amount,
-#                 d.amount_paid,
-#                 (d.due_amount - d.amount_paid) AS bal,
-#                 SUM(d.due_amount - d.amount_paid) OVER (
-#                     ORDER BY d.year, d.month ASC
-#                     ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-#                 ) AS cumulative_bal
-#             FROM dues d
-#             WHERE d.guest_id = ?
-#         )
-#         SELECT
-#             dwc.*,
-#             COALESCE(rpa.rent_payment_id, 0)    AS rent_payment_id,
-#             COALESCE(rpa.allocated_amount, 0)   AS allocated_amount,
-#             COALESCE(rp.amount, 0)              AS payment_amount,
-#             COALESCE(rp.status, 'unpaid')       AS payment_status,
-#             COALESCE(rp.created_at, '')         AS payment_date
-#         FROM dues_with_cumulative dwc
-#         LEFT JOIN rent_payment_allocations rpa
-#             ON rpa.due_id = dwc.due_id
-#         LEFT JOIN rent_payments rp
-#             ON rp.rent_payment_id = rpa.rent_payment_id
-#         ORDER BY dwc.year, dwc.month ASC, rent_payment_id DESC
-#     """, (guest_id,))
-
-#     rows = cur.fetchall()
-#     if not rows:
-#         raise HTTPException(status_code=404, detail="Payments + Dues not found")
-
-#     # ================================
-#     # 🔥 GROUPING LOGIC (KEY PART)
-#     # ================================
-#     grouped = []
-
-#     payment_map = {}
-
-#     for r in rows:
-#         r = dict(r)
-#         pid = r["rent_payment_id"]
-
-#         # create parent only once
-#         if pid not in payment_map:
-#             payment_map[pid] = {
-#                 "rent_payment_id": pid,
-#                 "payment_amount": r["payment_amount"],
-#                 "payment_status": r["payment_status"],
-#                 "payment_date": r["payment_date"],
-#                 "total_allocated": 0,
-#                 "cumulative_bal": r["cumulative_bal"],
-#                 "dues": []
-#             }
-#             grouped.append(payment_map[pid])
-
-#         payment_map[pid]["total_allocated"] += r["allocated_amount"]
-
-#         # append due under payment
-#         payment_map[pid]["dues"].append({
-#             "due_id": r["due_id"],
-#             "due_type_id": r["due_type_id"],
-#             "year": r["year"],
-#             "month": r["month"],
-#             "due_amount": r["due_amount"],
-#             "amount_paid": r["amount_paid"],
-#             "bal": r["bal"]
-#         })
-
-#     conn.close()
-#     return grouped
 
 
 def list_guest_payments(guest_id):
@@ -1811,3 +1805,8 @@ def get_rent_receipt(rent_payment_id):
 
     conn.close()
     return header
+
+
+
+
+    

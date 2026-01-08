@@ -16,7 +16,7 @@ Run: python dbscript_payment_sqlite.py
 
 Note: this file references the original uploaded file path: /mnt/data/dbscript.py for reference but does not import it. It uses same environment loader and crypto_manager used in original.
 """
-
+# TODO: Script dbscript
 
 import sqlite3
 import face_recognition 
@@ -56,15 +56,27 @@ CREATE TABLE IF NOT EXISTS guests (
 
 # 2 Guest Faces Table (NEW)
 cursor.execute("""
-CREATE TABLE users (
-    user_id      VARCHAR(20) PRIMARY KEY,
-    username     VARCHAR(100) UNIQUE NOT NULL,
-    name         VARCHAR(200),
-    role         VARCHAR(20) NOT NULL CHECK (role IN ('resident','employee','owner')),
-    email        TEXT UNIQUE,
-    phone_number TEXT,
-    is_active    BOOLEAN DEFAULT TRUE
-)
+CREATE TABLE guest_profile (
+    guest_id          INTEGER       NOT NULL,
+    date_of_birth     DATE,
+    phone_number      VARCHAR (10),
+    emergency_contact VARCHAR (10),
+    permanent_address TEXT,
+    pincode           VARCHAR (6),
+    police_station    VARCHAR (100),
+    aadhaar_number    VARCHAR (12),
+    marital_status    VARCHAR (10),
+    created_at        DATETIME      DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME      DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (
+        guest_id
+    ),
+    FOREIGN KEY (
+        guest_id
+    )
+    REFERENCES guests (guest_id) ON DELETE CASCADE
+                                 ON UPDATE CASCADE
+);
 """)
 
 # 4️⃣ Guest Faces Table (NEW)

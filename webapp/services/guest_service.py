@@ -10,6 +10,7 @@ import os, shutil, json, zipfile
 from datetime import datetime
 from utilities.crypto_manager import crypto
 from utilities.email_service import send_email
+from services import rentalmonth_service_models as rsm
 #from passlib.context import CryptContext
 #import ffmpeg
 
@@ -540,6 +541,7 @@ def confirm_guest(guest_id: str) -> bool:
 # ------------------------------------------------------------
 # Helper function OUTSIDE of execute()  (Correct place)
 # ------------------------------------------------------------
+# TODO: Insert Guest
 def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
     conn = get_connection()
     cursor = conn.cursor()
@@ -584,6 +586,11 @@ def _insert_guest(guest_id, name, guest_type, comments, email, phone_number):
         INSERT OR IGNORE INTO guest_roles (guest_id, role_id, assigned_at)
         VALUES (?, ?, ?)
     """, (guest_id, role_id, datetime.now().strftime("%Y-%m-%d")))
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO guest_profile (guest_id)
+        VALUES (?)
+    """, (guest_id,))
 
     print(f"[Info] Assigned role {role_id} to guest {guest_id}")
     conn.commit()
@@ -702,7 +709,59 @@ def get_history_records(guest_id, start_date, end_date, page, limit):
         "guest": guest_data
     }
 
+def get_profile_details(guest_id: str):
+    conn = get_connection()
+    cur = conn.cursor()
 
+    cur.execute("""
+        SELECT 
+            g.name,
+            g.email,
+            gp.date_of_birth,
+            gp.phone_number,
+            gp.emergency_contact,
+            gp.permanent_address,
+            gp.pincode,
+            gp.police_station,
+            gp.aadhaar_number,
+            gp.marital_status
+        FROM guests g
+        LEFT JOIN guest_profile gp ON gp.guest_id = g.guest_id
+        WHERE g.guest_id = ?
+    """, (guest_id,))
+
+    row = cur.fetchone()
+
+    if not row:
+        return {"status": "error", "message": "Guest not found"}
+
+    return {
+        "status": "success",
+        "data": {
+            # "name": row[0],
+            # "email": row[1],
+            # "dob": row[2],
+            # "phone": row[3],
+            # "emergency": row[4],
+            # "address": row[5],
+            # "pincode": row[6],
+            # "police_station": row[7],
+            # "aadhaar": row[8],
+            # "marital_status": row[9],
+
+            "name": row["name"],
+            "email": row["email"],
+            "dob": row["date_of_birth"],
+            "phone": row["phone_number"],   
+            "emergency": row["emergency_contact"],
+            "address": row["permanent_address"],
+            "pincode": row["pincode"],
+            "police_station": row["police_station"],
+            "aadhaar": row["aadhaar_number"],
+            "marital_status": row["marital_status"]
+
+        }
+    }
 
 def get_guest_history(guest_id: str):
     """
@@ -830,33 +889,40 @@ def get_guest_ifemailexist(guest_email: str):
 
 
 
-def update_guest(meta: dict):
+def update_guest(profile_data:  rsm.GuestProfileUpdate):
 
     try:
-        guest_id = meta.get("guest_id")
-        name = meta.get("name", "").strip()
-        email = meta.get("email", "").strip()
-        phone = meta.get("phone_number", "").strip()
-        comments = meta.get("comments", "").strip()
-        status = meta.get("status", "").strip()
-
-        # === Validation ===
-        if not all([guest_id, name, email, phone, comments, status]):
-            return {"error": "All fields are required"}
-        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
-            return {"error": "Invalid email format"}
-        if not phone.isdigit() or len(phone) != 10:
-            return {"error": "Phone number must be 10 digits"}
-        if status not in ['active', 'inactive', 'closed', 'leave']:
-            return {"error": "Invalid status value"}
-
         conn = get_connection()
         cursor = conn.cursor()
+        # Update profile
         cursor.execute("""
-        UPDATE guests 
-        SET name=?, email=?, phone_number=?, comments=?, status=? 
-        WHERE guest_id=?
-    """, (name, email, phone, comments, status, guest_id))
+            INSERT OR IGNORE INTO guest_profile (guest_id)
+            VALUES (?)
+        """, (profile_data.guest_id,))
+        cursor.execute("""
+            UPDATE guest_profile
+            SET
+                date_of_birth = ?,
+                phone_number = ?,
+                emergency_contact = ?,
+                permanent_address = ?,
+                pincode = ?,
+                police_station = ?,
+                aadhaar_number = ?,
+                marital_status = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE guest_id = ?
+        """, (
+            profile_data.date_of_birth,
+            profile_data.phone_number,
+            profile_data.emergency_contact,
+            profile_data.permanent_address,
+            profile_data.pincode,
+            profile_data.police_station,
+            profile_data.aadhaar_number,
+            profile_data.marital_status,
+            profile_data.guest_id
+        ))
         conn.commit()
         conn.close()
 

@@ -1,8 +1,15 @@
 from Designs.Chain_of_Responsibility import Task 
-from services.google_contact_service import add_or_edit_contact
+from services.google_contact_service import safe_add_or_edit_contact
 from services.Biz_Log import PaymentActionService as pas 
 from datetime import datetime
 from fastapi import  HTTPException
+from db.database import get_connection
+from typing import Optional
+import sqlite3
+from services.rentalmonth_service_models import SecurityRequest
+
+# TODO:  Initate Classes Chain of Responsibilities
+
 class ParseMonthTask(Task):
     def validate(self, ctx):
         try:
@@ -74,47 +81,6 @@ class RentDueTask(Task):
 
 
 
-class SecurityDueTask(Task):
-    def validate(self, ctx):
-        return ctx.get("pay_security") and float(ctx.get("pay_security")) > 0
-
-
-
-    def process(self, ctx):
-        cur = ctx.get("cur")
-        guest_id = ctx.get("guest_id")
-        pay_security = float(ctx.get("pay_security"))
-        rent_payment_id=int(ctx.get("rent_payment_id"))
-        payment_mode=ctx.get("payment_mode")
-        # Ensure security account exists
-        sec = cur.execute("""
-            SELECT id FROM security_accounts
-            WHERE guest_id = ?
-        """, (guest_id,)).fetchone()
-
-        if not sec:
-            cur.execute("""
-                INSERT INTO security_accounts (guest_id, created_on)
-                VALUES (?, datetime('now'))
-            """, (guest_id,))
-            security_id = cur.lastrowid
-        else:
-            security_id = sec["id"]
-
-        cur.execute("""
-            INSERT INTO security_transactions
-            (security_id, amount, txn_type, payment_mode, reference_id, created_at, remarks)
-            VALUES (?, ?, 'received', ?, ?, datetime('now'), 'Collected with rent payment')
-        """, (
-            security_id,
-            pay_security,
-            payment_mode,
-            rent_payment_id
-        ))
-
-
-
-
 class AdvanceDueTask(Task):
     def validate(self, ctx):
         return ctx.get("pay_advance") and float(ctx.get("pay_advance")) > 0
@@ -124,28 +90,245 @@ class AdvanceDueTask(Task):
         cur = ctx.get("cur")
         guest_id = ctx.get("guest_id")
         pay_advance = float(ctx.get("pay_advance"))
-        rent_payment_id=int(ctx.get("rent_payment_id"))
- 
+        rent_payment_id=0
+
+        txn_type=ctx.get("txn_type") 
+        if not txn_type: txn_type = 'credited'
+        pay_date = ctx.get("pay_date")
+        if not pay_date: pay_date = datetime.now() 
+        sec_remarks = ctx.get("sec_remarks")
+        if not sec_remarks: sec_remarks = 'Advance received'
+        trx_id = ctx.get("trx_id")
+        if not trx_id: trx_id = 0
+
 
         # ============================
         # 3️⃣ ADVANCE PAYMENT (WALLET)
         # ============================
 
+        wallet_id = self._get_or_create_wallet(cur, guest_id)
+
         cur.execute("""
             INSERT INTO wallet_transactions (
-                guest_id, amount, reason,
-                reference_id, created_at, remarks
+                wallet_id,
+                amount,
+                txn_type,
+                reference_id,
+                created_at,
+                remarks
             )
-            VALUES (?, ?, 'ADVANCE_RECEIVED', ?, datetime('now'), ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            guest_id,
-            pay_advance,
+            wallet_id,
+            pay_advance,          # POSITIVE amount
+            txn_type,
             rent_payment_id,
-            "Advance received"
+            pay_date,
+            sec_remarks
+        ))
+
+
+    def _get_or_create_wallet(self,cur, guest_id):
+        cur.execute("""
+            SELECT id
+            FROM wallet_accounts
+            WHERE guest_id = ?
+        """, (guest_id,))
+
+        row = cur.fetchone()
+        if row:
+            return row["id"]
+
+        cur.execute("""
+            INSERT INTO wallet_accounts (guest_id, created_on)
+            VALUES (?, datetime('now'))
+        """, (guest_id,))
+
+        return cur.lastrowid
+
+
+
+class SecurityDueTask(Task):
+    def validate(self, ctx):
+        return ctx.get("pay_security") and float(ctx.get("pay_security")) > 0
+
+
+
+
+    
+    def process(self, ctx):
+
+        cur = ctx.get("cur")
+        guest_id = ctx.get("guest_id")
+        pay_security = float(ctx.get("pay_security"))
+        rent_payment_id=int(ctx.get("rent_payment_id"))
+        payment_mode=ctx.get("payment_mode")
+        
+
+        txn_type=ctx.get("txn_type") 
+        if not txn_type: txn_type = 'received'
+        pay_date = ctx.get("pay_date")
+        if not pay_date: pay_date = datetime.now() 
+        sec_remarks = ctx.get("sec_remarks")
+        if not sec_remarks: sec_remarks = 'Collected with rent payment'
+        trx_id = ctx.get("trx_id")
+        if not trx_id: trx_id = 0
+
+        
+        
+        
+        # Ensure security account exists
+        sec = cur.execute("""
+            SELECT id FROM security_accounts
+            WHERE guest_id = ?
+        """, (guest_id,)).fetchone()
+
+        if not sec:
+            cur.execute("""
+                INSERT INTO security_accounts (guest_id, created_on)
+                VALUES (?, ?)
+            """, (guest_id,pay_date))
+            security_id = cur.lastrowid
+        else:
+            security_id = sec["id"]
+
+        cur.execute("""
+            INSERT INTO security_transactions
+            (security_id, amount, txn_type, payment_mode, reference_id, created_at, remarks)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            security_id,
+            pay_security,
+            txn_type,
+            payment_mode,
+            rent_payment_id,
+            pay_date,
+            sec_remarks
+        ))
+        
+
+
+
+class SecurityDueTaskPartTwo(Task):
+
+    def validate(self, ctx):
+       return ctx.get("pay_security") and float(ctx.get("pay_security")) > 0
+
+    def process(self, ctx):
+        cur = ctx.get("cur")
+        guest_id = ctx.get("guest_id")
+        pay_security = float(ctx.get("pay_security"))
+        rent_payment_id=0
+        payment_mode=ctx.get("payment_mode")
+        
+
+        txn_type=ctx.get("txn_type") 
+        if not txn_type: txn_type = 'received'
+        pay_date = ctx.get("pay_date")
+        if not pay_date: pay_date = datetime.now() 
+        sec_remarks = ctx.get("sec_remarks")
+        if not sec_remarks: sec_remarks = 'Collected with rent payment'
+        trx_id = ctx.get("trx_id")
+        if not trx_id: trx_id = 0
+
+        
+        
+        
+        # Ensure security account exists
+        sec = cur.execute("""
+            SELECT id FROM security_accounts
+            WHERE guest_id = ?
+        """, (guest_id,)).fetchone()
+
+        if not sec:
+            cur.execute("""
+                INSERT INTO security_accounts (guest_id, created_on)
+                VALUES (?, ?)
+            """, (guest_id,pay_date))
+            security_id = cur.lastrowid
+        else:
+            security_id = sec["id"]
+
+        cur.execute("""
+            INSERT INTO security_transactions
+            (security_id, amount, txn_type, payment_mode, reference_id, created_at, remarks)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            security_id,
+            pay_security,
+            txn_type,
+            payment_mode,
+            rent_payment_id,
+            pay_date,
+            sec_remarks
         ))
 
 
 
+
+class AdvanceDueTaskPartTwo(Task):
+    def validate(self, ctx):
+        return ctx.get("pay_advance") and float(ctx.get("pay_advance")) > 0
+
+    def _get_or_create_wallet(self,cur, guest_id):
+        cur.execute("""
+            SELECT id
+            FROM wallet_accounts
+            WHERE guest_id = ?
+        """, (guest_id,))
+
+        row = cur.fetchone()
+        if row:
+            return row["id"]
+
+        cur.execute("""
+            INSERT INTO wallet_accounts (guest_id, created_on)
+            VALUES (?, datetime('now'))
+        """, (guest_id,))
+
+        return cur.lastrowid
+
+
+    def process(self, ctx):
+        cur = ctx.get("cur")
+        guest_id = ctx.get("guest_id")
+        pay_advance = float(ctx.get("pay_advance"))
+        rent_payment_id=0
+
+        txn_type=ctx.get("txn_type") 
+        if not txn_type: txn_type = 'credited'
+        pay_date = ctx.get("pay_date")
+        if not pay_date: pay_date = datetime.now() 
+        sec_remarks = ctx.get("sec_remarks")
+        if not sec_remarks: sec_remarks = 'Advance received'
+        trx_id = ctx.get("trx_id")
+        if not trx_id: trx_id = 0
+
+
+        # ============================
+        # 3️⃣ ADVANCE PAYMENT (WALLET)
+        # ============================
+
+        wallet_id = self._get_or_create_wallet(cur, guest_id)
+
+        cur.execute("""
+            INSERT INTO wallet_transactions (
+                wallet_id,
+                amount,
+                txn_type,
+                reference_id,
+                created_at,
+                remarks
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            wallet_id,
+            pay_advance,          # POSITIVE amount
+            txn_type,
+            rent_payment_id,
+            pay_date,
+            sec_remarks
+        ))
 
 
 class RentPaymentTask(Task):
@@ -209,7 +392,7 @@ class AssignBed(Task):
             return
             
         try:
-            assign_date = datetime.strptime(roomAssignedAt, "%Y-%m-%d").strftime("%Y-%m-%d %H:%M:%S")
+            assign_date = datetime.strptime(roomAssignedAt, "%Y-%m-%d").strftime("%Y-%m-%d")
         except Exception:
             assign_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Insert assignment into guest_beds
@@ -268,8 +451,14 @@ class AddEditPhoneNoToContact(Task):
         guest_id = ctx.get("guest_id")
         guest_name = ctx.get("guest_name")
         bedNumber= ctx.get("bedNumber")
-        guest_name ="AV. "  + guest_name + " "+ bedNumber
-        add_or_edit_contact(guest_id, guest_name)
+        
+        pay_security= ctx.get("pay_security")
+        pay_rent= ctx.get("pay_rent")
+        total_payment= ctx.get("total_payment")
+        prefix = "AV. "
+        if (total_payment< pay_security +pay_rent): prefix="AV.D. "
+        guest_name =prefix  + guest_name + " "+ bedNumber
+        safe_add_or_edit_contact(guest_id, guest_name)
 
 
 

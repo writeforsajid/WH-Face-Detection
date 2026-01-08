@@ -3,7 +3,7 @@
     (_venv) PS D:\Working\AI\WH Face Detection\webapp> uvicorn main:app --reload --host 127.0.0.1 --port 8000 --ssl-keyfile="webapp.key" --ssl-certfile="webapp.crt"
 Note: this file references the original uploaded file path: /mnt/data/dbscript.py for reference but does not import it. It uses same environment loader and crypto_manager used in original.
 """
-
+# TODO: Script dbscript_rent
 import sqlite3
 import json
 import os
@@ -43,6 +43,7 @@ DROP Table IF EXISTS rent_payments;
 DROP Table IF EXISTS rent_payment_refunds;
 DROP Table IF EXISTS rent_settlements;
 DROP Table IF EXISTS wallet_transactions;
+DROP Table IF EXISTS wallet_accounts;                     
 DROP Table IF EXISTS security_transactions;
 DROP Table IF EXISTS security_accounts;
 DROP Table IF EXISTS rent_change_events;
@@ -138,28 +139,49 @@ CREATE TABLE IF NOT EXISTS rent_forward_history (
     forwarded_at TEXT DEFAULT (datetime('now'))
 );
 
-
-
-CREATE TABLE IF NOT EXISTS wallet_transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guest_id INTEGER NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    reason TEXT NOT NULL,
-    reference_id INTEGER,
-    created_at DATETIME NOT NULL,
-    remarks TEXT
+CREATE TABLE IF NOT EXISTS  wallet_accounts (
+    id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+    guest_id   TEXT     NOT NULL
+                        UNIQUE,
+    created_on DATETIME NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_wallet_guest
-ON wallet_transactions(guest_id);
 
-CREATE INDEX IF NOT EXISTS idx_wallet_reason
-ON wallet_transactions(reason);
+CREATE TABLE IF NOT EXISTS  wallet_transactions (
+    id           INTEGER         PRIMARY KEY AUTOINCREMENT,
+    wallet_id    INTEGER         NOT NULL,
+    amount       DECIMAL (10, 2) NOT NULL,
+    txn_type     TEXT            CHECK (txn_type IN ('credited', 'debited', 'refunded') ) 
+                                 NOT NULL,
+    reference_id INTEGER,
+    created_at   DATETIME        NOT NULL,
+    remarks      TEXT,
+    FOREIGN KEY (
+        wallet_id
+    )
+    REFERENCES wallet_accounts (id) 
+);
 
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_accounts_guest
+ON wallet_accounts(guest_id);
+
+-- Wallet transactions
+CREATE INDEX IF NOT EXISTS idx_wallet_txn_wallet
+ON wallet_transactions(wallet_id);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_txn_wallet_type
+ON wallet_transactions(wallet_id, txn_type);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_txn_created
+ON wallet_transactions(wallet_id, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_txn_reference
+ON wallet_transactions(reference_id);
+                                         
 CREATE TABLE IF NOT EXISTS security_accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            guest_id INTEGER NOT NULL UNIQUE,
+            guest_id TEXT NOT NULL UNIQUE,
             created_on DATETIME NOT NULL
         );
 
@@ -185,7 +207,7 @@ CREATE INDEX IF NOT EXISTS idx_security_txn_type
         
 CREATE TABLE IF NOT EXISTS rent_settlements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            guest_id INTEGER NOT NULL,
+            guest_id TEXT NOT NULL,
             settlement_date DATETIME NOT NULL,
             adjusted_amount DECIMAL(10,2) NOT NULL,
             refunded_amount DECIMAL(10,2) NOT NULL,

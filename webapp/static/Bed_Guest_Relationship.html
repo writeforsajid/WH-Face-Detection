@@ -115,6 +115,7 @@
 				} else {
 					guest = '<span class="badge badge-unassigned">Unassigned</span>';
 				}
+				// TODO: HTML BED assign-btn  unassign-btn
 				const assignDate = r.assign_date || '-';
 				   return `
 					   <tr>
@@ -123,7 +124,7 @@
 						   <td>${r.bed_sharing_type || '-'}</td>
 						   <td>${guest}</td>
 						   <td>${assignDate}</td>
-						   <td>
+						   <td> 
 							   ${r.guest_id ? `<button class=\"btn btn-sm btn-success assign-btn\" data-bed-id=\"${r.id}\" data-guest-id=\"${r.guest_id}\" data-guest-name=\"${(r.guest_name||'').replace(/\"/g,'\\\"')}\">Assigned</button>` : `<button class=\"btn btn-sm btn-secondary unassign-btn\" data-bed-id=\"${r.id}\">Unassigned</button>`}
 						   </td>
 					   </tr>
@@ -161,66 +162,68 @@
 				   const data = await res.json();
 				   renderRows(data);
 				   statusEl.textContent = '';
-				   // Attach event listeners to assign/unassign buttons
-				   setTimeout(() => {
-					   // Handle "Assigned" button clicks (unassign functionality)
-					   document.querySelectorAll('.assign-btn').forEach(btn => {
-						   btn.addEventListener('click', async function() {
-							   const guestId = this.getAttribute('data-guest-id');
-							   const guestName = this.getAttribute('data-guest-name') || 'Guest';
-							   if (!guestId) return;
-							   const row = this.closest('tr');
-							   const cells = row ? row.querySelectorAll('td') : null;
-							   this.disabled = true;
-							   this.textContent = 'Unassigning...';
-							   try {
-								   const token = localStorage.getItem('wh_token');
-								   // Call API to unassign guest
-								   const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
-									   method: 'POST',
-									   headers: {
-										   'Authorization': `Bearer ${token}`,
-										   'Content-Type': 'application/json'
-									   },
-									   body: JSON.stringify({ guest_id: guestId })
-								   });
-								   if (!res.ok) {
-									   const err = await res.json().catch(() => ({}));
-									   throw new Error(err.detail || `Unassign failed (${res.status})`);
-								   }
-								   // Optimistically update the row: Guest -> Unassigned, Date -> '-', Button -> Unassigned disabled
-								   if (cells && cells.length >= 5) {
-									   // cells: [0]=Bed, [1]=Desc, [2]=Guest, [3]=Date, [4]=Action
-									   cells[2].innerHTML = '<span class="badge badge-unassigned">Unassigned</span>';
-									   cells[3].textContent = '-';
-								   }
-								   this.classList.remove('btn-success');
-								   this.classList.add('btn-secondary');
-								   this.classList.remove('assign-btn');
-								   this.classList.add('unassign-btn');
-								   this.textContent = 'Unassigned';
-								   this.disabled = false;
-								   // Add click handler for the newly created unassign button
-								   const bedId = this.getAttribute('data-bed-id');
-								   this.onclick = () => showInactiveGuestsModal(bedId);
-								   // Show undo snackbar
-								   showUndoUnassign({ bedId, guestId, guestName });
-							   } catch (e) {
-								   alert(e.message || 'Failed to unassign');
-								   this.disabled = false;
-								   this.textContent = 'Assigned';
-							   }
-						   });
-					   });
+				// TODO: JS BED assign-btn  unassign-btn
+				
+				//    // Attach event listeners to assign/unassign buttons
+				//    setTimeout(() => {
+				// 	   // Handle "Assigned" button clicks (unassign functionality)
+				// 	   document.querySelectorAll('.assign-btn').forEach(btn => {
+				// 		   btn.addEventListener('click', async function() {
+				// 			   const guestId = this.getAttribute('data-guest-id');
+				// 			   const guestName = this.getAttribute('data-guest-name') || 'Guest';
+				// 			   if (!guestId) return;
+				// 			   const row = this.closest('tr');
+				// 			   const cells = row ? row.querySelectorAll('td') : null;
+				// 			   this.disabled = true;
+				// 			   this.textContent = 'Unassigning...';
+				// 			   try {
+				// 				   const token = localStorage.getItem('wh_token');
+				// 				   // Call API to unassign guest
+				// 				   const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
+				// 					   method: 'POST',
+				// 					   headers: {
+				// 						   'Authorization': `Bearer ${token}`,
+				// 						   'Content-Type': 'application/json'
+				// 					   },
+				// 					   body: JSON.stringify({ guest_id: guestId })
+				// 				   });
+				// 				   if (!res.ok) {
+				// 					   const err = await res.json().catch(() => ({}));
+				// 					   throw new Error(err.detail || `Unassign failed (${res.status})`);
+				// 				   }
+				// 				   // Optimistically update the row: Guest -> Unassigned, Date -> '-', Button -> Unassigned disabled
+				// 				   if (cells && cells.length >= 5) {
+				// 					   // cells: [0]=Bed, [1]=Desc, [2]=Guest, [3]=Date, [4]=Action
+				// 					   cells[2].innerHTML = '<span class="badge badge-unassigned">Unassigned</span>';
+				// 					   cells[3].textContent = '-';
+				// 				   }
+				// 				   this.classList.remove('btn-success');
+				// 				   this.classList.add('btn-secondary');
+				// 				   this.classList.remove('assign-btn');
+				// 				   this.classList.add('unassign-btn');
+				// 				   this.textContent = 'Unassigned';
+				// 				   this.disabled = false;
+				// 				   // Add click handler for the newly created unassign button
+				// 				   const bedId = this.getAttribute('data-bed-id');
+				// 				   this.onclick = () => showInactiveGuestsModal(bedId);
+				// 				   // Show undo snackbar
+				// 				   showUndoUnassign({ bedId, guestId, guestName });
+				// 			   } catch (e) {
+				// 				   alert(e.message || 'Failed to unassign');
+				// 				   this.disabled = false;
+				// 				   this.textContent = 'Assigned';
+				// 			   }
+				// 		   });
+				// 	   });
 					   
-					   // Handle "Unassigned" button clicks (show inactive guests modal)
-					   document.querySelectorAll('.unassign-btn').forEach(btn => {
-						   btn.addEventListener('click', function() {
-							   const bedId = this.getAttribute('data-bed-id');
-							   showInactiveGuestsModal(bedId);
-						   });
-					   });
-				   }, 100);
+				// 	   // Handle "Unassigned" button clicks (show inactive guests modal)
+				// 	   document.querySelectorAll('.unassign-btn').forEach(btn => {
+				// 		   btn.addEventListener('click', function() {
+				// 			   const bedId = this.getAttribute('data-bed-id');
+				// 			   showInactiveGuestsModal(bedId);
+				// 		   });
+				// 	   });
+				//    }, 100);
 			   } catch (e) {
 				   console.error(e);
 				   statusEl.textContent = e.message || 'Failed to load';
@@ -342,6 +345,105 @@
 			} catch { /* ignore */ }
 		}
 
+	
+		function closeModal() {
+			const modal = document.getElementById('inactiveGuestsModal');
+			modal.classList.remove('active');
+		}
+		
+		async function assignGuestToBed(bedId, guestId, guestName, btn) {
+			try {
+				const token = localStorage.getItem('wh_token');
+				if (!token) {
+					window.location.href = 'login.html';
+					return;
+				}
+				const container = btn.closest('.inactive-guest-item');
+				const assignDate = container.querySelector('.assign-date')?.value;
+
+				if (!assignDate) {
+					alert("Please select assignment date");
+					return;
+				}				
+				// Call API to assign guest to bed
+				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+						body: JSON.stringify({
+							id: bedId,
+							guest_id: guestId,
+							assign_date: assignDate
+						})
+				});
+				
+				if (!res.ok) {
+					const err = await res.json().catch(() => ({}));
+					throw new Error(err.detail || `Assignment failed (${res.status})`);
+				}
+				
+				// Close modal and reload data
+				closeModal();
+				alert(`Successfully assigned ${guestName} to bed!`);
+				await loadData();
+				
+			} catch (e) {
+				console.error(e);
+				alert(e.message || 'Failed to assign guest to bed');
+			}
+		}
+		
+		// Close modal when clicking outside
+		document.addEventListener('click', (e) => {
+			const modal = document.getElementById('inactiveGuestsModal');
+			if (e.target === modal) {
+				closeModal();
+			}
+		});
+	</script>
+<!-- Un assign Guests Modal -->
+<script>
+	document.addEventListener("click", function (e) {
+
+		// Assigned → Unassign
+		if (e.target.classList.contains("assign-btn")) {
+			const btn = e.target;
+
+			const bedId = btn.dataset.bedId;
+			const guestId = btn.dataset.guestId;
+			const guestName = btn.dataset.guestName || "Guest";
+
+			openUnassignModal(bedId, guestId, guestName);
+		}
+
+		// Unassigned → Show inactive guests
+		if (e.target.classList.contains("unassign-btn")) {
+			const bedId = e.target.dataset.bedId;
+			showInactiveGuestsModal(bedId);
+		}
+
+	});
+
+	// btn.addEventListener('click',".assign-btn", function () {
+	// 	const bedId = this.getAttribute('data-bed-id');
+	// 	const guestId = this.getAttribute('data-guest-id');
+	// 	const guestName = this.getAttribute('data-guest-name');
+
+	// 	openUnassignModal(bedId, guestId, guestName);
+	// });
+	function openUnassignModal(bedId, guestId, guestName) {
+		$("#unassignBedId").val(bedId);
+		$("#unassignGuestId").val(guestId);
+		$("#unassignGuestName").val(guestName);
+
+		// default date = today
+		$("#unassignDate").val(new Date().toISOString().split("T")[0]);
+
+		$("#unassignGuestModal").addClass("active");
+	}
+
 		// Modal functions
 		async function showInactiveGuestsModal(bedId) {
 			const modal = document.getElementById('inactiveGuestsModal');
@@ -393,9 +495,26 @@
 									<strong>Status:</strong> <span style="color: #f59e0b; font-weight: 600;">Inactive</span>
 								</p>
 							</div>
-							<button class="assign-inactive-btn" onclick="assignGuestToBed('${bedId}', '${guest.guest_id}', '${guest.name.replace(/'/g, "\\'")}')">
-								Assign to Bed
-							</button>
+							<div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+								<input
+									type="date"
+									class="form-control form-control-sm assign-date"
+									value="${new Date().toISOString().split('T')[0]}"
+									style="max-width:150px;"
+								/>
+
+								<button
+									class="assign-inactive-btn"
+									onclick="assignGuestToBed(
+										'${bedId}',
+										'${guest.guest_id}',
+										'${guest.name.replace(/'/g, "\\'")}',
+										this
+									)">
+									Assign
+								</button>
+							</div>
+
 						</div>
 					`).join('');
 					modalBody.innerHTML = html;
@@ -411,57 +530,54 @@
 				`;
 			}
 		}
-		
-		function closeModal() {
-			const modal = document.getElementById('inactiveGuestsModal');
-			modal.classList.remove('active');
+	
+
+	function closeUnassignModal() {
+		$("#unassignGuestModal").removeClass("active");
+	}
+	async function confirmUnassign() {
+		const bedId = $("#unassignBedId").val();
+		const guestId = $("#unassignGuestId").val();
+		const unassignDate = $("#unassignDate").val();
+
+		if (!unassignDate) {
+			alert("Please select unassign date");
+			return;
 		}
-		
-		async function assignGuestToBed(bedId, guestId, guestName) {
-			try {
-				const token = localStorage.getItem('wh_token');
-				if (!token) {
-					window.location.href = 'login.html';
-					return;
-				}
-				
-				// Call API to assign guest to bed
-				const res = await fetch(`${API_BASE_URL}/beds/assign`, {
-					method: 'POST',
-					headers: {
-						'Authorization': `Bearer ${token}`,
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						id: bedId,
-						guest_id: guestId
-					})
-				});
-				
-				if (!res.ok) {
-					const err = await res.json().catch(() => ({}));
-					throw new Error(err.detail || `Assignment failed (${res.status})`);
-				}
-				
-				// Close modal and reload data
-				closeModal();
-				alert(`Successfully assigned ${guestName} to bed!`);
-				await loadData();
-				
-			} catch (e) {
-				console.error(e);
-				alert(e.message || 'Failed to assign guest to bed');
+
+		try {
+			const token = localStorage.getItem("wh_token");
+
+			const res = await fetch(`${API_BASE_URL}/beds/unassign`, {
+				method: "POST",
+				headers: {
+					"Authorization": `Bearer ${token}`,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					bed_id: bedId,
+					guest_id: guestId,
+					unassign_date: unassignDate   // 👈 NEW
+				})
+			});
+
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err.detail || "Unassign failed");
 			}
+
+			closeUnassignModal();
+			await loadData();
+			showSnackbar("Guest unassigned successfully");
+
+		} catch (e) {
+			alert(e.message);
 		}
-		
-		// Close modal when clicking outside
-		document.addEventListener('click', (e) => {
-			const modal = document.getElementById('inactiveGuestsModal');
-			if (e.target === modal) {
-				closeModal();
-			}
-		});
-	</script>
+	}
+
+</script>
+
+
 
 </head>
 <body class="admin-bg">
@@ -547,7 +663,7 @@
 			</div>
 	</div>
 
-		<!-- Inactive Guests Modal -->
+		<!-- Assign Guests Modal -->
 		<div class="modal-overlay" id="inactiveGuestsModal">
 			<div class="modal-card">
 				<div class="modal-header">
@@ -559,6 +675,41 @@
 				</div>
 			</div>
 		</div>
+
+
+		<!-- Un assign Guests Modal -->
+		<div class="modal-overlay" id="unassignGuestModal">
+			<div class="modal-card">
+				<div class="modal-header">
+				<h3><i class="bi bi-calendar-x"></i> Unassign Guest</h3>
+				<button class="modal-close" onclick="closeUnassignModal()">×</button>
+				</div>
+				<div class="modal-body">
+
+				<div class="mb-3">
+					<label class="form-label fw-semibold">Guest</label>
+					<input type="text" id="unassignGuestName" class="form-control" readonly>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label fw-semibold">Unassign Date</label>
+					<input type="date" id="unassignDate" class="form-control" required>
+				</div>
+
+				<input type="hidden" id="unassignBedId">
+				<input type="hidden" id="unassignGuestId">
+
+				<div class="d-flex justify-content-end gap-2 mt-4">
+					<button class="btn btn-outline-secondary" onclick="closeUnassignModal()">Cancel</button>
+					<button class="btn btn-danger" onclick="confirmUnassign()">Confirm Unassign</button>
+				</div>
+
+				</div>
+			</div>
+		</div>
+
+
+
 
 	</div>
 

@@ -6,7 +6,7 @@ from google.auth.transport.requests import Request
 from db.database import get_connection
 from datetime import datetime
 from utilities.environment_variables import load_environment
-
+import asyncio
 SCOPES = ['https://www.googleapis.com/auth/contacts']
 load_environment("./../data/.env.webapp")
 
@@ -70,7 +70,7 @@ def update_contact(service, resource_name, etag, new_name):
 def is_docker():
     return os.path.exists("/.dockerenv")
 
-def _add_or_edit_contact_sync(guest_id,name):
+def _add_or_edit_contact(guest_id,name):
     if not  is_docker():
         return{
             "status": 'failed - not in docker'
@@ -104,10 +104,16 @@ def _add_or_edit_contact_sync(guest_id,name):
             }
 
 
-# ---------- ASYNC WRAPPER ----------
-async def add_or_edit_contact(guest_id, name):
-    return await asyncio.to_thread(
-        _add_or_edit_contact_sync,
-        guest_id,
-        name
-    )
+# # ---------- ASYNC WRAPPER ----------
+# async def add_or_edit_contact(guest_id, name):
+#     return await asyncio.to_thread(
+#         _add_or_edit_contact_sync,
+#         guest_id,
+#         name
+#     )
+
+semaphore = asyncio.Semaphore(5)  # tune: 3–10
+
+async def safe_add_or_edit_contact(guest_id, name):
+    async with semaphore:
+        return await _add_or_edit_contact(guest_id, name)

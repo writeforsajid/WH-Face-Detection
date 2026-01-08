@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Header, Query
 from typing import Optional, List, Dict
 from db.database import get_connection
 from datetime import datetime, timezone
-
+from services.log_service import add_guest_metadata
 router = APIRouter()
 
 
@@ -323,9 +323,26 @@ def assign_guest_to_bed(
 
     id = payload.get("id")
     guest_id = payload.get("guest_id")
-    
+    assign_date = payload.get("assign_date")  # 👈 NEW    
+
     if not id or not guest_id:
         raise HTTPException(status_code=400, detail="id and guest_id are required")
+
+    # If assign_date not sent → fallback to today
+    if assign_date:
+        try:
+            # Accept yyyy-mm-dd
+            assign_date = datetime.strptime(assign_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="assign_date must be in YYYY-MM-DD format"
+            )
+    else:
+        assign_date = datetime.now()
+
+    assign_date_str = assign_date.strftime("%Y-%m-%d")
+
 
     conn = get_connection()
     cur = conn.cursor()
@@ -366,7 +383,7 @@ def assign_guest_to_bed(
         assign_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cur.execute(
             "INSERT INTO guest_beds (guest_id, bed_id, assign_date) VALUES (?, ?, ?)",
-            (guest_id, bed_id, assign_date)
+            (guest_id, bed_id, assign_date_str)
         )
         
         # Update guest status to 'active' since they're being assigned to a bed
@@ -374,8 +391,17 @@ def assign_guest_to_bed(
             "UPDATE guests SET status = 'active' WHERE guest_id = ?",
             (guest_id,)
         )
+    
+        meta = {}                       # declare
+        meta["guest_id"] = guest_id
+        meta["name"] = "bed assigned"
+        meta["description"] = f"Bed # {bed_id} is assigned at {assign_date_str}" 
+        meta["timestamp"] =  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
         
         conn.commit()
+        add_guest_metadata(meta)        
         return {
             "status": "success", 
             "message": f"Guest {guest_id} assigned to bed {bed_id}",
@@ -409,7 +435,21 @@ def unassign_guest_from_bed(
     guest_id = payload.get("guest_id")
     if not guest_id:
         raise HTTPException(status_code=400, detail="guest_id required")
+    # If assign_date not sent → fallback to today
+    assign_date= payload.get("assign_date")
+    if assign_date:
+        try:
+            # Accept yyyy-mm-dd
+            assign_date = datetime.strptime(assign_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="assign_date must be in YYYY-MM-DD format"
+            )
+    else:
+        assign_date = datetime.now()
 
+    assign_date_str = assign_date.strftime("%Y-%m-%d")
     conn = get_connection()
     cur = conn.cursor()
     try:
@@ -428,7 +468,16 @@ def unassign_guest_from_bed(
             "UPDATE guests SET status = 'inactive' WHERE guest_id = ?",
             (guest_id,)
         )
+
+ 
+        meta = {}                       # declare
+        meta["guest_id"] = guest_id
+        meta["name"] = "bed assigned"
+        meta["description"] = f"Bed is un- assigned at {assign_date_str}" 
+        meta["timestamp"] =  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+       
         conn.commit()
+        add_guest_metadata(meta)         
         return {"status": "success", "message": "Guest unassigned from bed(s)"}
     finally:
         conn.close()

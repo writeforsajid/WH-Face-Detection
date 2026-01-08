@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Guest</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+	<!-- header styles moved to Header.html -->
+	<link rel="stylesheet" href="./css/style.css">
+
+	  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<script>
+				// Prefer API host saved at login; else if this page is served from API origin use same; else fall back to localhost:8000
+				const API_BASE_URL = (function(){
+					const saved = localStorage.getItem('wh_api_base');
+					if (saved) return saved;
+					if (window.location.port === '8000') return window.location.origin;
+					return window.location.origin;
+				})();
+				const CURRENT_USER = (JSON.parse(localStorage.getItem('wh_user') || '{}').guest_id) || '';
+
+    </script>
+</head>
+<body class="admin-bg">
+    <div class="page-wrapper">
+      <div id="menu-container"></div>
+
+      <!-- Page Header (Full Width) -->
+      <div class="page-header">
+        <div class="page-header-content">
+          <div>
+            <h1><i class="bi bi-people-fill"></i> My Profile</h1>
+          </div>
+        </div>
+      </div>
+
+        
+
+    <div class="page-subheader">
+        <div class="container mt-5">
+            <form id="updateForm" class="mt-4 profile-section">
+                    <div class="row g-3">
+
+                        <!-- Name -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Name</label>
+                            <input name='name' type="text" class="form-control" value="" readonly>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Email</label>
+                            <input name="email" type="email" class="form-control" value="" readonly>
+                        </div>
+
+                        <!-- DOB -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Date of Birth *</label>
+                            <input type="date" id="dob" class="form-control required" required>
+                            <small class="text-danger" id="dobError"></small>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="text" id="phone" class="form-control number required" maxlength="10"  required>
+                            <small class="text-danger" id="phoneError"></small>
+                        </div>
+
+                        <!-- Emergency -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Emergency Contact *</label>
+                            <input type="text" id="emergency" class="form-control required" maxlength="10" required>
+                            <small class="text-danger" id="emergencyError"></small>
+                        </div>
+
+                        <!-- Pincode -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Pin Code *</label>
+                            <input type="text" id="pincode" class="form-control required" maxlength="6" required>
+                            <small class="text-danger" id="pinError"></small>
+                        </div>
+
+                        <!-- Police Station -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Police Station *</label>
+                            <input type="text" id="policeStation" class="form-control" required>
+                            <small class="text-danger" id="psError"></small>
+                        </div>
+
+                        <!-- Aadhaar -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Aadhaar Number *</label>
+                            <input type="text" id="aadhaar" class="form-control required" maxlength="12" required>
+                            <small class="text-danger" id="aadhaarError"></small>
+                        </div>
+
+                        <!-- Marital Status -->
+                        <div class="col-lg-3 col-md-6 col-12">
+                            <label class="form-label">Marital Status *</label>
+                            <select id="maritalStatus" class="form-select required" required>
+                                <option value="">Select</option>
+                                <option value="single">Single</option>
+                                <option value="married">Married</option>
+                            </select>
+                            <small class="text-danger" id="maritalError"></small>
+                        </div>
+
+                        <!-- Address (full width) -->
+                        <div class="col-12">
+                            <label class="form-label">Permanent Address *</label>
+                            <textarea id="address" class="form-control required" rows="3" required></textarea>
+                            <small class="text-danger" id="addressError"></small>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary mt-3">
+                                Update Profile
+                            </button>
+                        </div>
+
+                    </div>
+            </form>
+
+            <div id="result" class="mt-3"></div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<!--TODO: COMMON SCRIPT ERROR-->
+<script>
+    function showError(input, message) {
+        input.addClass("is-invalid");
+        input.next(".invalid-feedback").remove();
+        input.after(`<div class="invalid-feedback">${message}</div>`);
+    }
+
+    function clearError(input) {
+        input.removeClass("is-invalid");
+        input.next(".invalid-feedback").remove();
+    }
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        
+        url = "/guests/profile";
+        $.ajax({
+            url: API_BASE_URL + url,
+            type: "GET",
+            data: { guest_id: CURRENT_USER },
+            success: function (response) {
+
+                if (!response.status) {
+                    alert(response.message);
+                    return;
+                }
+
+                const d = response.data;
+
+                // Populate fields
+                $("input[name='name']").val(d.name);
+                $("input[name='email']").val(d.email);
+                $("#dob").val(d.dob);
+                $("#phone").val(d.phone);
+                $("#emergency").val(d.emergency);
+                $("#address").val(d.address);
+                $("#pincode").val(d.pincode);
+                $("#policeStation").val(d.police_station);
+                $("#aadhaar").val(d.aadhaar);
+                $("#maritalStatus").val(d.marital_status);
+            },
+            error: function () {
+                alert("Failed to fetch profile data");
+            }
+        });
+
+        $("#updateForm").on("submit", function (e) {
+            e.preventDefault(); // 🔴 stop normal form submit
+            const section = $(this).closest(".profile-section");
+            debugger;
+            if (!validateSection(section))
+            {
+                return;
+            }
+            // OPTIONAL: call your validation function
+            if (! validateForm()) {
+                return;
+            }
+
+            submitProfileUpdate();
+        });
+
+    });
+
+    function  submitProfileUpdate()
+        {
+            var url = "/guests/profile_update";
+            const profile_data = {
+                    
+                    guest_id: CURRENT_USER,
+
+                    date_of_birth: $("#dob").val(),
+                    phone_number: $("#phone").val(),
+                    emergency_contact: $("#emergency").val(),
+
+                    permanent_address: $("#address").val(),
+                    pincode: $("#pincode").val(),
+                    police_station: $("#policeStation").val(),
+
+                    aadhaar_number: $("#aadhaar").val(),
+                    marital_status: $("#maritalStatus").val()
+                }
+                debugger;
+            $.ajax({
+                url: API_BASE_URL + url,
+                type: "POST",
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify(profile_data),
+                success: function (response) {
+                    if (response.status) {
+                        alert("Profile updated successfully ✅");
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Server error while updating profile ❌");
+                }
+            });
+        }
+
+</script>
+<script>
+    function validateForm() {
+        let valid = true;
+    
+        // Phone
+        const phone = $("#phone");
+        if (!validatePhone(phone.val().replace(/\D/g, ''))) {
+            showError(phone, "Enter valid 10-digit mobile number");
+            valid = false;
+        } else {
+            clearError(phone);
+        }
+
+        // DOB
+        const dob = $("#dob");
+        if (!validateDOB(dob.val())) {
+            showError(dob, "Age must be 18 years or above");
+            valid = false;
+        } else {
+            clearError(dob);
+        }
+
+        // Pincode
+        const pincode = $("#pincode");
+        if (!validatePincode(pincode.val().replace(/\D/g, ''))) {
+            showError(pincode, "Enter valid 6-digit pincode");
+            valid = false;
+        } else {
+            clearError(pincode);
+        }
+
+        // Aadhaar
+        const aadhaar = $("#aadhaar");
+        if (!validateAadhaar(aadhaar.val().replace(/\D/g, ''))) {
+            showError(aadhaar, "Enter valid 12-digit Aadhaar number");
+            valid = false;
+        } else {
+            clearError(aadhaar);
+        }
+
+        return valid;
+    }
+</script>
+
+<!--TODO: COMMON SCRIPT VALIDATE-->
+<script>
+    function validatePhone(phone) 
+    {
+        return /^[6-9]\d{9}$/.test(phone);
+    }
+    function validateDOB(dob) 
+    {
+        if (!dob) return false;
+
+        const birthDate = new Date(dob);
+        const today = new Date();
+
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age >= 18;
+    }
+    function validatePincode(pin) {
+        return /^\d{6}$/.test(pin);
+    }
+    function validateAadhaar(aadhaar) {
+        return /^\d{12}$/.test(aadhaar);
+    }
+    function validateSection(section) {
+        let valid = true;
+        section.find(".required").each(function () {
+        const value = $(this).val().trim();
+
+        if (!value) {
+            $(this).addClass("is-invalid");
+            valid = false;
+        } else {
+            $(this).removeClass("is-invalid");
+        }
+        });
+        section.find(".amount").each(function () {
+        const value = parseFloat($(this).val());
+
+        if ($(this).val() && (isNaN(value) || value <= 0)) {
+            $(this).addClass("is-invalid");
+            valid = false;
+        } else {
+            $(this).removeClass("is-invalid");
+        }
+        });
+        section.find(".saconfirm-secadv").prop("disabled", !valid);
+        return valid;
+    }
+
+</script>
+
+
+<script>
+    // Live validation on input/change
+    $(document).on("input change", ".profile-section input, .profile-section select, .profile-section textarea", function () {
+        const section = $(this).closest(".profile-section");
+        
+        validateSection(section);
+    });
+ 
+</script>
+
+<script src="./js/main.js"></script>
+<script>
+    $(document).ready(function(){
+
+        //const username = sessionStorage.getItem("username");
+        const username = JSON.parse(localStorage.getItem('wh_user') || '{}').name || '';
+        if (!username) window.location.href = "login.html";
+        $("#username").text(username);
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

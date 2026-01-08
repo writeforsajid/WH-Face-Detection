@@ -214,6 +214,8 @@ class RegisterUserInDataBase(PrecessingStrategy):
     # ------------------------------------------------------------
     # Helper function OUTSIDE of execute()  (Correct place)
     # ------------------------------------------------------------
+    # INSERT INTO guests (
+    # TODO: Insert Guest
     def _insert_guest(self, cursor, guest_id, name, guest_type, comments, email, phone_number):
         
         if (guest_type.lower() == "resident") and (email == "N/A" or email.strip() == ""):
@@ -257,7 +259,11 @@ class RegisterUserInDataBase(PrecessingStrategy):
             INSERT OR IGNORE INTO guest_roles (guest_id, role_id, assigned_at)
             VALUES (?, ?, ?)
         """, (guest_id, role_id, datetime.now().strftime("%Y-%m-%d")))
-
+        
+        cursor.execute("""
+            INSERT OR IGNORE INTO guest_profile (guest_id)
+            VALUES (?)
+        """, (guest_id,))
         print(f"[Info] Assigned role {role_id} to guest {guest_id}")
 
         return guest_id

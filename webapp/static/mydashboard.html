@@ -83,8 +83,8 @@
           >
             <i class="fas fa-hand-pointer"></i>
             <div class="text">
-              <p>MY LOG</p>
-              <h3>379</h3>
+              <p>SECURITY</p>
+              <h3 id="data-security">0</h3>
             </div>
           </div>
           <div
@@ -105,8 +105,8 @@
           >
             <i class="fas fa-list-check"></i>
             <div class="text">
-              <p>Remember</p>
-              <h3>22</h3>
+              <p>Advance</p>
+              <h3 id="data-advance"></h3>
             </div>
           </div>
         </div>
@@ -298,9 +298,12 @@
               // Access individual sharing types
             const attendance = _mainResponse.attendance || "0";
             const totaldue = _mainResponse.totaldue || "0";
+            const advance_balance  = _mainResponse.advance_balance || "0";
+            const security_balance = _mainResponse.security_balance | "0";
             document.getElementById('data-attendance').textContent = attendance || 90;
             document.getElementById('data-due').textContent =totaldue || 0;
-
+            document.getElementById('data-advance').textContent =advance_balance || 0;
+            document.getElementById('data-security').textContent =security_balance || 0;
             // if (bedsResponse.ok) {
             //     //bedsData = await bedsResponse.json();
                 
